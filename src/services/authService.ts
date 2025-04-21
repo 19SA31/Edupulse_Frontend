@@ -1,4 +1,6 @@
 import { userAxiosInstance } from "../api/userAxiosInstance";
+import axios from 'axios';
+
 
 export const signUpService = (
   name: string,
@@ -82,9 +84,9 @@ export const verifyForgotOtpService = async (
 
 export const loginService = async (email: string, password: string) => {
    try {
-    console.log("inside login service")
+    console.log("inside login service##")
      const response = await userAxiosInstance.post("/auth/login", { email, password });
- 
+     console.log("response insie front login service",response)
      if (response.data.success) {
        
        localStorage.setItem("accessToken", response.data.accessToken);
@@ -92,10 +94,18 @@ export const loginService = async (email: string, password: string) => {
      }
  
      return response.data;
-   } catch (error: any) {
-     console.error("Login failed:", error);
-     throw new Error(error.response?.data?.message || "Login failed");
-   }
+   }catch (error: unknown) {
+    
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data?.message || "Login failed";
+      console.error("Login failed:", message);
+      return { success: false, message };
+    }
+
+    
+    console.error("Unexpected error:", error);
+    return { success: false, message: "Something went wrong. Please try again." };
+  }
  };
  
 

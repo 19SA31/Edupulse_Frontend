@@ -10,10 +10,12 @@ import bg_img from "../../assets/ep-background.jpg";
 
 interface LoginFormProps {
   role: "admin" | "tutor" | "user";
-  onLoginSuccess: () => void; // Function to handle successful login
+  onLoginSuccess: () => void; 
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
+
+  console.log("role: ",role)
   const navigate = useNavigate();
 
   const formik = useFormik({
@@ -22,42 +24,61 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
       password: "",
     },
     validationSchema: Yup.object({
-      email: Yup.string().email("Invalid email address").required("Email is required"),
-      password: Yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
+      email: Yup.string()
+        .email("Invalid email address")
+        .required("Email is required"),
+      password: Yup.string()
+        .min(6, "Password must be at least 6 characters")
+        .required("Password is required"),
     }),
     onSubmit: async (values) => {
       try {
-        console.log("login form : ",values.email,values.password)
+        console.log("login form : ", values.email, values.password);
         const response = await loginService(values.email, values.password);
-        console.log("login form response: ", response)
+        console.log("login form response: ", response);
         if (response?.success) {
-          toast.success(`${role.charAt(0).toUpperCase() + role.slice(1)} Login Successful!`);
-          onLoginSuccess(); // Navigate based on role
+          toast.success(
+            `${role.charAt(0).toUpperCase() + role.slice(1)} Login Successful!`
+          );
+          onLoginSuccess(); 
         } else {
-          toast.error("Login failed, Incorrect credentials");
+          toast.error(response.message);
         }
       } catch (error) {
-        console.log(error);
-        toast.error("Login Failed!");
+        console.log("Unexpected error: ", error);
+        toast.error("Something went wrong. Please try again.");
       }
     },
   });
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: `url(${bg_img})` }}>
+    <div
+      className="h-screen w-screen flex items-center justify-center bg-cover bg-center bg-no-repeat relative"
+      style={{ backgroundImage: `url(${bg_img})` }}
+    >
       <div className="absolute inset-0 bg-black/60"></div>
       <div className="relative z-10 flex flex-col lg:flex-row w-full max-w-4xl overflow-hidden bg-white/5 rounded-3xl border border-white/30 backdrop-blur-md">
         <div className="w-full lg:w-1/2 flex flex-col bg-black items-center justify-center p-10 text-white">
           <img src={logo} alt="Logo" className="w-50 h-auto mb-6" />
-          <h2 className="text-3xl font-bold text-center">Welcome {role === "admin" ? "Admin" : role === "tutor" ? "Tutor" : "User"}!</h2>
-          <p className="text-lg text-center mt-2">Log in to continue your journey with <span className="font-semibold">EduPulse</span>.</p>
+          <h2 className="text-3xl font-bold text-center">
+            Welcome{" "}
+            {role === "admin" ? "Admin" : role === "tutor" ? "Tutor" : "User"}!
+          </h2>
+          <p className="text-lg text-center mt-2">
+            Log in to continue your journey with{" "}
+            <span className="font-semibold">EduPulse</span>.
+          </p>
         </div>
 
         <div className="w-full lg:w-1/2 p-10 bg-transparent rounded-3xl">
-          <h2 className="text-3xl font-semibold text-white mb-6 text-center lg:text-left">Login</h2>
+          <h2 className="text-3xl font-semibold text-white mb-6 text-center lg:text-left">
+            Login
+          </h2>
           <form onSubmit={formik.handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-white font-medium mb-2">Email Address</label>
+              <label className="block text-white font-medium mb-2">
+                Email Address
+              </label>
               <input
                 type="email"
                 name="email"
@@ -67,11 +88,17 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
                 onBlur={formik.handleBlur}
                 className="w-full px-4 py-2 border border-white/30 rounded-lg bg-transparent text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               />
-              {formik.touched.email && formik.errors.email && <p className="text-red-400 text-sm mt-1">{formik.errors.email}</p>}
+              {formik.touched.email && formik.errors.email && (
+                <p className="text-red-400 text-sm mt-1">
+                  {formik.errors.email}
+                </p>
+              )}
             </div>
 
             <div>
-              <label className="block text-white font-medium mb-2">Password</label>
+              <label className="block text-white font-medium mb-2">
+                Password
+              </label>
               <input
                 type="password"
                 name="password"
@@ -81,24 +108,100 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
                 onBlur={formik.handleBlur}
                 className="w-full px-4 py-2 border border-white/30 rounded-lg bg-transparent text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               />
-              {formik.touched.password && formik.errors.password && <p className="text-red-400 text-sm mt-1">{formik.errors.password}</p>}
+              {formik.touched.password && formik.errors.password && (
+                <p className="text-red-400 text-sm mt-1">
+                  {formik.errors.password}
+                </p>
+              )}
             </div>
 
             <div className="flex justify-between items-center text-sm text-white">
               <label className="flex items-center space-x-2">
-                <input type="checkbox" className="form-checkbox text-blue-500" />
+                <input
+                  type="checkbox"
+                  className="form-checkbox text-blue-500"
+                />
                 <span>Remember me</span>
               </label>
-              <Link to="/forgot-password" className="text-blue-400 hover:underline">Forgot password?</Link>
+              <Link
+                to="/forgot-password"
+                className="text-blue-400 hover:underline"
+              >
+                Forgot password?
+              </Link>
             </div>
 
-            <button type="submit" className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-200">
+            <button
+              type="submit"
+              className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-200"
+            >
               Login
             </button>
 
             <div className="text-center mt-4 text-white">
-              Don't have an account? <Link to="/register" className="text-blue-400 hover:underline">Sign up</Link>
+              Don't have an account?{" "}
+              { role ==="user" &&(
+                
+              <Link to="/register" className="text-blue-400 hover:underline">
+                Sign up
+              </Link>
+              )}
+              { role ==="tutor" &&(
+              <Link to="/tutor/register" className="text-blue-400 hover:underline">
+                Sign up
+              </Link>
+              )}
             </div>
+            {role === "user" && (
+              <>
+                <div className="text-center mt-4 text-white">
+                  Go to{" "}
+                  <Link to="/admin-login" className="text-blue-400 hover:underline">
+                    Admin
+                  </Link>
+                </div>
+                <div className="text-center mt-4 text-white">
+                  Go to{" "}
+                  <Link to="/tutor/login" className="text-blue-400 hover:underline">
+                    Tutor
+                  </Link>
+                </div>
+              </>
+            )}
+
+            {role === "tutor" && (
+              <>
+                <div className="text-center mt-4 text-white">
+                  Go to{" "}
+                  <Link to="/admin-login" className="text-blue-400 hover:underline">
+                    Admin
+                  </Link>
+                </div>
+                <div className="text-center mt-4 text-white">
+                  Go to{" "}
+                  <Link to="/login" className="text-blue-400 hover:underline">
+                    User
+                  </Link>
+                </div>
+              </>
+            )}
+
+            {role === "admin" && (
+              <>
+                <div className="text-center mt-4 text-white">
+                  Go to{" "}
+                  <Link to="/login" className="text-blue-400 hover:underline">
+                    User
+                  </Link>
+                </div>
+                <div className="text-center mt-4 text-white">
+                  Go to{" "}
+                  <Link to="/tutor/login" className="text-blue-400 hover:underline">
+                    Tutor
+                  </Link>
+                </div>
+              </>
+            )}
           </form>
         </div>
       </div>
