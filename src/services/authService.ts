@@ -10,7 +10,7 @@ export const signUpService = (
 ) => {
   try {
     console.log("inside signupservice", name, email, phone, password);
-    const response = userAxiosInstance.post("/auth/send-otp", {
+    const response = userAxiosInstance.post("/user/send-otp", {
       name,
       email,
       phone,
@@ -18,8 +18,15 @@ export const signUpService = (
     });
     return response;
   } catch (error) {
+
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data?.message || "Signup failed";
+      console.error("Signup Failed:", message);
+      return { success: false, message };
+    }
+
     console.log("Error in signupService: ", error);
-    throw error;
+    
   }
 };
 
@@ -32,7 +39,7 @@ export const verifyOtpService = async (
 ) => {
   try {
     console.log("reached verifyOtpService");
-    const response = await userAxiosInstance.post("/auth/verify-otp", {
+    const response = await userAxiosInstance.post("/user/verify-otp", {
       name,
       email,
       phone,
@@ -52,7 +59,7 @@ export const forgotPasswordService = async (
 ) => {
   try {
     console.log("reached createUserService");
-    const response = await userAxiosInstance.post("/auth/send-otp", {
+    const response = await userAxiosInstance.post("/user/send-otp", {
       email,
       isForgot,
     });
@@ -70,7 +77,7 @@ export const verifyForgotOtpService = async (
 ) => {
   try {
     console.log("reached verifyOtpService");
-    const response = await userAxiosInstance.post("/auth/verify-otp", {
+    const response = await userAxiosInstance.post("/user/verify-otp", {
       email,
       otp,
       isForgot,
@@ -85,7 +92,7 @@ export const verifyForgotOtpService = async (
 export const loginService = async (email: string, password: string) => {
    try {
     console.log("inside login service##")
-     const response = await userAxiosInstance.post("/auth/login", { email, password });
+     const response = await userAxiosInstance.post("/user/login", { email, password });
      console.log("response insie front login service",response)
      if (response.data.success) {
        
@@ -115,7 +122,7 @@ export const passwordChangeService = async (
 ) => {
   try {
     console.log("reached password change service");
-    const response = await userAxiosInstance.patch("/auth/reset-password", {
+    const response = await userAxiosInstance.patch("/user/reset-password", {
       email,
       password,
     });
@@ -128,7 +135,7 @@ export const passwordChangeService = async (
 
 export const logoutUser = async () => {
   try {
-    const response = await userAxiosInstance.post("/auth/logout");
+    const response = await userAxiosInstance.post("/user/logout");
     console.log(response);
     return response.data;
   } catch (error: any) {

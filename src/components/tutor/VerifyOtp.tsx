@@ -3,10 +3,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Toaster, toast } from "react-hot-toast";
 import OtpInput from "../auth/OtpInput";
 import { 
-  verifyOtpService,
-  verifyForgotOtpService,
-  forgotPasswordService
-} from "../../services/authService";
+  tutorVerifyOtpService,
+  tutorVerifyForgotOtpService,
+  tutorForgotPasswordService
+} from "../../services/tutorService";
 import logo from "../../assets/epulse.png";
 import bg_img from "../../assets/ep-background.jpg";
 
@@ -17,11 +17,12 @@ const VerifyOtp = () => {
 
   const handleVerify = async (otp: string) => {
     try {
+      console.log(userData)
       let response;
       if (userData?.source === "forgotPassword") {
-        response = await verifyForgotOtpService(userData.email, otp, true);
+        response = await tutorVerifyForgotOtpService(userData.email, otp, true);
       } else {
-        response = await verifyOtpService(
+        response = await tutorVerifyOtpService(
           userData.name,
           userData.email,
           userData.phone,
@@ -34,14 +35,14 @@ const VerifyOtp = () => {
         if(response?.data?.success){
           toast.success("OTP Verified Successfully!")
           setTimeout(()=>{
-            navigate("/reset-password",{ state: { email: userData.email } })
+            navigate("/tutor/reset-password",{ state: { email: userData.email } })
           })
         }
       }else{
         if (response?.data?.success) {
           toast.success("OTP Verified Successfully!");
           setTimeout(() => {
-            navigate("/login");
+            navigate("/tutor/login");
           }, 1000);
         } else {
           toast.error("OTP verification failed.");
@@ -57,7 +58,7 @@ const VerifyOtp = () => {
 
   const handleResend = async () => {
     try {
-      const response = await forgotPasswordService(userData.email, userData?.source === "forgotPassword");
+      const response = await tutorForgotPasswordService(userData.email, userData?.source === "forgotPassword");
 
       if (response?.data?.success) {
         toast.success("OTP Resent Successfully!");

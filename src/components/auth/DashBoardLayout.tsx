@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../../assets/epulse.png";
 import { logoutUser } from "../../services/authService";
+import { logoutTutor } from "../../services/tutorService";
+import { logoutAdmin } from "../../services/adminService";
 
 interface DashboardProps {
   role: "user" | "tutor" | "admin";
@@ -20,21 +22,56 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
   }, [role]);
 
   const handleLogout = async () => {
-    try {
-      console.log("Inside handleLogout");
-      const response = await logoutUser();
-      console.log(response);
-
-      if (response) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("user");
-        navigate("/login");
-      } else {
-        console.error("Logout failed - Invalid response:", response);
+    if(role==="user"){
+      try {
+        console.log("Inside handleLogout");
+        const response = await logoutUser();
+        console.log(response);
+  
+        if (response) {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("user");
+          navigate("/login");
+        } else {
+          console.error("Logout failed - Invalid response:", response);
+        }
+      } catch (error) {
+        console.error("Logout failed:", error);
       }
-    } catch (error) {
-      console.error("Logout failed:", error);
+    }else if(role==="tutor"){
+      try {
+        console.log("Inside handleLogout");
+        const response = await logoutTutor();
+        console.log(response);
+  
+        if (response) {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("tutor");
+          navigate("/tutor/login");
+        } else {
+          console.error("Logout failed - Invalid response:", response);
+        }
+      } catch (error) {
+        console.error("Logout failed:", error);
+      }
+    }else{
+      try {
+        console.log("Inside handleLogout");
+        const response = await logoutAdmin();
+        console.log(response);
+  
+        if (response) {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("admin");
+          navigate("/admin/login");
+        } else {
+          console.error("Logout failed - Invalid response:", response);
+        }
+      } catch (error) {
+        console.error("Logout failed:", error);
+      }
     }
+    
   };
 
   return (
@@ -45,7 +82,7 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
           Welcome {role === "admin" ? "Admin" : userName || "User"}!
         </h1>
         <p className="text-lg text-gray-200 mb-6">
-          You are now logged in to the dashboard. Feel free to explore.
+          `You are now logged as {role} to the dashboard. Feel free to explore.`
         </p>
 
         <button

@@ -1,7 +1,7 @@
 import { tutorAxiosInstance } from "../api/tutorAxiosInstance";
 import axios from 'axios';
 
-export const signUpService = (
+export const tutorSignUpService = (
   name: string,
   email: string,
   phone: string,
@@ -9,7 +9,7 @@ export const signUpService = (
 ) => {
   try {
     console.log("inside tutor signupservice", name, email, phone, password);
-    const response = tutorAxiosInstance.post("/auth/send-otp", {
+    const response = tutorAxiosInstance.post("/tutor/send-otp", {
       name,
       email,
       phone,
@@ -22,7 +22,7 @@ export const signUpService = (
   }
 };
 
-export const verifyOtpService = async (
+export const tutorVerifyOtpService = async (
   name: string,
   email: string,
   phone: string,
@@ -31,7 +31,7 @@ export const verifyOtpService = async (
 ) => {
   try {
     console.log("reached verifyOtpService");
-    const response = await tutorAxiosInstance.post("/auth/verify-otp", {
+    const response = await tutorAxiosInstance.post("/tutor/verify-otp", {
       name,
       email,
       phone,
@@ -45,13 +45,13 @@ export const verifyOtpService = async (
   }
 };
 
-export const forgotPasswordService = async (
+export const tutorForgotPasswordService = async (
   email: string,
   isForgot: boolean
 ) => {
   try {
-    console.log("reached createUserService");
-    const response = await tutorAxiosInstance.post("/auth/send-otp", {
+    console.log("reached createTutorService");
+    const response = await tutorAxiosInstance.post("/tutor/send-otp", {
       email,
       isForgot,
     });
@@ -62,14 +62,14 @@ export const forgotPasswordService = async (
   }
 };
 
-export const verifyForgotOtpService = async (
+export const tutorVerifyForgotOtpService = async (
   email: string,
   otp: string,
   isForgot: boolean
 ) => {
   try {
     console.log("reached verifyOtpService");
-    const response = await tutorAxiosInstance.post("/auth/verify-otp", {
+    const response = await tutorAxiosInstance.post("/tutor/verify-otp", {
       email,
       otp,
       isForgot,
@@ -81,15 +81,15 @@ export const verifyForgotOtpService = async (
   }
 };
 
-export const loginService = async (email: string, password: string) => {
+export const tutorLoginService = async (email: string, password: string) => {
     try {
      console.log("inside login service##")
-      const response = await tutorAxiosInstance.post("/auth/login", { email, password });
+      const response = await tutorAxiosInstance.post("/tutor/login", { email, password });
       console.log("response insie front login service",response)
       if (response.data.success) {
         
         localStorage.setItem("accessToken", response.data.accessToken);
-        localStorage.setItem("user", JSON.stringify(response.data.user)); 
+        localStorage.setItem("tutor", JSON.stringify(response.data.tutor)); 
       }
   
       return response.data;
@@ -107,13 +107,13 @@ export const loginService = async (email: string, password: string) => {
    }
   };
 
-  export const passwordChangeService = async (
+  export const tutorPasswordChangeService = async (
     email: string,
     password: String
   ) => {
     try {
       console.log("reached password change service");
-      const response = await tutorAxiosInstance.patch("/auth/reset-password", {
+      const response = await tutorAxiosInstance.patch("/tutor/reset-password", {
         email,
         password,
       });
@@ -124,9 +124,9 @@ export const loginService = async (email: string, password: string) => {
     }
   };
 
-  export const logoutUser = async () => {
+  export const logoutTutor = async () => {
     try {
-      const response = await tutorAxiosInstance.post("/auth/logout");
+      const response = await tutorAxiosInstance.post("/tutor/logout");
       console.log(response);
       return response.data;
     } catch (error: any) {

@@ -1,11 +1,11 @@
 import React from 'react'
 import DashboardLayout from '../auth/DashBoardLayout'
-function Dashboard() {
+function AdminDashboard() {
   return (
     <div>
-      <DashboardLayout role="user" />
+      <DashboardLayout role="admin" />
     </div>
   )
 }
 
-export default Dashboard
+export default AdminDashboard

@@ -4,9 +4,11 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "sonner";
 import { loginService } from "../../services/authService";
+import { tutorLoginService } from "../../services/tutorService";
 import { useNavigate } from "react-router-dom";
 import logo from "../../assets/epulse.png";
 import bg_img from "../../assets/ep-background.jpg";
+import { adminLoginService } from "../../services/adminService";
 
 interface LoginFormProps {
   role: "admin" | "tutor" | "user";
@@ -32,22 +34,59 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
         .required("Password is required"),
     }),
     onSubmit: async (values) => {
-      try {
-        console.log("login form : ", values.email, values.password);
-        const response = await loginService(values.email, values.password);
-        console.log("login form response: ", response);
-        if (response?.success) {
-          toast.success(
-            `${role.charAt(0).toUpperCase() + role.slice(1)} Login Successful!`
-          );
-          onLoginSuccess(); 
-        } else {
-          toast.error(response.message);
+      if(role==="user"){
+        try {
+          console.log("login form : ", values.email, values.password);
+          const response = await loginService(values.email, values.password);
+          console.log("login form response: ", response);
+          if (response?.success) {
+            toast.success(
+              `${role.charAt(0).toUpperCase() + role.slice(1)} Login Successful!`
+            );
+            onLoginSuccess(); 
+          } else {
+            toast.error(response.message);
+          }
+        } catch (error) {
+          console.log("Unexpected error: ", error);
+          toast.error("Something went wrong. Please try again.");
         }
-      } catch (error) {
-        console.log("Unexpected error: ", error);
-        toast.error("Something went wrong. Please try again.");
+      }else if(role==="tutor"){
+        try {
+          console.log("login form : ", values.email, values.password);
+          const response = await tutorLoginService(values.email, values.password);
+          console.log("login form response: ", response);
+          if (response?.success) {
+            toast.success(
+              `${role.charAt(0).toUpperCase() + role.slice(1)} Login Successful!`
+            );
+            onLoginSuccess(); 
+          } else {
+            toast.error(response.message);
+          }
+        } catch (error) {
+          console.log("Unexpected error: ", error);
+          toast.error("Something went wrong. Please try again.");
+        }
+      }else{
+        try {
+          console.log("login form : ", values.email, values.password);
+          const response = await adminLoginService(values.email, values.password);
+          console.log("login form response: ", response);
+          if (response?.success) {
+            toast.success(
+              `${role.charAt(0).toUpperCase() + role.slice(1)} Login Successful!`
+            );
+            onLoginSuccess(); 
+          } else {
+            toast.error(response.message);
+          }
+        } catch (error) {
+          console.log("Unexpected error: ", error);
+          toast.error("Something went wrong. Please try again.");
+        }
       }
+      
     },
   });
 
@@ -123,12 +162,27 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
                 />
                 <span>Remember me</span>
               </label>
-              <Link
+              {role==="user" && (
+                <>
+                <Link
                 to="/forgot-password"
                 className="text-blue-400 hover:underline"
               >
                 Forgot password?
               </Link>
+                </>
+              )}
+              {role==="tutor" && (
+                <>
+                <Link
+                to="/tutor/forgot-password"
+                className="text-blue-400 hover:underline"
+              >
+                Forgot password?
+              </Link>
+                </>
+              )}
+              
             </div>
 
             <button
@@ -156,7 +210,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
               <>
                 <div className="text-center mt-4 text-white">
                   Go to{" "}
-                  <Link to="/admin-login" className="text-blue-400 hover:underline">
+                  <Link to="/admin/login" className="text-blue-400 hover:underline">
                     Admin
                   </Link>
                 </div>
@@ -173,7 +227,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
               <>
                 <div className="text-center mt-4 text-white">
                   Go to{" "}
-                  <Link to="/admin-login" className="text-blue-400 hover:underline">
+                  <Link to="/admin/login" className="text-blue-400 hover:underline">
                     Admin
                   </Link>
                 </div>

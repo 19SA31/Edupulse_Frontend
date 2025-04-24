@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import logo from "../../assets/epulse.png";
 import bg_img from "../../assets/ep-background.jpg";
 import { forgotPasswordService } from "../../services/authService";
+import { tutorForgotPasswordService } from "../../services/tutorService";
 
 interface ForgotPasswordProps {
     role: "user" | "tutor"; // 
@@ -18,22 +19,40 @@ const ForgotPasswordLayout = ({ role }:ForgotPasswordProps) => {
       toast.error("Enter email.");
       return;
     }
-
-    try {
-      const response = await forgotPasswordService(email, true);
-      if (response?.data?.success) {
-        toast.success("OTP sent successfully");
-        setTimeout(() =>
-          navigate("/verify-otp", { state: { email, source: "forgotPassword", role } }),
-          1000
-        );
-      } else {
-        toast.error("OTP sending failed.");
+    if(role==="user"){
+      try {
+        const response = await forgotPasswordService(email, true);
+        if (response?.data?.success) {
+          toast.success("OTP sent successfully");
+          setTimeout(() =>
+            navigate("/verify-otp", { state: { email, source: "forgotPassword", role } }),
+            1000
+          );
+        } else {
+          toast.error("OTP sending failed.");
+        }
+      } catch (error) {
+        console.log(error);
+        toast.error("Request failed. Please try again.");
       }
-    } catch (error) {
-      console.log(error);
-      toast.error("Request failed. Please try again.");
+    }else if(role==="tutor"){
+      try {
+        const response = await tutorForgotPasswordService(email, true);
+        if (response?.data?.success) {
+          toast.success("OTP sent successfully");
+          setTimeout(() =>
+            navigate("/tutor/verify-otp", { state: { email, source: "forgotPassword", role } }),
+            1000
+          );
+        } else {
+          toast.error("OTP sending failed.");
+        }
+      } catch (error) {
+        console.log(error);
+        toast.error("Request failed. Please try again.");
+      }
     }
+    
   };
 
   return (

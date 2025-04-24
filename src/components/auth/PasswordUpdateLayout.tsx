@@ -4,6 +4,7 @@ import * as Yup from "yup";
 import { toast } from "sonner";
 import { useNavigate, useLocation } from "react-router-dom";
 import { passwordChangeService } from "../../services/authService";
+import { tutorPasswordChangeService } from "../../services/tutorService";
 import bg_img from "../../assets/ep-background.jpg";
 import logo from "../../assets/epulse.png";
 
@@ -30,18 +31,34 @@ const PasswordUpdateLayout: React.FC<PasswordUpdateProps> = ({ role }) => {
         .required("Required"),
     }),
     onSubmit: async (values) => {
-      try {
-        console.log("password update:", email, values.password, role);
-        const response = await passwordChangeService(email, values.password);
-        console.log("Response:", response);
-
-        if (response?.data?.success) {
-          toast.success("Password updated successfully!");
-          navigate("/login");
+      if(role==="user"){
+        try {
+          console.log("password update:", email, values.password, role);
+          const response = await passwordChangeService(email, values.password);
+          console.log("Response:", response);
+  
+          if (response?.data?.success) {
+            toast.success("Password updated successfully!");
+            navigate("/login");
+          }
+        } catch (error) {
+          toast.error("Failed to update password. Try again.");
         }
-      } catch (error) {
-        toast.error("Failed to update password. Try again.");
+      }else if(role==="tutor"){
+        try {
+          console.log("password update:", email, values.password, role);
+          const response = await tutorPasswordChangeService(email, values.password);
+          console.log("Response:", response);
+  
+          if (response?.data?.success) {
+            toast.success("Password updated successfully!");
+            navigate("/tutor/login");
+          }
+        } catch (error) {
+          toast.error("Failed to update password. Try again.");
+        }
       }
+      
     },
   });
 

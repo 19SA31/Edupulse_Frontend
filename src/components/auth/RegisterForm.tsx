@@ -1,15 +1,16 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner"; 
-import logo from "../../assets/epulse.png"; 
-import bg_img from "../../assets/ep-background.jpg"; 
+import { toast } from "sonner";
+import logo from "../../assets/epulse.png";
+import bg_img from "../../assets/ep-background.jpg";
 import { signUpService } from "../../services/authService";
+import { tutorSignUpService } from "../../services/tutorService";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-
+import axios from "axios";
 
 interface RegisterProps {
-  role: "user" | "tutor"; 
+  role: "user" | "tutor";
 }
 
 function Register({ role }: RegisterProps) {
@@ -37,19 +38,49 @@ function Register({ role }: RegisterProps) {
         .required("Confirm Password is required"),
     }),
     onSubmit: async (values) => {
-      try {
-        const response = await signUpService(
-          values.name,
-          values.email,
-          values.phone,
-          values.password
-        );
-        console.log(response);
-        toast.success("Registration Successful! Please verify OTP.");
-        navigate("/verify-otp", { state: values });
-      } catch (error) {
-        console.log(error);
-        toast.error("Registration failed. Please try again.");
+      if (role === "user") {
+        try {
+          const response = await signUpService(
+            values.name,
+            values.email,
+            values.phone,
+            values.password
+          );
+          console.log(response);
+          toast.success("Registration Successful! Please verify OTP.");
+          navigate("/verify-otp", { state: values });
+        } catch (error) {
+          console.log(error);
+          if (axios.isAxiosError(error)) {
+            const message =
+              error.response?.data?.message || "Registration failed. Please try again.";
+            toast.error(message); 
+          } else {
+            toast.error("Registration failed. Please try again.");
+          }
+        }
+      } else if (role === "tutor") {
+        try {
+          console.log("inside tutor signup data collection");
+          const response = await tutorSignUpService(
+            values.name,
+            values.email,
+            values.phone,
+            values.password
+          );
+          console.log(response);
+          toast.success("Registration Successful! Please verify OTP.");
+          navigate("/tutor/verify-otp", { state: values });
+        } catch (error) {
+          console.log(error);
+          if (axios.isAxiosError(error)) {
+            const message =
+              error.response?.data?.message || "Registration failed. Please try again.";
+            toast.error(message);
+          } else {
+            toast.error("Registration failed. Please try again.");
+          }
+        }
       }
     },
   });
@@ -162,16 +193,33 @@ function Register({ role }: RegisterProps) {
             </button>
           </form>
 
-          {/* Already have an account? */}
-          <p className="text-white mt-5 text-center">
-            Already have an account?{" "}
-            <span
-              className="text-blue-400 cursor-pointer hover:underline"
-              onClick={() => navigate("/login")}
-            >
-              Login
-            </span>
-          </p>
+          {role === "user" && (
+            <>
+              <p className="text-white mt-5 text-center">
+                Already have an account?{" "}
+                <span
+                  className="text-blue-400 cursor-pointer hover:underline"
+                  onClick={() => navigate("/login")}
+                >
+                  Login
+                </span>
+              </p>
+            </>
+          )}
+
+          {role === "tutor" && (
+            <>
+              <p className="text-white mt-5 text-center">
+                Already have an account?{" "}
+                <span
+                  className="text-blue-400 cursor-pointer hover:underline"
+                  onClick={() => navigate("/tutor/login")}
+                >
+                  Login
+                </span>
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>
