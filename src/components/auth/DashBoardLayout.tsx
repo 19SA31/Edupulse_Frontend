@@ -4,6 +4,7 @@ import logo from "../../assets/epulse.png";
 import { logoutUser } from "../../services/authService";
 import { logoutTutor } from "../../services/tutorService";
 import { logoutAdmin } from "../../services/adminService";
+import { toast } from "sonner"
 
 interface DashboardProps {
   role: "user" | "tutor" | "admin";
@@ -32,6 +33,7 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
           localStorage.removeItem("accessToken");
           localStorage.removeItem("user");
           navigate("/login");
+          toast.success("Logged out successfully")
         } else {
           console.error("Logout failed - Invalid response:", response);
         }
@@ -48,6 +50,7 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
           localStorage.removeItem("accessToken");
           localStorage.removeItem("tutor");
           navigate("/tutor/login");
+          toast.success("Logged out successfully")
         } else {
           console.error("Logout failed - Invalid response:", response);
         }
@@ -64,6 +67,7 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
           localStorage.removeItem("accessToken");
           localStorage.removeItem("admin");
           navigate("/admin/login");
+          toast.success("Logged out successfully")
         } else {
           console.error("Logout failed - Invalid response:", response);
         }
