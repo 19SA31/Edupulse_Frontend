@@ -3,12 +3,15 @@ import { Link } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "sonner";
-import { loginService } from "../../services/authService";
-import { tutorLoginService } from "../../services/tutorService";
 import { useNavigate } from "react-router-dom";
 import logo from "../../assets/epulse.png";
 import bg_img from "../../assets/ep-background.jpg";
-import { adminLoginService } from "../../services/adminService";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "../../redux/store";
+import { adminLogin } from "../../redux/actions/adminActions"; 
+import { login } from "../../redux/actions/userActions"; 
+import { tutorLogin } from "../../redux/actions/tutorActions"; 
+
 
 interface LoginFormProps {
   role: "admin" | "tutor" | "user";
@@ -16,8 +19,9 @@ interface LoginFormProps {
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  
 
-  console.log("role: ",role)
   const navigate = useNavigate();
 
   const formik = useFormik({
@@ -35,56 +39,50 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
     }),
     onSubmit: async (values) => {
       if(role==="user"){
-        try {
-          console.log("login form : ", values.email, values.password);
-          const response = await loginService(values.email, values.password);
-          console.log("login form response: ", response);
-          if (response?.success) {
-            toast.success(
-              `${role.charAt(0).toUpperCase() + role.slice(1)} Login Successful!`
-            );
-            onLoginSuccess(); 
-          } else {
-            toast.error(response.message);
-          }
-        } catch (error) {
-          console.log("Unexpected error: ", error);
-          toast.error("Something went wrong. Please try again.");
-        }
+  console.log("###role: ",role)
+
+        dispatch(login({ email: values.email, password: values.password }))
+          .unwrap()
+          .then((data) => {
+            console.log("Login successful data:", data); 
+            toast.success("User Login Successful!");
+            onLoginSuccess();
+            navigate("/dashboard"); // Redirect after success
+          })
+          .catch((error: any) => {
+            const message =
+              error?.data?.message || error?.message || "Login failed.";
+            toast.error(message);
+          });
+          
       }else if(role==="tutor"){
-        try {
-          console.log("login form : ", values.email, values.password);
-          const response = await tutorLoginService(values.email, values.password);
-          console.log("login form response: ", response);
-          if (response?.success) {
-            toast.success(
-              `${role.charAt(0).toUpperCase() + role.slice(1)} Login Successful!`
-            );
-            onLoginSuccess(); 
-          } else {
-            toast.error(response.message);
-          }
-        } catch (error) {
-          console.log("Unexpected error: ", error);
-          toast.error("Something went wrong. Please try again.");
-        }
+        dispatch(tutorLogin({ email: values.email, password: values.password }))
+          .unwrap()
+          .then(() => {
+            toast.success("Tutor Login Successful!");
+            onLoginSuccess();
+            navigate("/tutor/dashboard"); // Redirect after success
+          })
+          .catch((error: any) => {
+            const message =
+              error?.data?.message || error?.message || "Login failed.";
+            toast.error(message);
+          });
+          
       }else{
-        try {
-          console.log("login form : ", values.email, values.password);
-          const response = await adminLoginService(values.email, values.password);
-          console.log("login form response: ", response);
-          if (response?.success) {
-            toast.success(
-              `${role.charAt(0).toUpperCase() + role.slice(1)} Login Successful!`
-            );
-            onLoginSuccess(); 
-          } else {
-            toast.error(response.message);
-          }
-        } catch (error) {
-          console.log("Unexpected error: ", error);
-          toast.error("Something went wrong. Please try again.");
-        }
+        dispatch(adminLogin({ email: values.email, password: values.password }))
+          .unwrap()
+          .then(() => {
+            toast.success("Admin Login Successful!");
+            onLoginSuccess();
+            navigate("/admin/dashboard"); // Redirect after success
+          })
+          .catch((error: any) => {
+            const message =
+              error?.data?.message || error?.message || "Login failed.";
+            toast.error(message);
+          });
+          
       }
       
     },

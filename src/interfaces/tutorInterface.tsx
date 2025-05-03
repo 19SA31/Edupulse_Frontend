@@ -1,4 +1,4 @@
-export interface User{
+export interface Tutor{
     id?: string
     name: string
     email: string
@@ -9,7 +9,7 @@ export interface User{
     isBlocked?: boolean
 }
 
-export interface UserSignup{
+export interface TutorSignup{
     
     name: string
     email: string
@@ -27,14 +27,14 @@ export interface VerifyOtpArgs {
   }
 
 
-  export interface UserLogin {
+  export interface TutorLogin {
     
     email: string
     password: string
     
   }
-export interface UserState{
-    userInfo: User | null;
+export interface TutorState{
+    tutorInfo: Tutor | null;
     token: string | null;
     loading: boolean;
     error: string | null;

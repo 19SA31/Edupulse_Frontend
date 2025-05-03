@@ -1,72 +1,66 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import axios from 'axios';
-import { User } from '../../interfaces/userInterface';
+// redux/slices/userSlice.ts
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { login, logout, signUp, verifyOtp } from "../actions/userActions";
 
 interface UserState {
-  userInfo: any | null;
-  token: string | null;
+  user: any;
   loading: boolean;
   error: string | null;
+  isAuthenticated: boolean;
 }
 
 const initialState: UserState = {
-  userInfo: null,
-  token: null,
+  user: null,
   loading: false,
   error: null,
+  isAuthenticated: false
 };
 
-
-export const registerUser = createAsyncThunk<
-  any, 
-  User, 
-  { rejectValue: { message: string } } 
->(
-  'user/register',
-  async (userData, { rejectWithValue }) => {
-    try {
-      const { data } = await axios.post('/api/register', userData);
-      return data;
-    } catch (error: any) {
-      return rejectWithValue({ message: error.response?.data?.message || 'Something went wrong' });
-    }
-  }
-);
-
 const userSlice = createSlice({
-  name: 'user',
+  name: "user",
   initialState,
   reducers: {
-    clearUser(state) {
-      state.userInfo = null;
-      state.token = null;
-      localStorage.removeItem('user');
-      localStorage.removeItem('access_token');
-    },
-    setLoading(state, action: PayloadAction<boolean>) {
-      state.loading = action.payload;
-    },
-    setError(state, action: PayloadAction<string | null>) {
-      state.error = action.payload;
+    clearError: (state) => {
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(registerUser.pending, (state) => {
+      .addCase(signUp.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
+      .addCase(signUp.rejected, (state, action: PayloadAction<any>) => {
         state.loading = false;
-        state.userInfo = action.payload;
-        state.token = action.payload.token; 
+        state.error = action.payload || "Signup failed";
       })
-      .addCase(registerUser.rejected, (state, action) => {
+      
+
+      .addCase(verifyOtp.fulfilled, (state, action: PayloadAction<any>) => {
+        state.user = action.payload.user;
+        state.isAuthenticated = true;
+        state.error = null;
+      })
+
+      .addCase(login.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(login.fulfilled, (state, action: PayloadAction<any>) => {
         state.loading = false;
-        state.error = action.payload ? action.payload.message : 'Something went wrong';
+        state.user = action.payload;
+        state.isAuthenticated = true;
+        state.error = null;
+      })
+      .addCase(login.rejected, (state, action: PayloadAction<any>) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(logout.fulfilled, () => {
+        return initialState;
       });
-  },
+  }
 });
 
-export const { clearUser, setLoading, setError } = userSlice.actions;
+export const { clearError } = userSlice.actions;
 export default userSlice.reducer;

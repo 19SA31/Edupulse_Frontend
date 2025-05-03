@@ -5,9 +5,13 @@ import logo from "../../assets/epulse.png";
 import bg_img from "../../assets/ep-background.jpg";
 import { signUpService } from "../../services/authService";
 import { tutorSignUpService } from "../../services/tutorService";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "../../redux/store";
+import { signUp } from "../../redux/actions/userActions";
+import { tutorSignUp } from "../../redux/actions/tutorActions";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import axios from "axios";
+
 
 interface RegisterProps {
   role: "user" | "tutor";
@@ -15,6 +19,7 @@ interface RegisterProps {
 
 function Register({ role }: RegisterProps) {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
 
   const formik = useFormik({
     initialValues: {
@@ -38,49 +43,53 @@ function Register({ role }: RegisterProps) {
         .required("Confirm Password is required"),
     }),
     onSubmit: async (values) => {
-      if (role === "user") {
-        try {
-          const response = await signUpService(
-            values.name,
-            values.email,
-            values.phone,
-            values.password
+      try {
+        if (role === "user") {
+          const response = await dispatch(
+            signUp({
+              name: values.name,
+              email: values.email,
+              phone: values.phone,
+              password: values.password,
+            })
           );
-          console.log(response);
-          toast.success("Registration Successful! Please verify OTP.");
-          navigate("/verify-otp", { state: values });
-        } catch (error) {
-          console.log(error);
-          if (axios.isAxiosError(error)) {
-            const message =
-              error.response?.data?.message || "Registration failed. Please try again.";
-            toast.error(message); 
+
+          if (signUp.fulfilled.match(response)) {
+            toast.success("Registration Successful! Please verify OTP.");
+            navigate("/verify-otp", { state: values });
           } else {
-            toast.error("Registration failed. Please try again.");
+            throw new Error(
+              typeof response.payload === "string"
+                ? response.payload
+                : (response.payload as { message?: string })?.message ||
+                  "Registration failed."
+            );
+          }
+        } else if (role === "tutor") {
+          const response = await dispatch(
+            tutorSignUp({
+              name: values.name,
+              email: values.email,
+              phone: values.phone,
+              password: values.password,
+            })
+          );
+
+          if (tutorSignUp.fulfilled.match(response)) {
+            toast.success("Registration Successful! Please verify OTP.");
+            navigate("/tutor/verify-otp", { state: values });
+          } else {
+            throw new Error(
+              typeof response.payload === "string"
+                ? response.payload
+                : (response.payload as { message?: string })?.message ||
+                  "Registration failed."
+            );
           }
         }
-      } else if (role === "tutor") {
-        try {
-          console.log("inside tutor signup data collection");
-          const response = await tutorSignUpService(
-            values.name,
-            values.email,
-            values.phone,
-            values.password
-          );
-          console.log(response);
-          toast.success("Registration Successful! Please verify OTP.");
-          navigate("/tutor/verify-otp", { state: values });
-        } catch (error) {
-          console.log(error);
-          if (axios.isAxiosError(error)) {
-            const message =
-              error.response?.data?.message || "Registration failed. Please try again.";
-            toast.error(message);
-          } else {
-            toast.error("Registration failed. Please try again.");
-          }
-        }
+      } catch (error: any) {
+        console.error(error);
+        toast.error(error.message || "Registration failed. Please try again.");
       }
     },
   });

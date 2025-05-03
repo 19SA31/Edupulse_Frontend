@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../../assets/epulse.png";
-import { logoutUser } from "../../services/authService";
-import { logoutTutor } from "../../services/tutorService";
-import { logoutAdmin } from "../../services/adminService";
 import { toast } from "sonner"
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "../../redux/store";
+import { logoutAdminAction } from "../../redux/actions/adminActions"; 
+import { logout } from "../../redux/actions/userActions"; 
+import { logoutTutorAction } from "../../redux/actions/tutorActions"; 
 
 interface DashboardProps {
   role: "user" | "tutor" | "admin";
@@ -13,67 +15,42 @@ interface DashboardProps {
 const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState<string | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (storedUser && role !== "admin") {
-      const user = JSON.parse(storedUser);
-      setUserName(user.name);
-    }
+if (storedUser && role !== "admin") {
+  try {
+    const user = JSON.parse(storedUser);
+    setUserName(user?.name || null);
+  } catch (error) {
+    setUserName(null);
+  }
+}
   }, [role]);
 
   const handleLogout = async () => {
-    if(role==="user"){
-      try {
-        console.log("Inside handleLogout");
-        const response = await logoutUser();
-        console.log(response);
-  
-        if (response) {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("user");
-          navigate("/login");
-          toast.success("Logged out successfully")
-        } else {
-          console.error("Logout failed - Invalid response:", response);
-        }
-      } catch (error) {
-        console.error("Logout failed:", error);
+    try {
+      if (role === "user") {
+        await dispatch(logout()).unwrap();
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("user");
+        navigate("/login");
+      } else if (role === "tutor") {
+        await dispatch(logoutTutorAction()).unwrap();
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("tutor");
+        navigate("/tutor/login");
+      } else if (role === "admin") {
+        await dispatch(logoutAdminAction()).unwrap();
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("admin");
+        navigate("/admin/login");
       }
-    }else if(role==="tutor"){
-      try {
-        console.log("Inside handleLogout");
-        const response = await logoutTutor();
-        console.log(response);
-  
-        if (response) {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("tutor");
-          navigate("/tutor/login");
-          toast.success("Logged out successfully")
-        } else {
-          console.error("Logout failed - Invalid response:", response);
-        }
-      } catch (error) {
-        console.error("Logout failed:", error);
-      }
-    }else{
-      try {
-        console.log("Inside handleLogout");
-        const response = await logoutAdmin();
-        console.log(response);
-  
-        if (response) {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("admin");
-          navigate("/admin/login");
-          toast.success("Logged out successfully")
-        } else {
-          console.error("Logout failed - Invalid response:", response);
-        }
-      } catch (error) {
-        console.error("Logout failed:", error);
-      }
+      toast.success("Logged out successfully");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      toast.error("Logout failed");
     }
     
   };
