@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
-  return <LoginForm role="admin" onLoginSuccess={() => navigate("/admin/dashboard")} />;
+  return <LoginForm role="admin" onLoginSuccess={() => navigate("/admin/home")} />;
 };
 
 export default AdminLogin;

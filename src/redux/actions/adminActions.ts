@@ -8,7 +8,7 @@ export const adminLogin = createAsyncThunk(
     try {
       const result = await adminLoginService(email, password);
       if (result.success) {
-        return result.data; // Return the data if success is true
+        return result.data; 
       } else {
         return rejectWithValue(result.message || "Login failed");
       }
@@ -19,12 +19,12 @@ export const adminLogin = createAsyncThunk(
 );
 
 export const logoutAdminAction = createAsyncThunk(
-  "admi/logout",
+  "admin/logout",
   async (_, { rejectWithValue }) => {
     try {
       const result = await logoutAdmin();
       if (result.success) {
-        return result.data; // Return the data if success is true
+        return result.data; 
       } else {
         return rejectWithValue(result.message || "Logout failed");
       }
