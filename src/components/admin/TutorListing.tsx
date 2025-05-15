@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { logoutAdminAction } from '../../redux/actions/adminActions';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../redux/store'; 
-import { getTutors, listUnlistUser } from '../../services/adminService';
+import { getTutors, listUnlistTutor } from '../../services/adminService';
 
 function TutorListing() {
     const navigate = useNavigate();
@@ -51,7 +51,7 @@ function TutorListing() {
 
     const toggleListState = async (id: string) => {
         try {
-            await listUnlistUser(id);
+            await listUnlistTutor(id);
             setTutors((prevTutors) =>
                 prevTutors.map((tutor) =>
                     tutor._id === id ? { ...tutor, isBlocked: !tutor.isBlocked } : tutor

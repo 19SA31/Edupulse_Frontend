@@ -23,6 +23,10 @@ const adminSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    // Force logout - use this when you need to manually reset state
+    forceLogout: (state) => {
+      return initialState;
+    }
   },
   extraReducers: (builder) => {
     // Handle login action
@@ -42,17 +46,26 @@ const adminSlice = createSlice({
     // Handle logout action
     builder.addCase(logoutAdminAction.pending, (state) => {
       state.loading = true;
+      state.error = null;
     });
+    
+    // IMPORTANT FIX: Return to initial state on both fulfilled and rejected
     builder.addCase(logoutAdminAction.fulfilled, () => {
-      return initialState
+      console.log("Logout fulfilled - resetting state to initial");
+      return initialState; // Completely reset state
     });
+    
     builder.addCase(logoutAdminAction.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload as string; // Set error message on failed logout
+      console.log("Logout rejected - forcing reset anyway");
+      // Even if the API call fails, we should still reset the admin state
+      return {
+        ...initialState,
+        error: action.payload as string || "Logout encountered an error, but you've been logged out locally."
+      };
     });
   },
 });
 
 // Export actions and reducers
-export const { clearError } = adminSlice.actions;
+export const { clearError, forceLogout } = adminSlice.actions;
 export default adminSlice.reducer;

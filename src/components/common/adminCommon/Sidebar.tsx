@@ -3,17 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import logo from "../../../assets/ep-logo.png";
 import { logoutAdminAction } from "../../../redux/actions/adminActions";
+import { AppDispatch } from "../../../redux/store";
 
 function Sidebar() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   const handleLogout = async () => {
     try {
       
       await dispatch(logoutAdminAction());
-      localStorage.removeItem('adminInfo');
-      navigate("/admin/login");
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('admin');
+      navigate("/admin/login",{ replace: true });
+      console.log("Logout successful, redirecting to login page");
     } catch (error) {
       console.error('Error logging out:', error);
     }

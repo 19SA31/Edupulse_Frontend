@@ -6,6 +6,8 @@ import DashboardPage from '../pages/admin/DashboardPage'
 import AdminLayoutPage from '../pages/admin/AdminLayoutPage'
 import UsersListPage from '../pages/admin/UserListPage'
 import TutorsListPage from '../pages/admin/TutorListPage';
+import AdminLoginProtectRoute from './ProtectedRoutes/AdminLoginProtectRoute';
+import AdminProtectRoute from './ProtectedRoutes/AdminProtectRoute';
 
 function AdminRoutes() {
   return (
@@ -13,8 +15,8 @@ function AdminRoutes() {
       <Toaster richColors position="top-center"/>
 
       <Routes>
-        <Route path='login' element={<LoginPage/>}/>
-        <Route path='/' element={<AdminLayoutPage/>}>
+        <Route path='login' element={<AdminLoginProtectRoute><LoginPage/></AdminLoginProtectRoute>}/>
+        <Route path='/' element={<AdminProtectRoute><AdminLayoutPage/></AdminProtectRoute>}>
               <Route path='dashboard' element={<DashboardPage/>}/>
               <Route path='home' element={<AdminLayoutPage/>}/>
               <Route path='usersList' element={<UsersListPage/>}/>
