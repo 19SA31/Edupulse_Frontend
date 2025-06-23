@@ -15,6 +15,7 @@ const ForgotPasswordLayout = ({ role }:ForgotPasswordProps) => {
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
+    console.log(role)
     if (!email) {
       toast.error("Enter email.");
       return;
@@ -22,7 +23,8 @@ const ForgotPasswordLayout = ({ role }:ForgotPasswordProps) => {
     if(role==="user"){
       try {
         const response = await forgotPasswordService(email, true);
-        if (response?.data?.success) {
+        console.log(response)
+        if (response?.success) {
           toast.success("OTP sent successfully");
           setTimeout(() =>
             navigate("/verify-otp", { state: { email, source: "forgotPassword", role } }),
@@ -38,7 +40,8 @@ const ForgotPasswordLayout = ({ role }:ForgotPasswordProps) => {
     }else if(role==="tutor"){
       try {
         const response = await tutorForgotPasswordService(email, true);
-        if (response?.data?.success) {
+        
+        if (response?.success) {
           toast.success("OTP sent successfully");
           setTimeout(() =>
             navigate("/tutor/verify-otp", { state: { email, source: "forgotPassword", role } }),

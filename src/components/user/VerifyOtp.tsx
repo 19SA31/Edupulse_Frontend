@@ -31,14 +31,14 @@ const VerifyOtp = () => {
       }
 
       if(userData.source==="forgotPassword"){
-        if(response?.data?.success){
+        if(response?.success){
           toast.success("OTP Verified Successfully!")
           setTimeout(()=>{
             navigate("/reset-password",{ state: { email: userData.email } })
           })
         }
       }else{
-        if (response?.data?.success) {
+        if (response?.success) {
           toast.success("OTP Verified Successfully!");
           setTimeout(() => {
             navigate("/login");

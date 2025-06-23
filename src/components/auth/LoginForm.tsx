@@ -8,19 +8,17 @@ import logo from "../../assets/epulse.png";
 import bg_img from "../../assets/ep-background.jpg";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
-import { adminLogin } from "../../redux/actions/adminActions"; 
-import { login } from "../../redux/actions/userActions"; 
-import { tutorLogin } from "../../redux/actions/tutorActions"; 
-
+import { adminLogin } from "../../redux/actions/adminActions";
+import { login } from "../../redux/actions/userActions";
+import { tutorLogin } from "../../redux/actions/tutorActions";
 
 interface LoginFormProps {
   role: "admin" | "tutor" | "user";
-  onLoginSuccess: () => void; 
+  onLoginSuccess: () => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
   const dispatch = useDispatch<AppDispatch>();
-  
 
   const navigate = useNavigate();
 
@@ -38,38 +36,39 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
         .required("Password is required"),
     }),
     onSubmit: async (values) => {
-      if(role==="user"){
-  console.log("###role: ",role)
+      if (role === "user") {
+      
 
         dispatch(login({ email: values.email, password: values.password }))
           .unwrap()
           .then((data) => {
-            console.log("Login successful data:", data); 
+            console.log("Login successful data:", data);
             toast.success("User Login Successful!");
             onLoginSuccess();
-            navigate("/dashboard"); // Redirect after success
+            navigate("/");
           })
           .catch((error: any) => {
+            
             const message =
-              error?.data?.message || error?.message || "Login failed.";
+              error ||
+              "Login failed. Please check your credentials.";
             toast.error(message);
           });
-          
-      }else if(role==="tutor"){
+      } else if (role === "tutor") {
         dispatch(tutorLogin({ email: values.email, password: values.password }))
           .unwrap()
           .then(() => {
             toast.success("Tutor Login Successful!");
             onLoginSuccess();
-            navigate("/tutor/dashboard"); // Redirect after success
+            navigate("/tutor/");
           })
           .catch((error: any) => {
             const message =
-              error?.data?.message || error?.message || "Login failed.";
+              error||
+              "Login failed. Please check your credentials.";
             toast.error(message);
           });
-          
-      }else{
+      } else {
         dispatch(adminLogin({ email: values.email, password: values.password }))
           .unwrap()
           .then(() => {
@@ -82,9 +81,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
               error?.data?.message || error?.message || "Login failed.";
             toast.error(message);
           });
-          
       }
-      
     },
   });
 
@@ -123,6 +120,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
                 value={formik.values.email}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
+                autoComplete="email"
                 className="w-full px-4 py-2 border border-white/30 rounded-lg bg-transparent text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               />
               {formik.touched.email && formik.errors.email && (
@@ -143,6 +141,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
                 value={formik.values.password}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
+                autoComplete="current-password"
                 className="w-full px-4 py-2 border border-white/30 rounded-lg bg-transparent text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               />
               {formik.touched.password && formik.errors.password && (
@@ -153,34 +152,27 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
             </div>
 
             <div className="flex justify-between items-center text-sm text-white">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  className="form-checkbox text-blue-500"
-                />
-                <span>Remember me</span>
-              </label>
-              {role==="user" && (
+              <label className="flex items-center space-x-2"></label>
+              {role === "user" && (
                 <>
-                <Link
-                to="/forgot-password"
-                className="text-blue-400 hover:underline"
-              >
-                Forgot password?
-              </Link>
+                  <Link
+                    to="/forgot-password"
+                    className="text-blue-400 hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
                 </>
               )}
-              {role==="tutor" && (
+              {role === "tutor" && (
                 <>
-                <Link
-                to="/tutor/forgot-password"
-                className="text-blue-400 hover:underline"
-              >
-                Forgot password?
-              </Link>
+                  <Link
+                    to="/tutor/forgot-password"
+                    className="text-blue-400 hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
                 </>
               )}
-              
             </div>
 
             <button
@@ -192,29 +184,37 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
 
             <div className="text-center mt-4 text-white">
               Don't have an account?{" "}
-              { role ==="user" &&(
-                
-              <Link to="/register" className="text-blue-400 hover:underline">
-                Sign up
-              </Link>
+              {role === "user" && (
+                <Link to="/register" className="text-blue-400 hover:underline">
+                  Sign up
+                </Link>
               )}
-              { role ==="tutor" &&(
-              <Link to="/tutor/register" className="text-blue-400 hover:underline">
-                Sign up
-              </Link>
+              {role === "tutor" && (
+                <Link
+                  to="/tutor/register"
+                  className="text-blue-400 hover:underline"
+                >
+                  Sign up
+                </Link>
               )}
             </div>
             {role === "user" && (
               <>
                 <div className="text-center mt-4 text-white">
                   Go to{" "}
-                  <Link to="/admin/login" className="text-blue-400 hover:underline">
+                  <Link
+                    to="/admin/login"
+                    className="text-blue-400 hover:underline"
+                  >
                     Admin
                   </Link>
                 </div>
                 <div className="text-center mt-4 text-white">
                   Go to{" "}
-                  <Link to="/tutor/login" className="text-blue-400 hover:underline">
+                  <Link
+                    to="/tutor/login"
+                    className="text-blue-400 hover:underline"
+                  >
                     Tutor
                   </Link>
                 </div>
@@ -225,7 +225,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
               <>
                 <div className="text-center mt-4 text-white">
                   Go to{" "}
-                  <Link to="/admin/login" className="text-blue-400 hover:underline">
+                  <Link
+                    to="/admin/login"
+                    className="text-blue-400 hover:underline"
+                  >
                     Admin
                   </Link>
                 </div>
@@ -248,7 +251,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
                 </div>
                 <div className="text-center mt-4 text-white">
                   Go to{" "}
-                  <Link to="/tutor/login" className="text-blue-400 hover:underline">
+                  <Link
+                    to="/tutor/login"
+                    className="text-blue-400 hover:underline"
+                  >
                     Tutor
                   </Link>
                 </div>

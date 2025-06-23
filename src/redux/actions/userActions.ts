@@ -56,11 +56,14 @@ export const login = createAsyncThunk(
       console.log("loginaction:",result)
       if (result.success) {
         return result.data;
-      } else {
+      } else if(!result.success) {
         return rejectWithValue(result.message || "Login failed");
       }
     } catch (error: any) {
-      return rejectWithValue("Unexpected error occurred.");
+      console.error("Thunk error:", error);
+      return rejectWithValue(
+        error?.response?.data?.message || error?.message || "Unexpected error occurred."
+      );
     }
   }
 );
@@ -69,6 +72,7 @@ export const logout = createAsyncThunk(
   "user/logout",
   async (_, { rejectWithValue }) => {
     try {
+      console.log("inside logout useraction")
       const result = await logoutUser();
       console.log("logoutuser action",result)
       if (result.success) {

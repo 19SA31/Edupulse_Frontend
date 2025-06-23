@@ -11,7 +11,7 @@ const OtpInput: React.FC<OtpInputProps> = ({ onVerify, onResend }) => {
   const [isResendDisabled, setIsResendDisabled] = useState(true);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
+    let timer: number | null = null;
     if (countdown > 0) {
       timer = setInterval(() => {
         setCountdown((prev) => prev - 1);
@@ -56,26 +56,26 @@ const OtpInput: React.FC<OtpInputProps> = ({ onVerify, onResend }) => {
         ))}
       </div>
       {countdown > 0 ? (
-      <>
+        <>
+          <button
+            type="button"
+            className="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl shadow-md hover:bg-blue-700 transition duration-200"
+            onClick={() => onVerify(otp.join(""))}
+          >
+            Verify OTP
+          </button>
+          <p className="text-white text-sm mt-3">Resend OTP in {countdown}s</p>
+        </>
+      ) : (
         <button
           type="button"
-          className="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl shadow-md hover:bg-blue-700 transition duration-200"
-          onClick={() => onVerify(otp.join(""))}
+          className="w-full py-3 bg-gray-600 text-white font-semibold rounded-xl shadow-md hover:bg-gray-700 transition duration-200 disabled:opacity-50"
+          onClick={handleResendClick}
+          disabled={isResendDisabled}
         >
-          Verify OTP
+          Resend OTP
         </button>
-        <p className="text-white text-sm mt-3">Resend OTP in {countdown}s</p>
-      </>
-    ) : (
-      <button
-        type="button"
-        className="w-full py-3 bg-gray-600 text-white font-semibold rounded-xl shadow-md hover:bg-gray-700 transition duration-200 disabled:opacity-50"
-        onClick={handleResendClick}
-        disabled={isResendDisabled}
-      >
-        Resend OTP
-      </button>
-    )}
+      )}
     </div>
   );
 };

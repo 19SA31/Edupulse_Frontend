@@ -21,6 +21,7 @@ const VerifyOtp = () => {
       let response;
       if (userData?.source === "forgotPassword") {
         response = await tutorVerifyForgotOtpService(userData.email, otp, true);
+        console.log("tutorVerifyForgotOtpService",response)
       } else {
         response = await tutorVerifyOtpService(
           userData.name,
@@ -32,14 +33,14 @@ const VerifyOtp = () => {
       }
 
       if(userData.source==="forgotPassword"){
-        if(response?.data?.success){
+        if(response?.success){
           toast.success("OTP Verified Successfully!")
           setTimeout(()=>{
             navigate("/tutor/reset-password",{ state: { email: userData.email } })
           })
         }
       }else{
-        if (response?.data?.success) {
+        if (response?.success) {
           toast.success("OTP Verified Successfully!");
           setTimeout(() => {
             navigate("/tutor/login");

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const TutorLogin = () => {
   const navigate = useNavigate();
-  return <LoginForm role="tutor" onLoginSuccess={() => navigate("/tutor/dashboard")} />;
+  return <LoginForm role="tutor" onLoginSuccess={() => navigate("/tutor/")} />;
 };
 
 export default TutorLogin;

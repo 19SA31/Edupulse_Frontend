@@ -52,6 +52,7 @@ export const tutorLoginService = async (email: string, password: string) => {
 // Tutor Logout
 export const logoutTutor = async () => {
   const response = await tutorAxiosInstance.post("/tutor/logout");
+  console.log("inside logouttutorservice",response)
   return response.data;
 };
 
@@ -75,6 +76,7 @@ export const tutorVerifyForgotOtpService = async (
     otp,
     isForgot,
   });
+  console.log("tutorVerifyForgotOtpService:",response.data)
   return response.data;
 };
 

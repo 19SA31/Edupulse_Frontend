@@ -1,29 +1,65 @@
-import React from 'react'
-import { Routes, Route } from 'react-router-dom'
-import Login from '../pages/user/LoginPage'
-import Register from '../pages/user/RegisterPage'
-import VerifyOtp from '../pages/user/VerifyOtpPage'
-import Dashboard from '../pages/user/DashboardPage'
-import ForgotPassword from '../components/user/ForgotPassword'
-import { Toaster } from 'sonner';
-import PasswordUpdate from '../components/user/PasswordUpdate'
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+import Login from "../pages/user/LoginPage";
+import Register from "../pages/user/RegisterPage";
+import VerifyOtp from "../pages/user/VerifyOtpPage";
+import Dashboard from "../pages/user/DashboardPage";
+import ForgotPassword from "../components/user/ForgotPassword";
+import PasswordUpdate from "../components/user/PasswordUpdate";
+import HomePage from "../pages/user/HomePage";
+import UserLoginProtectRoute from "./ProtectedRoutes/UserLoginProtectedRoute";
+import UserProtectRoute from "./ProtectedRoutes/UserProtectRoute";
+import { Toaster } from "sonner";
 
 function UserRoutes() {
   return (
     <div>
-      
-      <Toaster richColors position="top-center"/>
-      
+      <Toaster richColors position="top-center" />
+
       <Routes>
-        <Route path='login' element={<Login />} />
-        <Route path='register' element={<Register />} />
-        <Route path="verify-otp" element={<VerifyOtp />} />
-        <Route path='dashboard' element={<Dashboard/>}/>
-        <Route path='forgot-password' element={<ForgotPassword/>}/>
-        <Route path='reset-password' element={<PasswordUpdate/>}/>
+        <Route path="" element={<HomePage />} />
+
+        <Route
+          path="login"
+          element={
+            <UserLoginProtectRoute>
+              <Login />
+            </UserLoginProtectRoute>
+          }
+        />
+
+        <Route
+          path="register"
+          element={
+            <UserLoginProtectRoute>
+              <Register />
+            </UserLoginProtectRoute>
+          }
+        />
+
+        <Route
+          path="verify-otp"
+          element={
+            <UserLoginProtectRoute>
+              <VerifyOtp />
+            </UserLoginProtectRoute>
+          }
+        />
+
+        <Route
+          path="dashboard"
+          element={
+            <UserProtectRoute>
+              <Dashboard />
+            </UserProtectRoute>
+          }
+        />
+
+        <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="reset-password" element={<PasswordUpdate />} />
       </Routes>
     </div>
-  )
+  );
 }
 
 export default UserRoutes;

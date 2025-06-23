@@ -37,7 +37,7 @@ const PasswordUpdateLayout: React.FC<PasswordUpdateProps> = ({ role }) => {
           const response = await passwordChangeService(email, values.password);
           console.log("Response:", response);
   
-          if (response?.data?.success) {
+          if (response?.success) {
             toast.success("Password updated successfully!");
             navigate("/login");
           }
@@ -50,7 +50,7 @@ const PasswordUpdateLayout: React.FC<PasswordUpdateProps> = ({ role }) => {
           const response = await tutorPasswordChangeService(email, values.password);
           console.log("Response:", response);
   
-          if (response?.data?.success) {
+          if (response?.success) {
             toast.success("Password updated successfully!");
             navigate("/tutor/login");
           }

@@ -16,7 +16,7 @@ const initialState: TutorState = {
   isAuthenticated: false
 };
 
-const userSlice = createSlice({
+const tutorSlice = createSlice({
   name: "tutor",
   initialState,
   reducers: {
@@ -61,5 +61,5 @@ const userSlice = createSlice({
   }
 });
 
-export const { clearError } = userSlice.actions;
-export default userSlice.reducer;
+export const { clearError } = tutorSlice.actions;
+export default tutorSlice.reducer;
