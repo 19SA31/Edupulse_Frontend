@@ -61,6 +61,7 @@ export const loginService = async (email: string, password: string) => {
     password,
   });
   console.log("inside login servicefor user: ",response.data)
+  
   if (response.data.success) {
     localStorage.setItem("accessToken", response.data.accessToken);
     localStorage.setItem("user", JSON.stringify(response.data.user));
