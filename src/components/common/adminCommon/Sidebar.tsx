@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { FaPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import logo from "../../../assets/ep-logo.png";
@@ -11,14 +12,13 @@ function Sidebar() {
 
   const handleLogout = async () => {
     try {
-      
       await dispatch(logoutAdminAction());
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('admin');
-      navigate("/admin/login",{ replace: true });
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("admin");
+      navigate("/admin/login", { replace: true });
       console.log("Logout successful, redirecting to login page");
     } catch (error) {
-      console.error('Error logging out:', error);
+      console.error("Error logging out:", error);
     }
   };
   return (
@@ -50,11 +50,7 @@ function Sidebar() {
                 </svg>
               </button>
               <a className="flex ms-18 md:me-24">
-                <img 
-                  src={logo} 
-                  alt="Edupulse Logo" 
-                  className="h-8" 
-                />
+                <img src={logo} alt="Edupulse Logo" className="h-8" />
               </a>
             </div>
             <div className="flex items-center">
@@ -79,10 +75,7 @@ function Sidebar() {
                   id="dropdown-user"
                 >
                   <div className="px-4 py-3" role="none">
-                    <p
-                      className="text-sm text-white"
-                      role="none"
-                    >
+                    <p className="text-sm text-white" role="none">
                       Neil Sims
                     </p>
                     <p
@@ -155,7 +148,7 @@ function Sidebar() {
               <NavLink
                 to="/admin/dashboard"
                 className={({ isActive }: { isActive: boolean }) =>
-                  `flex items-center p-2 rounded-lg group ${
+                  `group-hover:text-yellow-400 flex items-center p-2 rounded-lg group  ${
                     isActive
                       ? "bg-gray-800 text-yellow-400"
                       : "text-gray-300 hover:bg-gray-800"
@@ -163,9 +156,12 @@ function Sidebar() {
                 }
               >
                 <svg
-                  className={`w-5 h-5 transition duration-75 ${
-                    (isActive: boolean) => isActive ? "text-yellow-400" : "text-gray-400 group-hover:text-white"
-                  }`}
+                  className={`w-5 h-5 transition duration-75 ${(
+                    isActive: boolean
+                  ) =>
+                    isActive
+                      ? "text-yellow-400"
+                      : "text-gray-400 group-hover:text-white"}`}
                   aria-hidden="true"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="currentColor"
@@ -189,9 +185,12 @@ function Sidebar() {
                 }
               >
                 <svg
-                  className={`flex-shrink-0 w-5 h-5 transition duration-75 ${
-                    (isActive: boolean) => isActive ? "text-yellow-400" : "text-gray-400 group-hover:text-white"
-                  }`}
+                  className={`group-hover:text-yellow-400 flex-shrink-0 w-5 h-5 transition duration-75 ${(
+                    isActive: boolean
+                  ) =>
+                    isActive
+                      ? "text-yellow-400"
+                      : "text-gray-400 group-hover:text-white"}`}
                   aria-hidden="true"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="currentColor"
@@ -216,9 +215,12 @@ function Sidebar() {
                 }
               >
                 <svg
-                  className={`flex-shrink-0 w-5 h-5 transition duration-75 ${
-                    (isActive: boolean) => isActive ? "text-yellow-400" : "text-gray-400 group-hover:text-white"
-                  }`}
+                  className={`group-hover:text-yellow-400 flex-shrink-0 w-5 h-5 transition duration-75 ${(
+                    isActive: boolean
+                  ) =>
+                    isActive
+                      ? "text-yellow-400"
+                      : "text-gray-400 group-hover:text-white"}`}
                   aria-hidden="true"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="currentColor"
@@ -227,6 +229,23 @@ function Sidebar() {
                   <path d="M8 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM8 10C6.346 10 0 11.022 0 13v2.98C0 16.548 0 17 0 17h12c0 0 0-.452 0-1.02V13c0-1.978-6.346-3-8-3Zm6.5-1a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm-1.882 1.598A5.028 5.028 0 0 1 16.048 12H20v4.98C20 16.548 20 17 20 17h-6v-1.02a5.992 5.992 0 0 0-1.382-4.382Z" />
                 </svg>
                 <span className="flex-1 ms-3 whitespace-nowrap">Users</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/admin/addCourseCategory"
+                className={({ isActive }: { isActive: boolean }) =>
+                  `flex items-center p-2 rounded-lg group ${
+                    isActive
+                      ? "bg-gray-800 text-yellow-400"
+                      : "text-gray-300 hover:bg-gray-800"
+                  }`
+                }
+              >
+                <FaPlus className="w-5 h-5 text-gray-400 group-hover:text-yellow-400" />
+                <span className="flex-1 ms-3 whitespace-nowrap">
+                  Add Course
+                </span>
               </NavLink>
             </li>
           </ul>

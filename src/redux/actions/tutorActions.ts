@@ -81,9 +81,9 @@ export const logoutTutorAction = createAsyncThunk(
   "tutor/logout",
   async (_, { rejectWithValue }) => {
     try {
-      console.log("inside logout tutor action");
+      
       const result = await logoutTutor();
-      console.log("logouttutor action", result);
+      
       if (result.success) {
         return result.data || result.message;
       } else {

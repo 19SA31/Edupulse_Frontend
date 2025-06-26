@@ -2,7 +2,7 @@ import { adminAxiosInstance } from "../api/adminAxiosInstance";
 import axios from "axios";
 
 export const adminLoginService = async (email: string, password: string) => {
-  const response = await adminAxiosInstance.post("/admin/login", {
+  const response = await adminAxiosInstance.post("/login", {
     email,
     password,
   });
@@ -16,27 +16,60 @@ export const adminLoginService = async (email: string, password: string) => {
 };
 
 export const logoutAdmin = async () => {
-  console.log("inside adminlogout service")
-  const response = await adminAxiosInstance.post("/admin/logout");
+  
+  const response = await adminAxiosInstance.post("/logout");
   return response.data;
 };
 
 export const getUsers = (page: number, search: string) => {
-  return adminAxiosInstance.get("/admin/getUsers", {
+  return adminAxiosInstance.get("/users", {
     params: { page, limit: 7, search },
   });
 };
 
 export const listUnlistUser = (id: string) => {
-  return adminAxiosInstance.put(`/admin/listUnlistUser/${id}`);
+  return adminAxiosInstance.put(`/listUnlistUser/${id}`);
 };
 
 export const getTutors = (page: number, search: string) => {
-  return adminAxiosInstance.get("/admin/getTutors", {
+  return adminAxiosInstance.get("/tutors", {
     params: { page, limit: 7, search },
   });
 };
 
 export const listUnlistTutor = (id: string) => {
-  return adminAxiosInstance.put(`/admin/listUnlistTutor/${id}`);
+  return adminAxiosInstance.put(`/listUnlistTutor/${id}`);
+};
+
+export const getCategories = (page: number, search: string) => {
+  return adminAxiosInstance.get("/category", {
+    params: { page, limit: 10, search },
+  });
+};
+
+export const addCategoryService = async (name: string, description: string) => {
+  const response = await adminAxiosInstance.post("/add-category", {
+    name,
+    description,
+  });
+
+  return response.data;
+};
+
+export const toggleCategoryStatus = async (id: string) => {
+  const response = await adminAxiosInstance.put(`/toggle-category/${id}`);
+  return response.data;
+};
+
+
+export const updateCategoryService = async (
+  id: string, 
+  name: string, 
+  description: string
+) => {
+  const response = await adminAxiosInstance.put(`/update-category/${id}`, {
+    name,
+    description,
+  });
+  return response.data;
 };

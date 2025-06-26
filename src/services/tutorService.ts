@@ -7,7 +7,7 @@ export const tutorSignUpService = async (
   phone: string,
   password: string
 ) => {
-  const response = await tutorAxiosInstance.post("/tutor/send-otp", {
+  const response = await tutorAxiosInstance.post("/send-otp", {
     name,
     email,
     phone,
@@ -24,7 +24,7 @@ export const tutorVerifyOtpService = async (
   password: string,
   otp: string
 ) => {
-  const response = await tutorAxiosInstance.post("/tutor/verify-otp", {
+  const response = await tutorAxiosInstance.post("/verify-otp", {
     name,
     email,
     phone,
@@ -36,7 +36,7 @@ export const tutorVerifyOtpService = async (
 
 // Tutor Login
 export const tutorLoginService = async (email: string, password: string) => {
-  const response = await tutorAxiosInstance.post("/tutor/login", {
+  const response = await tutorAxiosInstance.post("/login", {
     email,
     password,
   });
@@ -51,14 +51,14 @@ export const tutorLoginService = async (email: string, password: string) => {
 
 // Tutor Logout
 export const logoutTutor = async () => {
-  const response = await tutorAxiosInstance.post("/tutor/logout");
+  const response = await tutorAxiosInstance.post("/logout");
   console.log("inside logouttutorservice",response)
   return response.data;
 };
 
 // Forgot Password - Send OTP
 export const tutorForgotPasswordService = async (email: string, isForgot: boolean) => {
-  const response = await tutorAxiosInstance.post("/tutor/send-otp", {
+  const response = await tutorAxiosInstance.post("/send-otp", {
     email,
     isForgot,
   });
@@ -71,7 +71,7 @@ export const tutorVerifyForgotOtpService = async (
   otp: string,
   isForgot: boolean
 ) => {
-  const response = await tutorAxiosInstance.post("/tutor/verify-otp", {
+  const response = await tutorAxiosInstance.post("/verify-otp", {
     email,
     otp,
     isForgot,
@@ -82,7 +82,7 @@ export const tutorVerifyForgotOtpService = async (
 
 // Reset Password
 export const tutorPasswordChangeService = async (email: string, password: string) => {
-  const response = await tutorAxiosInstance.patch("/tutor/reset-password", {
+  const response = await tutorAxiosInstance.patch("/reset-password", {
     email,
     password,
   });

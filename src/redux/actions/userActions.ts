@@ -51,9 +51,9 @@ export const login = createAsyncThunk(
   "user/login",
   async ({ email, password }: UserLogin, { rejectWithValue }) => {
     try {
-      console.log("inside user login action")
+      
       const result = await loginService(email, password);
-      console.log("loginaction:",result)
+      
       if (result.success) {
         return result.data;
       } else if(!result.success) {
@@ -72,9 +72,9 @@ export const logout = createAsyncThunk(
   "user/logout",
   async (_, { rejectWithValue }) => {
     try {
-      console.log("inside logout useraction")
+      
       const result = await logoutUser();
-      console.log("logoutuser action",result)
+      
       if (result.success) {
         return result;
       } else {

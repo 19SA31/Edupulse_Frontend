@@ -7,7 +7,7 @@ export const signUpService = async (
   phone: string,
   password: string
 ) =>{
-  const response = await userAxiosInstance.post("/user/send-otp", {
+  const response = await userAxiosInstance.post("/send-otp", {
     name,
     email,
     phone,
@@ -24,7 +24,7 @@ export const verifyOtpService = async (
   password: string,
   otp: string
 ) => {
-  const response = await userAxiosInstance.post("/user/verify-otp", {
+  const response = await userAxiosInstance.post("/verify-otp", {
     name,
     email,
     phone,
@@ -35,7 +35,7 @@ export const verifyOtpService = async (
 };
 
 export const forgotPasswordService = async (email: string, isForgot: boolean) => {
-  const response = await userAxiosInstance.post("/user/send-otp", {
+  const response = await userAxiosInstance.post("/send-otp", {
     email,
     isForgot,
   });
@@ -47,7 +47,7 @@ export const verifyForgotOtpService = async (
   otp: string,
   isForgot: boolean
 ) => {
-  const response = await userAxiosInstance.post("/user/verify-otp", {
+  const response = await userAxiosInstance.post("/verify-otp", {
     email,
     otp,
     isForgot,
@@ -56,7 +56,7 @@ export const verifyForgotOtpService = async (
 };
 
 export const loginService = async (email: string, password: string) => {
-  const response = await userAxiosInstance.post("/user/login", {
+  const response = await userAxiosInstance.post("/login", {
     email,
     password,
   });
@@ -71,7 +71,7 @@ export const loginService = async (email: string, password: string) => {
 };
 
 export const passwordChangeService = async (email: string, password: string) => {
-  const response = await userAxiosInstance.patch("/user/reset-password", {
+  const response = await userAxiosInstance.patch("/reset-password", {
     email,
     password,
   });
@@ -80,7 +80,7 @@ export const passwordChangeService = async (email: string, password: string) => 
 
 export const logoutUser = async () => {
   console.log("inside logout user service")
-  const response = await userAxiosInstance.post("/user/logout");
+  const response = await userAxiosInstance.post("/logout");
   console.log("response",response)
   return response.data;
 };

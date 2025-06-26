@@ -10,3 +10,17 @@ export interface AdminState{
     loading: boolean;
     error: string | null;
 }
+
+export interface Category {
+  _id: string;
+  name: string;
+  description: string;
+  isListed: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CategoryFormData {
+  name: string;
+  description: string;
+}
