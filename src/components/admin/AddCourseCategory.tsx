@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { logoutAdminAction } from "../../redux/actions/adminActions";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
-import { getCategories, addCategoryService, updateCategoryService } from "../../services/adminService";
+import { getCategories, addCategoryService, updateCategoryService,toggleCategoryStatus } from "../../services/adminService";
 import { Category } from "../../interfaces/adminInterface";
 
 function AddCourseCategory() {
@@ -133,26 +133,30 @@ function AddCourseCategory() {
     fetchCategories(currentPage, searchQuery);
   }, [currentPage]);
 
-  // Category listing handlers
+  
   const toggleListState = async (id: string) => {
-    try {
-      console.log("Toggling category state:", id);
+  try {
+    console.log("Toggling category state:", id);
 
-      // You'll need to implement this API call in your adminService
-      // For now, just updating the local state
+    const result = await toggleCategoryStatus(id);
+
+    if (result.success) {
+      
       setCategories((prevCategories) =>
         prevCategories.map((category) =>
-          category._id === id
-            ? { ...category, isListed: !category.isListed }
-            : category
+          category._id === id ? result.data : category
         )
       );
-      toast.success("Category status updated successfully!");
-    } catch (error) {
-      console.error("Error toggling category list state:", error);
-      toast.error("Failed to update category status");
+      toast.success(result.message || "Category status updated successfully!");
+    } else {
+      throw new Error(result.message || 'Failed to update category status');
     }
-  };
+  } catch (error: any) {
+    console.error("Error toggling category list state:", error);
+    toast.error(error.message || "Failed to update category status");
+    
+  }
+};
 
   // Edit functionality
   const handleEditCategory = (category: Category) => {
@@ -167,11 +171,7 @@ function AddCourseCategory() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleCancelEdit = () => {
-    setIsEditMode(false);
-    setEditingCategoryId(null);
-    formik.resetForm();
-  };
+  
 
   const handlePagination = (direction: string) => {
     if (direction === "next" && currentPage < totalPages) {

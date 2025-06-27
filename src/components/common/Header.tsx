@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from "react";
 import logo from "../../assets/ep-logo.png";
-import img from '../../assets/unknown-user.jpg'
-import { Link, useNavigate } from 'react-router-dom'
-import { toast } from 'sonner';
+import img from "../../assets/unknown-user.jpg";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
 import { logout } from "../../redux/actions/userActions";
@@ -16,26 +16,26 @@ function Header({ role = null }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
-  const [userImage, setUserImage] = useState<string>('');
+  const [userImage, setUserImage] = useState<string>("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  
+
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
-    console.log(role)
+    console.log(role);
     // Check authentication status and get user data
     const checkAuthStatus = () => {
       const accessToken = localStorage.getItem("accessToken");
       let userData = null;
-      
+
       if (accessToken) {
         if (role === "tutor") {
           userData = localStorage.getItem("tutor");
         } else {
           userData = localStorage.getItem("user");
         }
-        
+
         if (userData) {
           try {
             const user = JSON.parse(userData);
@@ -61,43 +61,40 @@ function Header({ role = null }: HeaderProps) {
     e.preventDefault();
     e.stopPropagation();
     console.log("inside handlelogout");
-    
+
     try {
       if (role === "user") {
-        
         localStorage.removeItem("accessToken");
         localStorage.removeItem("user");
         await dispatch(logout()).unwrap();
         navigate("/login");
       } else if (role === "tutor") {
-        
         localStorage.removeItem("accessToken");
         localStorage.removeItem("tutor");
         await dispatch(logoutTutorAction()).unwrap();
         navigate("/tutor/login");
       }
-      
+
       setIsLoggedIn(false);
       setUserName(null);
       setIsProfileOpen(false);
       toast.success("Logged out successfully");
     } catch (error) {
       console.error("Logout failed:", error);
-    
-    if (typeof error === 'string' && error.includes('Successfully')) {
-      
-      setIsLoggedIn(false);
-      setUserName(null);
-      setIsProfileOpen(false);
-      toast.success("Logged out successfully");
-      if (role === "tutor") {
-        navigate("/tutor/login");
+
+      if (typeof error === "string" && error.includes("Successfully")) {
+        setIsLoggedIn(false);
+        setUserName(null);
+        setIsProfileOpen(false);
+        toast.success("Logged out successfully");
+        if (role === "tutor") {
+          navigate("/tutor/login");
+        } else {
+          navigate("/login");
+        }
       } else {
-        navigate("/login");
+        toast.error("Logout failed");
       }
-    } else {
-      toast.error("Logout failed");
-    }
     }
   };
 
@@ -108,7 +105,6 @@ function Header({ role = null }: HeaderProps) {
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center bg-black text-white p-4 shadow-xl">
-      
       <div>
         <Link to="/">
           <img src={logo} alt="Logo" className="w-max h-7" />
@@ -156,7 +152,7 @@ function Header({ role = null }: HeaderProps) {
               Services
             </button>
           </li>
-          
+
           {/* Mobile auth section */}
           <li className="block md:hidden">
             {isLoggedIn ? (
@@ -204,7 +200,7 @@ function Header({ role = null }: HeaderProps) {
               <span className="text-white">{userName}</span>
               <svg
                 className={`w-4 h-4 text-white transition-transform duration-200 ${
-                  isProfileOpen ? 'rotate-180' : ''
+                  isProfileOpen ? "rotate-180" : ""
                 }`}
                 fill="none"
                 stroke="currentColor"
@@ -221,13 +217,16 @@ function Header({ role = null }: HeaderProps) {
 
             {/* Dropdown menu */}
             {isProfileOpen && (
-              <div 
+              <div
                 className="cursor-pointer absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg border border-gray-700 z-50"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="px-4 py-2 border-b border-gray-700">
-                  <p className="text-sm text-gray-300">Profile</p>
-                </div>
+                <Link
+                  to="/user/profile"
+                  className="block px-4 py-2 border-b border-gray-700 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200"
+                >
+                  Profile
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors duration-200"
@@ -255,7 +254,7 @@ function Header({ role = null }: HeaderProps) {
         />
       )}
     </header>
-  )
+  );
 }
 
-export default Header
+export default Header;

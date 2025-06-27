@@ -67,6 +67,7 @@ export const updateCategoryService = async (
   name: string, 
   description: string
 ) => {
+  
   const response = await adminAxiosInstance.put(`/update-category/${id}`, {
     name,
     description,

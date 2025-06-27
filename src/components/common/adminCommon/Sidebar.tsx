@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { FaPlus } from "react-icons/fa";
+import { FaChalkboardTeacher } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import logo from "../../../assets/ep-logo.png";
@@ -184,23 +185,18 @@ function Sidebar() {
                   }`
                 }
               >
-                <svg
-                  className={`group-hover:text-yellow-400 flex-shrink-0 w-5 h-5 transition duration-75 ${(
-                    isActive: boolean
-                  ) =>
-                    isActive
-                      ? "text-yellow-400"
-                      : "text-gray-400 group-hover:text-white"}`}
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M19 3H5a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 12H5V5h14v10z" />
-                  <path d="M7 12h8v2H7zm0-3h10v1H7zm0-3h10v1H7zm-3 8.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z" />
-                </svg>
-
-                <span className="ms-3">Tutors</span>
+                {({ isActive }) => (
+                  <>
+                    <FaChalkboardTeacher
+                      className={`w-5 h-5 flex-shrink-0 transition duration-75 ${
+                        isActive
+                          ? "text-yellow-400"
+                          : "text-gray-400 group-hover:text-white"
+                      }`}
+                    />
+                    <span className="ms-3">Tutors</span>
+                  </>
+                )}
               </NavLink>
             </li>
             <li>
@@ -242,10 +238,20 @@ function Sidebar() {
                   }`
                 }
               >
-                <FaPlus className="w-5 h-5 text-gray-400 group-hover:text-yellow-400" />
-                <span className="flex-1 ms-3 whitespace-nowrap">
-                  Add Course
-                </span>
+                {({ isActive }) => (
+                  <>
+                    <FaPlus
+                      className={`w-5 h-5 flex-shrink-0 transition duration-75 ${
+                        isActive
+                          ? "text-yellow-400"
+                          : "text-gray-400 group-hover:text-white"
+                      }`}
+                    />
+                    <span className="flex-1 ms-3 whitespace-nowrap">
+                      Add Course
+                    </span>
+                  </>
+                )}
               </NavLink>
             </li>
           </ul>
