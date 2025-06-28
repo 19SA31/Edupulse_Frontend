@@ -6,7 +6,12 @@ import { toast } from "sonner";
 import { logoutAdminAction } from "../../redux/actions/adminActions";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
-import { getCategories, addCategoryService, updateCategoryService,toggleCategoryStatus } from "../../services/adminService";
+import {
+  getCategories,
+  addCategoryService,
+  updateCategoryService,
+  toggleCategoryStatus,
+} from "../../services/adminService";
 import { Category } from "../../interfaces/adminInterface";
 
 function AddCourseCategory() {
@@ -19,10 +24,12 @@ function AddCourseCategory() {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
-  
+
   // Edit mode states
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
+    null
+  );
 
   // Formik configuration
   const formik = useFormik({
@@ -42,11 +49,14 @@ function AddCourseCategory() {
     }),
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
-        console.log(isEditMode ? "inside editcategory" : "inside addcategory", values);
-        
+        console.log(
+          isEditMode ? "inside editcategory" : "inside addcategory",
+          values
+        );
+
         let response;
         if (isEditMode && editingCategoryId) {
-          // Update existing category
+          
           response = await updateCategoryService(
             editingCategoryId,
             values.name.trim(),
@@ -61,22 +71,24 @@ function AddCourseCategory() {
         }
 
         if (response.success) {
-          // Reset form and edit state
+          
           resetForm();
           setIsEditMode(false);
           setEditingCategoryId(null);
-          
+
           toast.success(
-            isEditMode 
-              ? "Category updated successfully!" 
+            isEditMode
+              ? "Category updated successfully!"
               : "Category added successfully!"
           );
 
-          // Refresh categories list
+          
           await fetchCategories(currentPage, searchQuery);
 
           console.log(
-            isEditMode ? "Category updated successfully:" : "Category added successfully:", 
+            isEditMode
+              ? "Category updated successfully:"
+              : "Category added successfully:",
             response.data
           );
         }
@@ -86,11 +98,16 @@ function AddCourseCategory() {
           await dispatch(logoutAdminAction());
           navigate("/admin/login");
         } else {
-          console.error(isEditMode ? "Error updating category:" : "Error adding category:", error);
+          console.error(
+            isEditMode ? "Error updating category:" : "Error adding category:",
+            error
+          );
           const message =
             error?.response?.data?.message ||
             error?.message ||
-            `Failed to ${isEditMode ? 'update' : 'add'} category. Please try again.`;
+            `Failed to ${
+              isEditMode ? "update" : "add"
+            } category. Please try again.`;
           toast.error(message);
         }
       } finally {
@@ -104,13 +121,21 @@ function AddCourseCategory() {
       setLoading(true);
       console.log("Fetching categories, page:", page, "search:", search);
 
-      // Use actual API call instead of mock data
       const response = await getCategories(page, search);
+      console.log("Full response:", response); 
 
-      if (response.data && response.data.response) {
-        setCategories(response.data.response.category || []);
-        setTotalPages(response.data.response.totalPages || 1);
+      
+      if (response.data && response.data.success && response.data.data) {
+        
+        const { category, totalPages } = response.data.data;
+
+        setCategories(category || []);
+        setTotalPages(totalPages || 1);
+
+        console.log("Categories set:", category);
+        console.log("Total pages:", totalPages);
       } else {
+        console.log("Response unsuccessful or no data");
         setCategories([]);
         setTotalPages(1);
       }
@@ -133,30 +158,29 @@ function AddCourseCategory() {
     fetchCategories(currentPage, searchQuery);
   }, [currentPage]);
 
-  
   const toggleListState = async (id: string) => {
-  try {
-    console.log("Toggling category state:", id);
+    try {
+      console.log("Toggling category state:", id);
 
-    const result = await toggleCategoryStatus(id);
+      const result = await toggleCategoryStatus(id);
 
-    if (result.success) {
-      
-      setCategories((prevCategories) =>
-        prevCategories.map((category) =>
-          category._id === id ? result.data : category
-        )
-      );
-      toast.success(result.message || "Category status updated successfully!");
-    } else {
-      throw new Error(result.message || 'Failed to update category status');
+      if (result.success) {
+        setCategories((prevCategories) =>
+          prevCategories.map((category) =>
+            category._id === id ? result.data : category
+          )
+        );
+        toast.success(
+          result.message || "Category status updated successfully!"
+        );
+      } else {
+        throw new Error(result.message || "Failed to update category status");
+      }
+    } catch (error: any) {
+      console.error("Error toggling category list state:", error);
+      toast.error(error.message || "Failed to update category status");
     }
-  } catch (error: any) {
-    console.error("Error toggling category list state:", error);
-    toast.error(error.message || "Failed to update category status");
-    
-  }
-};
+  };
 
   // Edit functionality
   const handleEditCategory = (category: Category) => {
@@ -166,12 +190,10 @@ function AddCourseCategory() {
       name: category.name,
       description: category.description,
     });
-    
-    // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
-  
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const handlePagination = (direction: string) => {
     if (direction === "next" && currentPage < totalPages) {
@@ -206,7 +228,6 @@ function AddCourseCategory() {
             <h2 className="text-xl font-semibold text-gray-800">
               {isEditMode ? "Edit Category" : "Add New Category"}
             </h2>
-            
           </div>
 
           <form onSubmit={formik.handleSubmit} className="p-6">
@@ -235,7 +256,9 @@ function AddCourseCategory() {
                   disabled={formik.isSubmitting}
                 />
                 {formik.touched.name && formik.errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{formik.errors.name}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {formik.errors.name}
+                  </p>
                 )}
               </div>
 
@@ -285,10 +308,13 @@ function AddCourseCategory() {
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={formik.isSubmitting}
               >
-                {formik.isSubmitting 
-                  ? (isEditMode ? "Updating..." : "Adding...") 
-                  : (isEditMode ? "Update Category" : "Add Category")
-                }
+                {formik.isSubmitting
+                  ? isEditMode
+                    ? "Updating..."
+                    : "Adding..."
+                  : isEditMode
+                  ? "Update Category"
+                  : "Add Category"}
               </button>
             </div>
           </form>

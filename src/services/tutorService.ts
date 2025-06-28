@@ -7,13 +7,22 @@ export const tutorSignUpService = async (
   phone: string,
   password: string
 ) => {
-  const response = await tutorAxiosInstance.post("/send-otp", {
-    name,
-    email,
-    phone,
-    password,
-  });
-  return response.data;
+  try {
+    const response = await tutorAxiosInstance.post("/send-otp", {
+      name,
+      email,
+      phone,
+      password,
+    });
+    console.log("inside tutor signup service");
+    return response.data;
+  } catch (error: any) {
+    // Return the error response data if available, otherwise throw
+    if (error.response?.data) {
+      return error.response.data;
+    }
+    throw error;
+  }
 };
 
 // Tutor OTP Verification
@@ -24,45 +33,84 @@ export const tutorVerifyOtpService = async (
   password: string,
   otp: string
 ) => {
-  const response = await tutorAxiosInstance.post("/verify-otp", {
-    name,
-    email,
-    phone,
-    password,
-    otp,
-  });
-  return response.data;
+  try {
+    const response = await tutorAxiosInstance.post("/verify-otp", {
+      name,
+      email,
+      phone,
+      password,
+      otp,
+    });
+    console.log("inside tutor verify OTP service");
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data) {
+      return error.response.data;
+    }
+    throw error;
+  }
 };
 
 // Tutor Login
 export const tutorLoginService = async (email: string, password: string) => {
-  const response = await tutorAxiosInstance.post("/login", {
-    email,
-    password,
-  });
+  try {
+    const response = await tutorAxiosInstance.post("/login", {
+      email,
+      password,
+    });
 
-  if (response.data.success) {
-    localStorage.setItem("accessToken", response.data.accessToken);
-    localStorage.setItem("tutor", JSON.stringify(response.data.tutor));
+    if (response.data.success && response.data.data) {
+      // Updated to match the new controller response structure
+      localStorage.setItem("accessToken", response.data.data.accessToken);
+      localStorage.setItem("tutor", JSON.stringify(response.data.data.tutor));
+    }
+
+    console.log("inside tutor login service");
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data) {
+      return error.response.data;
+    }
+    throw error;
   }
-
-  return response.data;
 };
 
 // Tutor Logout
 export const logoutTutor = async () => {
-  const response = await tutorAxiosInstance.post("/logout");
-  console.log("inside logouttutorservice",response)
-  return response.data;
+  try {
+    const response = await tutorAxiosInstance.post("/logout");
+    console.log("inside logout tutor service", response);
+    
+    // Clear localStorage on successful logout
+    if (response.data.success) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("tutor");
+    }
+    
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data) {
+      return error.response.data;
+    }
+    throw error;
+  }
 };
 
 // Forgot Password - Send OTP
 export const tutorForgotPasswordService = async (email: string, isForgot: boolean) => {
-  const response = await tutorAxiosInstance.post("/send-otp", {
-    email,
-    isForgot,
-  });
-  return response.data;
+  try {
+    const response = await tutorAxiosInstance.post("/send-otp", {
+      email,
+      isForgot,
+    });
+    console.log("inside tutor forgot password service");
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data) {
+      return error.response.data;
+    }
+    throw error;
+  }
 };
 
 // Forgot Password - Verify OTP
@@ -71,20 +119,35 @@ export const tutorVerifyForgotOtpService = async (
   otp: string,
   isForgot: boolean
 ) => {
-  const response = await tutorAxiosInstance.post("/verify-otp", {
-    email,
-    otp,
-    isForgot,
-  });
-  console.log("tutorVerifyForgotOtpService:",response.data)
-  return response.data;
+  try {
+    const response = await tutorAxiosInstance.post("/verify-otp", {
+      email,
+      otp,
+      isForgot,
+    });
+    console.log("tutorVerifyForgotOtpService:", response.data);
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data) {
+      return error.response.data;
+    }
+    throw error;
+  }
 };
 
 // Reset Password
 export const tutorPasswordChangeService = async (email: string, password: string) => {
-  const response = await tutorAxiosInstance.patch("/reset-password", {
-    email,
-    password,
-  });
-  return response.data;
+  try {
+    const response = await tutorAxiosInstance.patch("/reset-password", {
+      email,
+      password,
+    });
+    console.log("inside tutor password change service");
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data) {
+      return error.response.data;
+    }
+    throw error;
+  }
 };

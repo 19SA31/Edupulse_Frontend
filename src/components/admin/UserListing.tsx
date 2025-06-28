@@ -6,7 +6,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
 import { getUsers, listUnlistUser } from "../../services/adminService";
 
-function TutorListing() {
+function UserListing() {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const [users, setUsers] = useState<UserDetails[]>([]);
@@ -21,9 +21,21 @@ function TutorListing() {
       console.log("searchhh", search);
 
       const response = await getUsers(page, search);
-      if (response.data && response.data.response) {
-        setUsers(response.data.response.users || []);
-        setTotalPages(response.data.response.totalPages || 1);
+      
+      // Handle the actual response structure from your API
+      if (response.data) {
+        if (response.data.response) {
+          // Structure: { response: { users, totalPages } }
+          setUsers(response.data.response.users || []);
+          setTotalPages(response.data.response.totalPages || 1);
+        } else if (response.data.success && response.data.data) {
+          // Alternative structure: { success, data: { users, totalPages } }
+          setUsers(response.data.data.users || []);
+          setTotalPages(response.data.data.totalPages || 1);
+        } else {
+          setUsers([]);
+          setTotalPages(1);
+        }
       } else {
         setUsers([]);
         setTotalPages(1);
@@ -82,7 +94,7 @@ function TutorListing() {
         <div className="flex space-x-4 items-center mb-4">
           <input
             type="text"
-            placeholder="Search Tutors"
+            placeholder="Search Users"
             value={searchQuery}
             onChange={handleSearchChange}
             className="p-1 rounded-lg border border-gray-300"
@@ -158,7 +170,7 @@ function TutorListing() {
             </table>
           ) : (
             <div className="text-center py-6">
-              <p>No tutors found.</p>
+              <p>No users found.</p>
             </div>
           )}
         </>
@@ -173,7 +185,7 @@ function TutorListing() {
           </span>{" "}
           of{" "}
           <span className="font-semibold text-gray-900 dark:text-slate-300">
-            {totalPages * 10}
+            {totalPages * 7}
           </span>{" "}
           Entries
         </span>
@@ -239,4 +251,4 @@ function TutorListing() {
   );
 }
 
-export default TutorListing;
+export default UserListing;

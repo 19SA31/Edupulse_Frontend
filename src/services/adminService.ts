@@ -6,9 +6,9 @@ export const adminLoginService = async (email: string, password: string) => {
     email,
     password,
   });
-
+  console.log("#####", response);
   if (response.data.success) {
-    localStorage.setItem("accessToken", response.data.accessToken);
+    localStorage.setItem("accessToken", response.data.data.accessToken);
     localStorage.setItem("admin", JSON.stringify(response.data.admin));
   }
 
@@ -16,7 +16,6 @@ export const adminLoginService = async (email: string, password: string) => {
 };
 
 export const logoutAdmin = async () => {
-  
   const response = await adminAxiosInstance.post("/logout");
   return response.data;
 };
@@ -41,8 +40,9 @@ export const listUnlistTutor = (id: string) => {
   return adminAxiosInstance.put(`/listUnlistTutor/${id}`);
 };
 
+
 export const getCategories = (page: number, search: string) => {
-  return adminAxiosInstance.get("/category", {
+  return adminAxiosInstance.get("/categories", {
     params: { page, limit: 10, search },
   });
 };
@@ -61,13 +61,11 @@ export const toggleCategoryStatus = async (id: string) => {
   return response.data;
 };
 
-
 export const updateCategoryService = async (
   id: string, 
   name: string, 
   description: string
 ) => {
-  
   const response = await adminAxiosInstance.put(`/update-category/${id}`, {
     name,
     description,

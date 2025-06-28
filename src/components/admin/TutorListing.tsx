@@ -23,10 +23,10 @@ function TutorListing() {
             const response = await getTutors(page, search);
             console.log("Tutor response:", response.data);
             
-            if (response.data && response.data.response) {
-                // Update this line to use tutors instead of users
-                setTutors(response.data.response.tutors || []);
-                setTotalPages(response.data.response.totalPages || 1);
+            if (response.data && response.data.success) {
+                // Fixed: Access tutors directly from response.data instead of response.data.response
+                setTutors(response.data.data.tutors || []);
+                setTotalPages(response.data.data.totalPages || 1);
             } else {
                 setTutors([]);
                 setTotalPages(1);
@@ -157,7 +157,7 @@ function TutorListing() {
             <div className="flex flex-col items-center">
                 {/* Help text */}
                 <span className="text-sm text-slate-500 dark:text-slate-400 mt-5">
-                    Showing <span className="font-semibold text-gray-900 dark:text-slate-300">{tutors ? tutors.length : 0}</span> of <span className="font-semibold text-gray-900 dark:text-slate-300">{totalPages * 10}</span> Entries
+                    Showing <span className="font-semibold text-gray-900 dark:text-slate-300">{tutors ? tutors.length : 0}</span> of <span className="font-semibold text-gray-900 dark:text-slate-300">{totalPages * 7}</span> Entries
                 </span>
 
                 {/* Buttons */}
