@@ -89,7 +89,7 @@ function UserListing() {
   };
 
   return (
-    <div className="flex flex-col pl-64 p-10 ml-3 mt-14">
+    <div className="p-6 mt-4">
       <div className="flex flex-row justify-end">
         <div className="flex space-x-4 items-center mb-4">
           <input

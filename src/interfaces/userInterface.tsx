@@ -1,3 +1,5 @@
+  import { ReactNode } from "react";
+  
 export interface User {
   id?: string;
   name: string;
@@ -45,4 +47,10 @@ export interface UserDetails {
   phone: string;
   email: string;
   isBlocked: boolean;
+}
+
+export interface SidebarItem {
+  path: string;
+  label: string;
+  icon: ReactNode;
 }

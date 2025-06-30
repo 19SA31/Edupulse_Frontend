@@ -47,7 +47,7 @@ function UserRoutes() {
         />
 
         <Route
-          path="dashboard"
+          path="profile"
           element={
             <UserProtectRoute>
               <Dashboard />

@@ -6,10 +6,11 @@ export const adminLoginService = async (email: string, password: string) => {
     email,
     password,
   });
-  console.log("#####", response);
+  
   if (response.data.success) {
+    // Only store the access token for admin
     localStorage.setItem("accessToken", response.data.data.accessToken);
-    localStorage.setItem("admin", JSON.stringify(response.data.admin));
+    // No need to store admin data
   }
 
   return response.data;

@@ -219,7 +219,7 @@ function AddCourseCategory() {
   };
 
   return (
-    <div className="ml-64 min-h-screen bg-gray-50">
+    <div className="p-3 mt-4">
       {/* Main content container with proper spacing */}
       <div className="pt-20 px-6 pb-6">
         {/* Add/Edit Category Form */}

@@ -2,9 +2,8 @@ import TutorListing from "../../components/admin/TutorListing"
 
 function TutorsListPage() {
   
-  return (
-    <TutorListing/>
-  )
+  return<TutorListing/>
+
 }
 
 export default TutorsListPage

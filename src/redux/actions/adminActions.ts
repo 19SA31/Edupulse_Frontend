@@ -23,7 +23,7 @@ export const logoutAdminAction = createAsyncThunk(
   "admin/logout",
   async (_, { rejectWithValue }) => {
     try {
-      
+      console.log("inside front end logoutadminaction")
       // Call the API logout endpoint
       const result = await logoutAdmin();
       

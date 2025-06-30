@@ -37,21 +37,16 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
     }),
     onSubmit: async (values) => {
       if (role === "user") {
-      
-
         dispatch(login({ email: values.email, password: values.password }))
           .unwrap()
           .then((data) => {
             console.log("Login successful data:", data);
             toast.success("User Login Successful!");
-            onLoginSuccess();
-            navigate("/");
+            onLoginSuccess(); // Remove navigate("/")
           })
           .catch((error: any) => {
-            
             const message =
-              error ||
-              "Login failed. Please check your credentials.";
+              error || "Login failed. Please check your credentials.";
             toast.error(message);
           });
       } else if (role === "tutor") {
@@ -59,13 +54,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
           .unwrap()
           .then(() => {
             toast.success("Tutor Login Successful!");
-            onLoginSuccess();
-            navigate("/tutor/");
+            onLoginSuccess(); // Remove navigate("/tutor/")
           })
           .catch((error: any) => {
             const message =
-              error||
-              "Login failed. Please check your credentials.";
+              error || "Login failed. Please check your credentials.";
             toast.error(message);
           });
       } else {
@@ -73,8 +66,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
           .unwrap()
           .then(() => {
             toast.success("Admin Login Successful!");
-            onLoginSuccess();
-            navigate("/admin/dashboard"); // Redirect after success
+            onLoginSuccess(); // Remove navigate("/admin/dashboard")
           })
           .catch((error: any) => {
             const message =
