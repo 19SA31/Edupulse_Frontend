@@ -151,3 +151,40 @@ export const tutorPasswordChangeService = async (email: string, password: string
     throw error;
   }
 };
+
+// export const updateTutorProfile = async (profileData: UpdateProfileData) => {
+//   try {
+//     const formData = new FormData();
+    
+//     if (profileData.name) formData.append('name', profileData.name);
+//     if (profileData.phone) formData.append('phone', profileData.phone);
+//     if (profileData.DOB) formData.append('DOB', profileData.DOB);
+//     if (profileData.gender) formData.append('gender', profileData.gender);
+//     if (profileData.avatar) formData.append('avatar', profileData.avatar);
+
+//     const response = await userAxiosInstance.put('/tutor/profile/update-profile', formData, {
+//       headers: {
+//         'Content-Type': 'multipart/form-data',
+//       },
+//     });
+
+//     if (response.data.success) {
+//       // Update localStorage with new tutor data
+//       const currentTutor = JSON.parse(localStorage.getItem('tutor') || '{}');
+//       const updatedTutor = { ...currentTutor, ...response.data.tutor };
+//       localStorage.setItem('tutor', JSON.stringify(updatedTutor));
+//     }
+
+//     return {
+//       success: true,
+//       data: response.data,
+//       message: response.data.message || 'Profile updated successfully'
+//     };
+//   } catch (error: any) {
+//     return {
+//       success: false,
+//       message: error.response?.data?.message || 'Failed to update profile',
+//       data: null
+//     };
+//   }
+// };

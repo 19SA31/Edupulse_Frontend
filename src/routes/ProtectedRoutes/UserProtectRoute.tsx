@@ -21,6 +21,7 @@ function UserProtectRoute({ children }: UserProtectRouteProps) {
     if (userData) {
       try {
         const parsedData = JSON.parse(userData);
+        console.log(parsedData)
         const user = JSON.parse(parsedData.user || 'null');
         const isAuthenticated = JSON.parse(parsedData.isAuthenticated || 'false');
         return user !== null || isAuthenticated === true;

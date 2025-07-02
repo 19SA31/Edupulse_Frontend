@@ -1,0 +1,330 @@
+// components/common/EditProfileModal.tsx
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Camera, User, Phone, Calendar, Users, Loader } from 'lucide-react';
+import { toast } from 'sonner';
+import { updateUserProfile } from '../../services/authService';
+import img from '../../assets/unknown-user.jpg';
+
+interface EditProfileModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  userData: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    DOB?: string;
+    gender?: string;
+    avatar?: string;
+  };
+  role: 'user' | 'tutor';
+  onProfileUpdate?: (updatedData: any) => void;
+}
+
+const EditProfileModal: React.FC<EditProfileModalProps> = ({
+  isOpen,
+  onClose,
+  userData,
+  role,
+  onProfileUpdate
+}) => {
+  const [formData, setFormData] = useState({
+    name: userData?.name || '',
+    phone: userData?.phone || '',
+    DOB: userData?.DOB ? userData.DOB.split('T')[0] : '',
+    gender: userData?.gender || '',
+  });
+  
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string>(userData?.avatar || img);
+  const [isDirty, setIsDirty] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Reset form when modal opens with new userData
+  useEffect(() => {
+    if (isOpen && userData) {
+      setFormData({
+        name: userData.name || '',
+        phone: userData.phone || '',
+        DOB: userData.DOB ? userData.DOB.split('T')[0] : '',
+        gender: userData.gender || '',
+      });
+      setAvatarPreview(userData.avatar || img);
+      setAvatarFile(null);
+      setIsDirty(false);
+    }
+  }, [isOpen, userData]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setIsDirty(true);
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select a valid image file');
+        return;
+      }
+      
+      setAvatarFile(file);
+      setIsDirty(true);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!isDirty && !avatarFile) {
+      toast.info('No changes to update');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const updateData: any = {};
+      
+      // Only include changed fields
+      if (formData.name !== userData?.name) updateData.name = formData.name;
+      if (formData.phone !== userData?.phone) updateData.phone = formData.phone;
+      if (formData.DOB !== userData?.DOB?.split('T')[0]) updateData.DOB = formData.DOB;
+      if (formData.gender !== userData?.gender) updateData.gender = formData.gender;
+      if (avatarFile) updateData.avatar = avatarFile;
+
+      if (Object.keys(updateData).length === 0 && !avatarFile) {
+        toast.info('No changes to update');
+        setIsLoading(false);
+        return;
+      }
+      console.log("inside edit modal:",updateData)
+      // Call the API service
+      const result = await updateUserProfile(updateData);
+      console.log(result)
+      if (result.success) {
+        toast.success('Profile updated successfully!');
+        
+        // Update local storage based on role
+        const storageKey = role === 'user' ? 'user' : 'tutor';
+        const currentData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        const updatedData = { 
+          ...currentData, 
+          ...formData,
+          // If avatar was updated and returned from API, use that
+          ...(result.data?.user && { avatar: result.data.user.avatar })
+        };
+        localStorage.setItem(storageKey, JSON.stringify(updatedData));
+        
+        // Call parent callback if provided
+        if (onProfileUpdate) {
+          onProfileUpdate(updatedData);
+        }
+        
+        onClose();
+      } else {
+        toast.error(result.message || 'Failed to update profile');
+      }
+    } catch (error: any) {
+      console.error('Profile update error:', error);
+      toast.error(error.message || 'Failed to update profile');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (isDirty && !isLoading) {
+      if (window.confirm('You have unsaved changes. Are you sure you want to close?')) {
+        onClose();
+      }
+    } else {
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+      <div className="bg-gray-800 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center p-6 border-b border-gray-700">
+          <h2 className="text-xl font-semibold text-white">Edit Profile</h2>
+          <button
+            onClick={handleClose}
+            className="text-gray-400 hover:text-white transition-colors"
+            disabled={isLoading}
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Avatar Upload */}
+          <div className="text-center">
+            <div className="relative inline-block">
+              <div className="w-24 h-24 rounded-full mx-auto overflow-hidden border-2 border-gray-600">
+                <img
+                  src={avatarPreview}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = img;
+                  }}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading}
+                className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Camera size={16} />
+              </button>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+              className="hidden"
+              disabled={isLoading}
+            />
+            <p className="text-gray-400 text-sm mt-2">Click camera to change avatar</p>
+          </div>
+
+          {/* Name Field */}
+          <div>
+            <label className="block text-gray-300 text-sm font-medium mb-2">
+              <User size={16} className="inline mr-2" />
+              Name *
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              disabled={isLoading}
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              required
+              minLength={2}
+              maxLength={50}
+            />
+          </div>
+
+          {/* Email Field (Read-only) */}
+          <div>
+            <label className="block text-gray-300 text-sm font-medium mb-2">
+              Email
+            </label>
+            <input
+              type="email"
+              value={userData?.email || ''}
+              disabled
+              className="w-full px-4 py-3 bg-gray-600 border border-gray-600 rounded-lg text-gray-300 cursor-not-allowed"
+            />
+            <p className="text-gray-500 text-xs mt-1">Email cannot be changed</p>
+          </div>
+
+          {/* Phone Field */}
+          <div>
+            <label className="block text-gray-300 text-sm font-medium mb-2">
+              <Phone size={16} className="inline mr-2" />
+              Phone *
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              disabled={isLoading}
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              required
+              pattern="[0-9]{10,15}"
+              title="Please enter a valid phone number (10-15 digits)"
+            />
+          </div>
+
+          {/* Date of Birth */}
+          <div>
+            <label className="block text-gray-300 text-sm font-medium mb-2">
+              <Calendar size={16} className="inline mr-2" />
+              Date of Birth
+            </label>
+            <input
+              type="date"
+              name="DOB"
+              value={formData.DOB}
+              onChange={handleInputChange}
+              disabled={isLoading}
+              max={new Date().toISOString().split('T')[0]}
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+          </div>
+
+          {/* Gender */}
+          <div>
+            <label className="block text-gray-300 text-sm font-medium mb-2">
+              <Users size={16} className="inline mr-2" />
+              Gender
+            </label>
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleInputChange}
+              disabled={isLoading}
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex space-x-4 pt-4">
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={isLoading}
+              className="flex-1 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading || (!isDirty && !avatarFile)}
+              className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isLoading && <Loader size={16} className="animate-spin" />}
+              {isLoading ? 'Updating...' : 'Update Profile'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default EditProfileModal;

@@ -50,7 +50,7 @@ function Header({ role = null }: HeaderProps) {
               const user = JSON.parse(userData);
               setUserName(user?.name || "User");
               setIsLoggedIn(true);
-              setUserImage(img);
+              setUserImage(user?.avatar || ""); 
             } catch (error) {
               console.error("Error parsing user data:", error);
               

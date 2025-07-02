@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/user/LoginPage";
 import Register from "../pages/user/RegisterPage";
 import VerifyOtp from "../pages/user/VerifyOtpPage";
@@ -10,6 +10,8 @@ import HomePage from "../pages/user/HomePage";
 import UserLoginProtectRoute from "./ProtectedRoutes/UserLoginProtectedRoute";
 import UserProtectRoute from "./ProtectedRoutes/UserProtectRoute";
 import { Toaster } from "sonner";
+import UserLayoutPage from "../pages/user/UserLayoutPage";
+import DashboardPage from "../pages/user/DashboardPage";
 
 function UserRoutes() {
   return (
@@ -45,18 +47,20 @@ function UserRoutes() {
             </UserLoginProtectRoute>
           }
         />
+        <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="reset-password" element={<PasswordUpdate />} />
 
         <Route
           path="profile"
           element={
             <UserProtectRoute>
-              <Dashboard />
+              <UserLayoutPage />
             </UserProtectRoute>
           }
-        />
-
-        <Route path="forgot-password" element={<ForgotPassword />} />
-        <Route path="reset-password" element={<PasswordUpdate />} />
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<DashboardPage />} />
+        </Route>
       </Routes>
     </div>
   );
