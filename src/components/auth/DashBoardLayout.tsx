@@ -24,9 +24,15 @@ interface UserData {
   avatar?: string;
 }
 
+interface Category{
+  name?: string;
+  description?:string
+}
+
 const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState<UserData | null>(null);
+  // const [category,setCategory]=useState<Category|null>
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const dispatch = useDispatch<AppDispatch>();
@@ -162,6 +168,9 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
             `${role.charAt(0).toUpperCase() + role.slice(1)}`}
           !
         </h1>
+        <h3>
+          <input type="dropdown"></input>
+        </h3>
 
         {/* User Details Grid */}
         <div className="space-y-4">

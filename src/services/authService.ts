@@ -145,6 +145,17 @@ export const loginService = async (
   }
 };
 
+// export const getAllCategories= async():Promise<ApiResponse>=>{
+//   try {
+//       const categoryFetched= await userAxiosInstance.get("/categories",)
+//       return categoryFetched.data
+//   } catch (error:any) {
+//     if(error.categoryFetched.data){
+//       console.error(error.categoryFetched.data)
+//     }
+//   }
+// }
+
 export const passwordChangeService = async (
   email: string, 
   password: string
@@ -189,6 +200,7 @@ export const logoutUser = async (): Promise<ApiResponse> => {
 };
 
 
+
 export const updateUserProfile = async (
   profileData: UpdateProfileData
 ): Promise<{
@@ -197,23 +209,14 @@ export const updateUserProfile = async (
   data?: any;
 }> => {
   try {
-
     const storedUser = localStorage.getItem('user');
     const user = storedUser ? JSON.parse(storedUser) : null;
-    const userId = user?.id;
+    const userId = user?._id;
     
-    if (profileData.name && profileData.name.trim().length < 2) {
+    if (!userId) {
       return {
         success: false,
-        message: 'Name must be at least 2 characters long',
-        data: null
-      };
-    }
-
-    if (profileData.phone && !/^[0-9]{10,15}$/.test(profileData.phone.replace(/\D/g, ''))) {
-      return {
-        success: false,
-        message: 'Please enter a valid phone number',
+        message: 'User not found. Please login again.',
         data: null
       };
     }
@@ -221,15 +224,17 @@ export const updateUserProfile = async (
     // Create FormData for multipart/form-data request
     const formData = new FormData();
     formData.append('id', userId);
+    
+    // Append only provided fields
     if (profileData.name?.trim()) formData.append('name', profileData.name.trim());
     if (profileData.phone?.trim()) formData.append('phone', profileData.phone.trim());
     if (profileData.DOB) formData.append('DOB', profileData.DOB);
     if (profileData.gender) formData.append('gender', profileData.gender);
     if (profileData.avatar) formData.append('avatar', profileData.avatar);
-    console.log(localStorage)
+
     // Log the data being sent (for debugging)
     console.log('Sending profile update data:', {
-      id:userId,
+      id: userId,
       name: profileData.name,
       phone: profileData.phone,
       DOB: profileData.DOB,
@@ -246,36 +251,37 @@ export const updateUserProfile = async (
 
     console.log('Profile update response:', response.data);
 
-    if (response.data.success) {
-      // Update localStorage with new user data
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      const updatedUserData = response.data.data?.user || response.data.user || {};
-      
-      const updatedUser = { 
-        ...currentUser, 
-        ...updatedUserData,
-        
-        avatar: updatedUserData.avatar || currentUser.avatar
-      };
-      
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      console.log("inside uodate user updated user", updatedUser)
-      return {
-        success: true,
-        data: { user: updatedUser },
-        message: response.data.message || 'Profile updated successfully'
-      };
-    } else {
+    if (!response.data.success) {
       return {
         success: false,
         message: response.data.message || 'Failed to update profile',
         data: null
       };
     }
+
+    // Update localStorage with new user data
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const updatedUserData = response.data.data?.user || response.data.user || {};
+    
+    const updatedUser = { 
+      ...currentUser, 
+      ...updatedUserData,
+      avatar: updatedUserData.avatar || currentUser.avatar
+    };
+    
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    console.log("Updated user data:", updatedUser);
+    
+    return {
+      success: true,
+      data: { user: updatedUser },
+      message: response.data.message || 'Profile updated successfully'
+    };
+    
   } catch (error: any) {
     console.error('Profile update error:', error);
     
-    // Handle different types of errors
+    // Handle specific error cases
     if (error.code === 'ECONNABORTED') {
       return {
         success: false,
