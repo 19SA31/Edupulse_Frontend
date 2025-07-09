@@ -19,7 +19,8 @@ function Header({ role = null }: HeaderProps) {
   const [userName, setUserName] = useState<string | null>(null);
   const [userImage, setUserImage] = useState<string>("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isVerified, setIsVerified] = useState(true); 
+  const [isVerified, setIsVerified] = useState(true);
+  const [verificationStatus, setVerificationStatus] = useState<string | null>(null); // New state for verification status
 
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -33,11 +34,12 @@ function Header({ role = null }: HeaderProps) {
         setIsLoggedIn(true);
         setUserImage(img);
         setIsVerified(true);
+        setVerificationStatus(null);
       } else {
         let userData = null;
         if (role === "tutor") {
           userData = localStorage.getItem("tutor");
-          console.log(userData)
+          console.log(userData);
         } else {
           userData = localStorage.getItem("user");
         }
@@ -45,6 +47,8 @@ function Header({ role = null }: HeaderProps) {
         if (userData && userData !== "undefined" && userData !== "null") {
           try {
             const user = JSON.parse(userData);
+            console.log("&&", user.avatar);
+            
             setUserName(user?.name || "User");
             setIsLoggedIn(true);
             setUserImage(user?.avatar || ""); 
@@ -52,8 +56,11 @@ function Header({ role = null }: HeaderProps) {
             // Check verification status for tutors
             if (role === "tutor") {
               setIsVerified(user?.isVerified || false);
+              // Set verification status (pending, approved, rejected, etc.)
+              setVerificationStatus(user?.verificationStatus || null);
             } else {
               setIsVerified(true); // Users are always considered verified
+              setVerificationStatus(null);
             }
           } catch (error) {
             console.error("Error parsing user data:", error);
@@ -65,15 +72,18 @@ function Header({ role = null }: HeaderProps) {
             }
             setIsLoggedIn(false);
             setIsVerified(true);
+            setVerificationStatus(null);
           }
         } else {
           setIsLoggedIn(false);
           setIsVerified(true);
+          setVerificationStatus(null);
         }
       }
     } else {
       setIsLoggedIn(false);
       setIsVerified(true);
+      setVerificationStatus(null);
     }
   };
 
@@ -128,6 +138,7 @@ function Header({ role = null }: HeaderProps) {
       setIsLoggedIn(false);
       setUserName(null);
       setIsProfileOpen(false);
+      setVerificationStatus(null);
       toast.success("Logged out successfully");
     } catch (error) {
       console.error("Logout failed:", error);
@@ -136,6 +147,7 @@ function Header({ role = null }: HeaderProps) {
         setIsLoggedIn(false);
         setUserName(null);
         setIsProfileOpen(false);
+        setVerificationStatus(null);
         toast.success("Logged out successfully");
         if (role === "tutor") {
           navigate("/tutor/login");
@@ -157,12 +169,33 @@ function Header({ role = null }: HeaderProps) {
   };
 
   const handleProfileOrVerify = () => {
-    if (role === "tutor" && !isVerified) {
+    if (role === "tutor" && !isVerified && verificationStatus !== "pending") {
       navigate("/tutor/verify-tutor");
     } else {
       navigate("/profile");
     }
     setIsProfileOpen(false);
+  };
+
+  // Function to get the appropriate button text and status
+  const getVerificationButtonText = () => {
+    if (role === "tutor") {
+      if (isVerified) {
+        return "Profile";
+      } else if (verificationStatus === "pending") {
+        return "Verification Pending";
+      } else if (verificationStatus === "rejected") {
+        return "Resubmit Verification";
+      } else {
+        return "Verify";
+      }
+    }
+    return "Profile";
+  };
+
+  // Function to check if verification button should be disabled
+  const isVerificationDisabled = () => {
+    return role === "tutor" && verificationStatus === "pending";
   };
 
   // Admin header - with profile dropdown or simple logout button
@@ -273,9 +306,14 @@ function Header({ role = null }: HeaderProps) {
                 </div>
                 <button
                   onClick={handleProfileOrVerify}
-                  className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                  disabled={isVerificationDisabled()}
+                  className={`transition-colors duration-200 ${
+                    isVerificationDisabled()
+                      ? "text-gray-500 cursor-not-allowed"
+                      : "text-blue-400 hover:text-blue-300"
+                  }`}
                 >
-                  {role === "tutor" && !isVerified ? "Verify" : "Profile"}
+                  {getVerificationButtonText()}
                 </button>
                 <button
                   onClick={handleLogout}
@@ -338,9 +376,14 @@ function Header({ role = null }: HeaderProps) {
               >
                 <button
                   onClick={handleProfileOrVerify}
-                  className="w-full text-left px-4 py-2 border-b border-gray-700 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200"
+                  disabled={isVerificationDisabled()}
+                  className={`w-full text-left px-4 py-2 border-b border-gray-700 text-sm transition-colors duration-200 ${
+                    isVerificationDisabled()
+                      ? "text-gray-500 cursor-not-allowed bg-gray-700"
+                      : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                  }`}
                 >
-                  {role === "tutor" && !isVerified ? "Verify" : "Profile"}
+                  {getVerificationButtonText()}
                 </button>
                 <button
                   onClick={handleLogout}

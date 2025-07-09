@@ -173,7 +173,7 @@ export const tutorVerificationService = async (
   try {
     // Create FormData for file upload
     const formData = new FormData();
-
+    console.log("inside verifytutor front service",documents)
     // Append files
     formData.append("degree", documents.degree);
     formData.append("aadharFront", documents.aadharFront);

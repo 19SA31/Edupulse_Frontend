@@ -2,6 +2,7 @@ import React from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom"; 
 import {
   Upload,
   FileText,
@@ -58,6 +59,8 @@ const validationSchema = Yup.object({
 });
 
 function VerifyTutor() {
+  const navigate = useNavigate(); // Add this hook
+  
   const initialValues: FormValues = {
     degree: null,
     aadharFront: null,
@@ -121,7 +124,7 @@ function VerifyTutor() {
     toast.info("File removed");
   };
 
-  // Updated handleSubmit function
+  // Updated handleSubmit function with redirect and localStorage update
   const handleSubmit = async (values: FormValues, { setSubmitting }: any) => {
     try {
       // Validate that all required files are present
@@ -136,10 +139,12 @@ function VerifyTutor() {
         aadharFront: values.aadharFront.file,
         aadharBack: values.aadharBack.file,
       };
-
+      console.log("verify tutor ui", documents);
+      
       // Call the verification service
       const result = await tutorVerificationService(documents);
-
+      console.log("verifytutor front", result);
+      
       if (result.success) {
         toast.success(
           "Verification documents submitted successfully! We will review your application and get back to you within 2-3 business days."
@@ -150,8 +155,28 @@ function VerifyTutor() {
         if (values.aadharFront) URL.revokeObjectURL(values.aadharFront.preview);
         if (values.aadharBack) URL.revokeObjectURL(values.aadharBack.preview);
 
-        // Optionally redirect or update UI state
-        // navigate('/tutor/dashboard');
+        // Update tutor data in localStorage to reflect verification status
+        const tutorData = localStorage.getItem("tutor");
+        if (tutorData) {
+          try {
+            const tutor = JSON.parse(tutorData);
+            // Update verification status to pending (you can adjust this based on your backend response)
+            tutor.verificationStatus = result.data.status; // 'pending'
+            tutor.verificationId = result.data.verificationId;
+            tutor.verificationSubmittedAt = result.data.submittedAt;
+            
+            // Save updated tutor data
+            localStorage.setItem("tutor", JSON.stringify(tutor));
+            
+            // Trigger storage event for header to update
+            window.dispatchEvent(new Event('userProfileUpdated'));
+          } catch (error) {
+            console.error("Error updating tutor data:", error);
+          }
+        }
+
+        // Redirect to tutor dashboard
+        navigate("/tutor");
       } else {
         toast.error(
           result.message || "Error submitting documents. Please try again."

@@ -9,7 +9,7 @@ import PasswordUpdate from "../components/tutor/PasswordUpdate";
 import TutorLoginProtectRoute from "./ProtectedRoutes/TutorLoginProtectRoure";
 import TutorProtectRoute from "./ProtectedRoutes/TutorProtectRoute";
 import HomePage from "../pages/tutor/HomePage";
-import TutorLayoutPage from "../pages/tutor/TutorLayoutPAge";
+import TutorLayoutPage from "../pages/tutor/TutorLayoutPage";
 import DashboardPage from "../pages/tutor/DashboardPage";
 import VerifyTutorPage from "../pages/tutor/VerifyTutorPage";
 

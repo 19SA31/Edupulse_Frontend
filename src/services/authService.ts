@@ -3,12 +3,20 @@ import axios from "axios";
 
 // Profile update interface
 export interface UpdateProfileData {
-  id?:string
+  id?: string;
   name?: string;
   phone?: string;
   DOB?: string;
   gender?: string;
   avatar?: File;
+  cropData?: CropData;
+}
+
+interface CropData {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 // Response interfaces
@@ -145,17 +153,6 @@ export const loginService = async (
   }
 };
 
-// export const getAllCategories= async():Promise<ApiResponse>=>{
-//   try {
-//       const categoryFetched= await userAxiosInstance.get("/categories",)
-//       return categoryFetched.data
-//   } catch (error:any) {
-//     if(error.categoryFetched.data){
-//       console.error(error.categoryFetched.data)
-//     }
-//   }
-// }
-
 export const passwordChangeService = async (
   email: string, 
   password: string
@@ -199,8 +196,7 @@ export const logoutUser = async (): Promise<ApiResponse> => {
   }
 };
 
-
-
+// Updated profile update service for S3 integration
 export const updateUserProfile = async (
   profileData: UpdateProfileData
 ): Promise<{
@@ -224,13 +220,22 @@ export const updateUserProfile = async (
     // Create FormData for multipart/form-data request
     const formData = new FormData();
     formData.append('id', userId);
-    
+    console.log("%%%",profileData)
     // Append only provided fields
     if (profileData.name?.trim()) formData.append('name', profileData.name.trim());
     if (profileData.phone?.trim()) formData.append('phone', profileData.phone.trim());
     if (profileData.DOB) formData.append('DOB', profileData.DOB);
     if (profileData.gender) formData.append('gender', profileData.gender);
-    if (profileData.avatar) formData.append('avatar', profileData.avatar);
+    
+    // Handle avatar and crop data for S3 upload
+    if (profileData.avatar) {
+      formData.append('avatar', profileData.avatar);
+      
+      // Add crop data if available for server-side processing with Sharp
+      if (profileData.cropData) {
+        formData.append('cropData', JSON.stringify(profileData.cropData));
+      }
+    }
 
     // Log the data being sent (for debugging)
     console.log('Sending profile update data:', {
@@ -239,14 +244,16 @@ export const updateUserProfile = async (
       phone: profileData.phone,
       DOB: profileData.DOB,
       gender: profileData.gender,
-      hasAvatar: !!profileData.avatar
+      hasAvatar: !!profileData.avatar,
+      hasCropData: !!profileData.cropData,
+      cropData: profileData.cropData
     });
 
     const response = await userAxiosInstance.put('/profile/update-profile', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      timeout: 30000, // 30 second timeout for file uploads
+      timeout: 60000, // Increased timeout for S3 uploads
     });
 
     console.log('Profile update response:', response.data);
@@ -259,18 +266,19 @@ export const updateUserProfile = async (
       };
     }
 
-    // Update localStorage with new user data
+    // Update localStorage with new user data including S3 URL
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     const updatedUserData = response.data.data?.user || response.data.user || {};
     
     const updatedUser = { 
       ...currentUser, 
       ...updatedUserData,
+      // Avatar will now be the S3 signed URL returned from server
       avatar: updatedUserData.avatar || currentUser.avatar
     };
     
     localStorage.setItem('user', JSON.stringify(updatedUser));
-    console.log("Updated user data:", updatedUser);
+    console.log("Updated user data with S3 URL:", updatedUser);
     
     return {
       success: true,
