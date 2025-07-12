@@ -11,7 +11,7 @@ import tutorReducer from './slices/tutorSlice';
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['admin'], // Only admin will be persisted
+  whitelist: ['admin','user','tutor'], // Only admin will be persisted
 };
 
 const rootReducer = combineReducers({

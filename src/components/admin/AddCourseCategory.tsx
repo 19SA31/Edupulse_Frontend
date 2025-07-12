@@ -117,42 +117,41 @@ function AddCourseCategory() {
   });
 
   const fetchCategories = async (page: number, search: string) => {
-    try {
-      setLoading(true);
-      console.log("Fetching categories, page:", page, "search:", search);
+  try {
+    setLoading(true);
+    console.log("Fetching categories, page:", page, "search:", search);
 
-      const response = await getCategories(page, search);
-      console.log("Full response:", response); 
+    const response = await getCategories(page, search);
+    console.log("Full response:", response); 
 
-      
-      if (response.data && response.data.success && response.data.data) {
-        
-        const { category, totalPages } = response.data.data;
+    if (response.data && response.data.success && response.data.data) {
+      // Fix: Change 'category' to 'categories'
+      const { categories, totalPages } = response.data.data;
 
-        setCategories(category || []);
-        setTotalPages(totalPages || 1);
+      setCategories(categories || []);
+      setTotalPages(totalPages || 1);
 
-        console.log("Categories set:", category);
-        console.log("Total pages:", totalPages);
-      } else {
-        console.log("Response unsuccessful or no data");
-        setCategories([]);
-        setTotalPages(1);
-      }
-    } catch (error: any) {
-      if (error.response && error.response.status === 401) {
-        console.error("Unauthorized: Redirecting to login page.");
-        await dispatch(logoutAdminAction());
-        navigate("/admin/login");
-      } else {
-        console.error("Error fetching categories:", error);
-        setCategories([]);
-        toast.error("Failed to fetch categories");
-      }
-    } finally {
-      setLoading(false);
+      console.log("Categories set:", categories);
+      console.log("Total pages:", totalPages);
+    } else {
+      console.log("Response unsuccessful or no data");
+      setCategories([]);
+      setTotalPages(1);
     }
-  };
+  } catch (error: any) {
+    if (error.response && error.response.status === 401) {
+      console.error("Unauthorized: Redirecting to login page.");
+      await dispatch(logoutAdminAction());
+      navigate("/admin/login");
+    } else {
+      console.error("Error fetching categories:", error);
+      setCategories([]);
+      toast.error("Failed to fetch categories");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchCategories(currentPage, searchQuery);
@@ -167,7 +166,7 @@ function AddCourseCategory() {
       if (result.success) {
         setCategories((prevCategories) =>
           prevCategories.map((category) =>
-            category._id === id ? result.data : category
+            category.id === id ? result.data : category
           )
         );
         toast.success(
@@ -185,7 +184,7 @@ function AddCourseCategory() {
   // Edit functionality
   const handleEditCategory = (category: Category) => {
     setIsEditMode(true);
-    setEditingCategoryId(category._id);
+    setEditingCategoryId(category.id);
     formik.setValues({
       name: category.name,
       description: category.description,
@@ -373,7 +372,7 @@ function AddCourseCategory() {
                     <tbody>
                       {categories.map((category) => (
                         <tr
-                          key={category._id}
+                          key={category.id}
                           className="hover:bg-gray-50 transition-colors"
                         >
                           <td className="py-3 px-6 border-b border-gray-200">
@@ -414,7 +413,7 @@ function AddCourseCategory() {
                                     ? "bg-red-500 hover:bg-red-600"
                                     : "bg-green-500 hover:bg-green-600"
                                 } text-white px-3 py-1 rounded text-sm transition-colors`}
-                                onClick={() => toggleListState(category._id)}
+                                onClick={() => toggleListState(category.id)}
                               >
                                 {category.isListed ? "Unlist" : "List"}
                               </button>

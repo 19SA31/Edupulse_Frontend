@@ -15,7 +15,7 @@ export interface AdminState{
 }
 
 export interface Category {
-  _id: string;
+  id: string;
   name: string;
   description: string;
   isListed: boolean;
