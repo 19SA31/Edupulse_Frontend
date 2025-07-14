@@ -11,6 +11,7 @@ import {
   CheckCircle,
   AlertCircle,
   X,
+  User,
 } from "lucide-react";
 import { tutorVerificationService } from "../../services/tutorService";
 
@@ -20,12 +21,23 @@ interface UploadedFile {
 }
 
 interface FormValues {
+  avatar: UploadedFile | null;
   degree: UploadedFile | null;
   aadharFront: UploadedFile | null;
   aadharBack: UploadedFile | null;
 }
 
 const validationSchema = Yup.object({
+  avatar: Yup.mixed()
+    .required("Tutor photo is required")
+    .test("fileSize", "File size must be less than 5MB", (value) => {
+      if (!value) return false;
+      return (value as UploadedFile).file.size <= 5 * 1024 * 1024;
+    })
+    .test("fileType", "Only image files are allowed", (value) => {
+      if (!value) return false;
+      return (value as UploadedFile).file.type.startsWith("image/");
+    }),
   degree: Yup.mixed()
     .required("Degree certificate is required")
     .test("fileSize", "File size must be less than 5MB", (value) => {
@@ -62,6 +74,7 @@ function VerifyTutor() {
   const navigate = useNavigate(); // Add this hook
   
   const initialValues: FormValues = {
+    avatar: null,
     degree: null,
     aadharFront: null,
     aadharBack: null,
@@ -124,17 +137,18 @@ function VerifyTutor() {
     toast.info("File removed");
   };
 
-  // Updated handleSubmit function with redirect and localStorage update
+  // Updated handleSubmit function with tutor photo
   const handleSubmit = async (values: FormValues, { setSubmitting }: any) => {
     try {
       // Validate that all required files are present
-      if (!values.degree || !values.aadharFront || !values.aadharBack) {
+      if (!values.avatar || !values.degree || !values.aadharFront || !values.aadharBack) {
         toast.error("Please upload all required documents");
         return;
       }
 
       // Prepare documents for submission
       const documents = {
+        avatar: values.avatar.file,
         degree: values.degree.file,
         aadharFront: values.aadharFront.file,
         aadharBack: values.aadharBack.file,
@@ -151,6 +165,7 @@ function VerifyTutor() {
         );
 
         // Clean up preview URLs
+        if (values.avatar) URL.revokeObjectURL(values.avatar.preview);
         if (values.degree) URL.revokeObjectURL(values.degree.preview);
         if (values.aadharFront) URL.revokeObjectURL(values.aadharFront.preview);
         if (values.aadharBack) URL.revokeObjectURL(values.aadharBack.preview);
@@ -201,6 +216,7 @@ function VerifyTutor() {
     setFieldValue,
     error,
     touched,
+    isProfilePhoto = false,
   }: {
     fieldName: string;
     title: string;
@@ -210,6 +226,7 @@ function VerifyTutor() {
     setFieldValue: (field: string, value: any) => void;
     error?: string;
     touched?: boolean;
+    isProfilePhoto?: boolean;
   }) => {
     return (
       <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-400 transition-colors">
@@ -253,7 +270,11 @@ function VerifyTutor() {
                 <img
                   src={value.preview}
                   alt={title}
-                  className="w-32 h-32 object-cover rounded-lg border border-gray-300"
+                  className={`object-cover border border-gray-300 ${
+                    isProfilePhoto
+                      ? "w-32 h-32 rounded-full"
+                      : "w-32 h-32 rounded-lg"
+                  }`}
                 />
                 <button
                   type="button"
@@ -308,6 +329,20 @@ function VerifyTutor() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <div className="md:col-span-2">
                     <DocumentUpload
+                      fieldName="avatar"
+                      title="Tutor Photo"
+                      icon={User}
+                      description="Upload a clear, professional photo of yourself (passport-style)"
+                      value={values.avatar}
+                      setFieldValue={setFieldValue}
+                      error={errors.avatar}
+                      touched={touched.avatar}
+                      isProfilePhoto={true}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <DocumentUpload
                       fieldName="degree"
                       title="Degree Certificate"
                       icon={FileText}
@@ -355,6 +390,7 @@ function VerifyTutor() {
                         <div className="mt-2 text-sm text-blue-700">
                           <ul className="list-disc list-inside space-y-1">
                             <li>All documents must be clear and legible</li>
+                            <li>Profile photo should be professional and passport-style</li>
                             <li>
                               File size should not exceed 5MB per document
                             </li>

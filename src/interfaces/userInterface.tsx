@@ -41,11 +41,13 @@ export interface OtpResponse {
 }
 
 export interface UserDetails {
-  _id: string;
+  id: string;
   userId: string;
   name: string;
   phone: string;
   email: string;
+  avatar:string;
+  createdAt:string;
   isBlocked: boolean;
 }
 

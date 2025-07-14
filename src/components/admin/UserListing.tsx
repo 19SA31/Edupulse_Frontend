@@ -5,6 +5,8 @@ import { logoutAdminAction } from "../../redux/actions/adminActions";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
 import { getUsers, listUnlistUser } from "../../services/adminService";
+import Table, { TableColumn, TableAction } from "../../components/common/Table";
+import UserDetailsModal from "../../components/common/UserDetailsModal";
 
 function UserListing() {
   const navigate = useNavigate();
@@ -14,22 +16,19 @@ function UserListing() {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedUser, setSelectedUser] = useState<UserDetails | null>(null);
 
   const fetchUsers = async (page: number, search: string) => {
     try {
       setLoading(true);
-      console.log("searchhh", search);
-
       const response = await getUsers(page, search);
       
-      // Handle the actual response structure from your API
       if (response.data) {
         if (response.data.response) {
-          // Structure: { response: { users, totalPages } }
           setUsers(response.data.response.users || []);
           setTotalPages(response.data.response.totalPages || 1);
         } else if (response.data.success && response.data.data) {
-          // Alternative structure: { success, data: { users, totalPages } }
           setUsers(response.data.data.users || []);
           setTotalPages(response.data.data.totalPages || 1);
         } else {
@@ -40,6 +39,7 @@ function UserListing() {
         setUsers([]);
         setTotalPages(1);
       }
+      
     } catch (error: any) {
       if (error.response && error.response.status === 401) {
         console.error("Unauthorized: Redirecting to login page.");
@@ -63,7 +63,7 @@ function UserListing() {
       await listUnlistUser(id);
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
-          user._id === id ? { ...user, isBlocked: !user.isBlocked } : user
+          user.id === id ? { ...user, isBlocked: !user.isBlocked } : user
         )
       );
     } catch (error) {
@@ -71,7 +71,7 @@ function UserListing() {
     }
   };
 
-  const handlePagination = (direction: string) => {
+  const handlePagination = (direction: "next" | "previous") => {
     if (direction === "next" && currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     } else if (direction === "previous" && currentPage > 1) {
@@ -79,174 +79,94 @@ function UserListing() {
     }
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
   const handleSearch = () => {
     setCurrentPage(1);
     fetchUsers(1, searchQuery);
   };
 
+  const handleViewUser = (user: UserDetails) => {
+    setSelectedUser(user);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  console.log("frontend listing", users);
+
+  // Define table columns
+  const columns: TableColumn<UserDetails>[] = [
+    {
+      key: "name",
+      title: "Name",
+      align: "center",
+    },
+    {
+      key: "email",
+      title: "Email",
+      align: "center",
+    },
+    {
+      key: "view",
+      title: "View Details",
+      align: "center",
+      render: (user) => (
+        <button
+          className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"
+          onClick={() => handleViewUser(user)}
+        >
+          View
+        </button>
+      ),
+    },
+  ];
+
+  // Define table actions
+  const actions: TableAction<UserDetails>[] = [
+    {
+      label: (user: UserDetails) => (user.isBlocked ? "List" : "Unlist"),
+      onClick: (user) => toggleListState(user.id), // Changed from user._id to user.id
+      variant: (user: UserDetails) => (user.isBlocked ? "success" : "danger"),
+    },
+  ];
+
   return (
     <div className="p-6 mt-4">
-      <div className="flex flex-row justify-end">
-        <div className="flex space-x-4 items-center mb-4">
-          <input
-            type="text"
-            placeholder="Search Users"
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="p-1 rounded-lg border border-gray-300"
-          />
-          <button
-            className="text-sm px-2 py-1 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
-            onClick={handleSearch}
-          >
-            Search
-          </button>
-        </div>
-      </div>
+      <Table
+        data={users}
+        columns={columns}
+        actions={actions}
+        loading={loading}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onSearch={handleSearch}
+        searchPlaceholder="Search Users"
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePagination}
+        itemsPerPage={7}
+        emptyMessage="No users found."
+        loadingMessage="Loading Users..."
+        getItemId={(user) => user.id} // Changed from user._id to user.id
+      />
 
-      {loading ? (
-        <div className="flex justify-center py-10">
-          <div className="text-center">
-            <p>Loading Users...</p>
-          </div>
-        </div>
-      ) : (
-        <>
-          {users && users.length > 0 ? (
-            <table className="min-w-full bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="py-2 px-4 border-b border-gray-300 text-center text-gray-700">
-                    Name
-                  </th>
-                  <th className="py-2 px-4 border-b border-gray-300 text-center text-gray-700">
-                    Email
-                  </th>
-                  <th className="py-2 px-4 border-b border-gray-300 text-center text-gray-700">
-                    View Details
-                  </th>
-                  <th className="py-2 px-4 border-b border-gray-300 text-center text-gray-700">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr
-                    key={user._id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="py-2 px-4 border-b border-gray-300 text-center">
-                      {user.name}
-                    </td>
-                    <td className="py-2 px-4 border-b border-gray-300 text-center">
-                      {user.email}
-                    </td>
-                    <td className="py-2 px-4 border-b border-gray-300 text-center">
-                      <button
-                        className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"
-                        // onClick={() => viewUser(user._id)}
-                      >
-                        View
-                      </button>
-                    </td>
-                    <td className="py-2 px-4 border-b border-gray-300 text-center">
-                      <button
-                        className={`${
-                          user.isBlocked ? "bg-green-500" : "bg-red-500"
-                        } text-white px-2 py-1 rounded hover:opacity-80 transition-opacity`}
-                        onClick={() => toggleListState(user._id)}
-                      >
-                        {user.isBlocked ? "List" : "Unlist"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="text-center py-6">
-              <p>No users found.</p>
-            </div>
-          )}
-        </>
-      )}
-
-      <div className="flex flex-col items-center">
-        {/* Help text */}
-        <span className="text-sm text-slate-500 dark:text-slate-400 mt-5">
-          Showing{" "}
-          <span className="font-semibold text-gray-900 dark:text-slate-300">
-            {users ? users.length : 0}
-          </span>{" "}
-          of{" "}
-          <span className="font-semibold text-gray-900 dark:text-slate-300">
-            {totalPages * 7}
-          </span>{" "}
-          Entries
-        </span>
-
-        {/* Buttons */}
-        <div className="inline-flex mt-4 space-x-2">
-          <button
-            className={`flex items-center justify-center px-5 py-2 h-10 text-base font-medium ${
-              currentPage === 1
-                ? "bg-slate-500 text-gray-100 cursor-not-allowed"
-                : "bg-gradient-to-br from-gray-700 via-gray-600 to-gray-800 text-white hover:scale-105 hover:shadow-xl hover:from-blue-600 hover:to-cyan-600"
-            } rounded-l-md shadow-lg transform transition duration-300 ease-in-out dark:bg-slate-500 dark:text-gray-200`}
-            onClick={() => handlePagination("previous")}
-            disabled={currentPage === 1}
-          >
-            <svg
-              className="w-4 h-4 mr-2 rtl:rotate-180"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 14 10"
-            >
-              <path
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M13 5H1m0 0 4 4M1 5l4-4"
-              />
-            </svg>
-            Prev
-          </button>
-
-          <button
-            className={`flex items-center justify-center px-5 py-2 h-10 text-base font-medium ${
-              currentPage === totalPages
-                ? "bg-slate-500 text-gray-100 cursor-not-allowed"
-                : "bg-gradient-to-br from-gray-800 via-gray-600 to-gray-700 text-white hover:scale-105 hover:shadow-xl hover:from-cyan-600 hover:to-blue-600"
-            } rounded-r-md shadow-lg transform transition duration-300 ease-in-out dark:bg-slate-500 dark:text-gray-200`}
-            onClick={() => handlePagination("next")}
-            disabled={currentPage === totalPages}
-          >
-            Next
-            <svg
-              className="w-4 h-4 ml-2 rtl:rotate-180"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 14 10"
-            >
-              <path
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M1 5h12m0 0L9 1m4 4L9 9"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
+      {/* User Details Modal */}
+      <UserDetailsModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        user={selectedUser ? {
+          id: selectedUser.id, // Changed from selectedUser._id to selectedUser.id
+          name: selectedUser.name,
+          email: selectedUser.email,
+          phone: selectedUser.phone,
+          avatar: selectedUser.avatar,
+          createdAt: selectedUser.createdAt,
+          isBlocked: selectedUser.isBlocked
+        } : null}
+        title="User Details"
+      />
     </div>
   );
 }

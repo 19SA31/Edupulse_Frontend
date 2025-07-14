@@ -1,6 +1,7 @@
 import { tutorAxiosInstance } from "../api/tutorAxiosInstance";
 
 interface VerificationDocuments {
+  avatar: File,
   degree: File;
   aadharFront: File;
   aadharBack: File;
@@ -175,6 +176,7 @@ export const tutorVerificationService = async (
     const formData = new FormData();
     console.log("inside verifytutor front service",documents)
     // Append files
+    formData.append("avatar",documents.avatar)
     formData.append("degree", documents.degree);
     formData.append("aadharFront", documents.aadharFront);
     formData.append("aadharBack", documents.aadharBack);

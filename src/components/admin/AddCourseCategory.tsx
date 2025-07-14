@@ -13,6 +13,7 @@ import {
   toggleCategoryStatus,
 } from "../../services/adminService";
 import { Category } from "../../interfaces/adminInterface";
+import Table, { TableColumn, TableAction } from "../../components/common/Table";
 
 function AddCourseCategory() {
   const navigate = useNavigate();
@@ -56,7 +57,6 @@ function AddCourseCategory() {
 
         let response;
         if (isEditMode && editingCategoryId) {
-          
           response = await updateCategoryService(
             editingCategoryId,
             values.name.trim(),
@@ -71,7 +71,6 @@ function AddCourseCategory() {
         }
 
         if (response.success) {
-          
           resetForm();
           setIsEditMode(false);
           setEditingCategoryId(null);
@@ -82,7 +81,6 @@ function AddCourseCategory() {
               : "Category added successfully!"
           );
 
-          
           await fetchCategories(currentPage, searchQuery);
 
           console.log(
@@ -117,41 +115,41 @@ function AddCourseCategory() {
   });
 
   const fetchCategories = async (page: number, search: string) => {
-  try {
-    setLoading(true);
-    console.log("Fetching categories, page:", page, "search:", search);
+    try {
+      setLoading(true);
+      console.log("Fetching categories, page:", page, "search:", search);
 
-    const response = await getCategories(page, search);
-    console.log("Full response:", response); 
+      const response = await getCategories(page, search);
+      console.log("Full response:", response);
 
-    if (response.data && response.data.success && response.data.data) {
-      // Fix: Change 'category' to 'categories'
-      const { categories, totalPages } = response.data.data;
+      if (response.data && response.data.success && response.data.data) {
+        // Fix: Change 'category' to 'categories'
+        const { categories, totalPages } = response.data.data;
 
-      setCategories(categories || []);
-      setTotalPages(totalPages || 1);
+        setCategories(categories || []);
+        setTotalPages(totalPages || 1);
 
-      console.log("Categories set:", categories);
-      console.log("Total pages:", totalPages);
-    } else {
-      console.log("Response unsuccessful or no data");
-      setCategories([]);
-      setTotalPages(1);
+        console.log("Categories set:", categories);
+        console.log("Total pages:", totalPages);
+      } else {
+        console.log("Response unsuccessful or no data");
+        setCategories([]);
+        setTotalPages(1);
+      }
+    } catch (error: any) {
+      if (error.response && error.response.status === 401) {
+        console.error("Unauthorized: Redirecting to login page.");
+        await dispatch(logoutAdminAction());
+        navigate("/admin/login");
+      } else {
+        console.error("Error fetching categories:", error);
+        setCategories([]);
+        toast.error("Failed to fetch categories");
+      }
+    } finally {
+      setLoading(false);
     }
-  } catch (error: any) {
-    if (error.response && error.response.status === 401) {
-      console.error("Unauthorized: Redirecting to login page.");
-      await dispatch(logoutAdminAction());
-      navigate("/admin/login");
-    } else {
-      console.error("Error fetching categories:", error);
-      setCategories([]);
-      toast.error("Failed to fetch categories");
-    }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     fetchCategories(currentPage, searchQuery);
@@ -216,6 +214,60 @@ function AddCourseCategory() {
     setIsEditMode(false);
     setEditingCategoryId(null);
   };
+
+  const categoryColumns: TableColumn<Category>[] = [
+    {
+      key: "name",
+      title: "Name",
+      align: "left",
+      render: (category) => (
+        <div className="font-medium text-gray-900">{category.name}</div>
+      ),
+    },
+    {
+      key: "description",
+      title: "Description",
+      align: "left",
+      render: (category) => (
+        <div
+          className="text-gray-600 text-sm max-w-md truncate"
+          title={category.description}
+        >
+          {category.description}
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      title: "Status",
+      align: "center",
+      render: (category) => (
+        <span
+          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+            category.isListed
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800"
+          }`}
+        >
+          {category.isListed ? "Listed" : "Unlisted"}
+        </span>
+      ),
+    },
+  ];
+
+  const categoryActions: TableAction<Category>[] = [
+    {
+      label: "Edit",
+      onClick: (category) => handleEditCategory(category),
+      variant: "primary",
+    },
+    {
+      label: (category: Category) => (category.isListed ? "Unlist" : "List"),
+      onClick: (category) => toggleListState(category.id),
+      variant: (category: Category) =>
+        category.isListed ? "danger" : "success",
+    },
+  ];
 
   return (
     <div className="p-3 mt-4">
@@ -321,25 +373,7 @@ function AddCourseCategory() {
 
         {/* Category Listing Section */}
         <div className="bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden">
-          <div className="bg-gray-100 px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <h2 className="text-xl font-semibold text-gray-800">Categories</h2>
 
-            <div className="flex space-x-4 items-center w-full sm:w-auto">
-              <input
-                type="text"
-                placeholder="Search Categories"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="flex-1 sm:flex-none px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <button
-                className="text-sm px-4 py-2 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 whitespace-nowrap"
-                onClick={handleSearch}
-              >
-                Search
-              </button>
-            </div>
-          </div>
 
           {loading ? (
             <div className="flex justify-center py-10">
@@ -352,77 +386,39 @@ function AddCourseCategory() {
             <>
               {categories && categories.length > 0 ? (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="py-3 px-6 border-b border-gray-300 text-left text-gray-700 font-medium">
-                          Name
-                        </th>
-                        <th className="py-3 px-6 border-b border-gray-300 text-left text-gray-700 font-medium">
-                          Description
-                        </th>
-                        <th className="py-3 px-6 border-b border-gray-300 text-center text-gray-700 font-medium">
-                          Status
-                        </th>
-                        <th className="py-3 px-6 border-b border-gray-300 text-center text-gray-700 font-medium">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {categories.map((category) => (
-                        <tr
-                          key={category.id}
-                          className="hover:bg-gray-50 transition-colors"
-                        >
-                          <td className="py-3 px-6 border-b border-gray-200">
-                            <div className="font-medium text-gray-900">
-                              {category.name}
-                            </div>
-                          </td>
-                          <td className="py-3 px-6 border-b border-gray-200">
-                            <div
-                              className="text-gray-600 text-sm max-w-md truncate"
-                              title={category.description}
-                            >
-                              {category.description}
-                            </div>
-                          </td>
-                          <td className="py-3 px-6 border-b border-gray-200 text-center">
-                            <span
-                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                category.isListed
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-red-100 text-red-800"
-                              }`}
-                            >
-                              {category.isListed ? "Listed" : "Unlisted"}
-                            </span>
-                          </td>
-                          <td className="py-3 px-6 border-b border-gray-200 text-center">
-                            <div className="flex justify-center space-x-2">
-                              <button
-                                className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition-colors"
-                                onClick={() => handleEditCategory(category)}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                className={`${
-                                  category.isListed
-                                    ? "bg-red-500 hover:bg-red-600"
-                                    : "bg-green-500 hover:bg-green-600"
-                                } text-white px-3 py-1 rounded text-sm transition-colors`}
-                                onClick={() => toggleListState(category.id)}
-                              >
-                                {category.isListed ? "Unlist" : "List"}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <Table
+                    data={categories}
+                    columns={categoryColumns}
+                    actions={categoryActions}
+                    loading={loading}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    onSearch={handleSearch}
+                    searchPlaceholder="Search Categories"
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePagination}
+                    itemsPerPage={10}
+                    emptyMessage="No categories found"
+                    emptyIcon={
+                      <svg
+                        className="mx-auto h-12 w-12"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8V4a1 1 0 00-1-1H7a1 1 0 00-1 1v1m14 0H4"
+                        />
+                      </svg>
+                    }
+                    loadingMessage="Loading categories..."
+                    getItemId={(category) => category.id}
+                    
+                  />
                 </div>
               ) : (
                 <div className="text-center py-12">
@@ -450,79 +446,6 @@ function AddCourseCategory() {
                 </div>
               )}
             </>
-          )}
-
-          {/* Pagination */}
-          {categories.length > 0 && (
-            <div className="flex flex-col items-center py-6 border-t border-gray-200">
-              <span className="text-sm text-slate-500 mb-4">
-                Showing{" "}
-                <span className="font-semibold text-gray-900">
-                  {categories.length}
-                </span>{" "}
-                of{" "}
-                <span className="font-semibold text-gray-900">
-                  {totalPages * 10}
-                </span>{" "}
-                Entries
-              </span>
-
-              <div className="inline-flex space-x-2">
-                <button
-                  className={`flex items-center justify-center px-5 py-2 h-10 text-base font-medium ${
-                    currentPage === 1
-                      ? "bg-slate-500 text-gray-100 cursor-not-allowed"
-                      : "bg-gradient-to-br from-gray-700 via-gray-600 to-gray-800 text-white hover:scale-105 hover:shadow-xl hover:from-blue-600 hover:to-cyan-600"
-                  } rounded-l-md shadow-lg transform transition duration-300 ease-in-out`}
-                  onClick={() => handlePagination("previous")}
-                  disabled={currentPage === 1}
-                >
-                  <svg
-                    className="w-4 h-4 mr-2 rtl:rotate-180"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 14 10"
-                  >
-                    <path
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M13 5H1m0 0 4 4M1 5l4-4"
-                    />
-                  </svg>
-                  Prev
-                </button>
-
-                <button
-                  className={`flex items-center justify-center px-5 py-2 h-10 text-base font-medium ${
-                    currentPage === totalPages
-                      ? "bg-slate-500 text-gray-100 cursor-not-allowed"
-                      : "bg-gradient-to-br from-gray-800 via-gray-600 to-gray-700 text-white hover:scale-105 hover:shadow-xl hover:from-cyan-600 hover:to-blue-600"
-                  } rounded-r-md shadow-lg transform transition duration-300 ease-in-out`}
-                  onClick={() => handlePagination("next")}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                  <svg
-                    className="w-4 h-4 ml-2 rtl:rotate-180"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 14 10"
-                  >
-                    <path
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M1 5h12m0 0L9 1m4 4L9 9"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
           )}
         </div>
       </div>
