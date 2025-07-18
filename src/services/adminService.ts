@@ -73,3 +73,31 @@ export const updateCategoryService = async (
   });
   return response.data;
 };
+
+export const getTutorsForVerification = async (page: number, search: string = "") => {
+  const response = await adminAxiosInstance.get('/tutors-verification', {
+    params: {
+      page,
+      search,
+      limit: 7
+    }
+  });
+  return response.data;
+};
+
+export const verifyTutor = async (tutorId: string) => {
+  const response = await adminAxiosInstance.put(`/verify-tutor/${tutorId}`);
+  return response.data;
+};
+
+export const rejectTutor = async (tutorId: string, reason?: string) => {
+  const response = await adminAxiosInstance.put(`/reject-tutor/${tutorId}`, {
+    reason
+  });
+  return response.data;
+};
+
+export const getTutorVerificationDetails = async (tutorId: string) => {
+  const response = await adminAxiosInstance.get(`/tutor-verification-details/${tutorId}`);
+  return response.data;
+};

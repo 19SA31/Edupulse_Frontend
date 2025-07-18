@@ -41,6 +41,15 @@ function AdminLayout() {
         </svg>
       ),
     },
+    {
+      path: "/admin/tutorVerification",
+      label: "Verify Tutor",
+      icon: (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 3a3 3 0 110 6 3 3 0 010-6zm0 14.2a7.2 7.2 0 01-6-3.2c.03-2 4-3.1 6-3.1s5.97 1.1 6 3.1a7.2 7.2 0 01-6 3.2zm7.71-9.21a1 1 0 10-1.42-1.42l-3.3 3.3-1.3-1.29a1 1 0 10-1.42 1.42l2 2a1 1 0 001.42 0l4-4z" />
+        </svg>
+      ),
+    },
   ];
 
   return (

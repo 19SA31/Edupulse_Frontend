@@ -9,6 +9,7 @@ import TutorsListPage from "../pages/admin/TutorListPage";
 import AdminLoginProtectRoute from "./ProtectedRoutes/AdminLoginProtectRoute";
 import AdminProtectRoute from "./ProtectedRoutes/AdminProtectRoute";
 import AddCourseCategoryPage from "../pages/admin/AddCourseCategoryPage";
+import TutorVerificationPage from "../pages/admin/TutorVerificationPage";
 
 function AdminRoutes() {
   return (
@@ -38,6 +39,7 @@ function AdminRoutes() {
           <Route path="usersList" element={<UsersListPage />} />
           <Route path="tutorsList" element={<TutorsListPage />} />
           <Route path="addCourseCategory" element={<AddCourseCategoryPage />} />
+          <Route path="tutorVerification" element={<TutorVerificationPage/>}/>
         </Route>
       </Routes>
     </div>
