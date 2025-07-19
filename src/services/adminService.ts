@@ -2,15 +2,10 @@ import { adminAxiosInstance } from "../api/adminAxiosInstance";
 import axios from "axios";
 
 export const adminLoginService = async (email: string, password: string) => {
-  const response = await adminAxiosInstance.post("/login", {
-    email,
-    password,
-  });
-  
+  const response = await adminAxiosInstance.post("/login", { email, password });
+
   if (response.data.success) {
-    // Only store the access token for admin
-    localStorage.setItem("accessToken", response.data.data.accessToken);
-    // No need to store admin data
+    localStorage.setItem("adminAccessToken", response.data.data.accessToken);
   }
 
   return response.data;
@@ -18,6 +13,11 @@ export const adminLoginService = async (email: string, password: string) => {
 
 export const logoutAdmin = async () => {
   const response = await adminAxiosInstance.post("/logout");
+
+  if (response.data.success) {
+    localStorage.removeItem("adminAccessToken");
+  }
+
   return response.data;
 };
 

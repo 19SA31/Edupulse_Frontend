@@ -22,7 +22,7 @@ export interface TableAction<T> {
 export interface TableProps<T> {
   data: T[];
   columns: TableColumn<T>[];
-  actions?: TableAction<T>[];
+  actions?: TableAction<T>[] | ((item: T) => TableAction<T>[]);
   loading?: boolean;
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
@@ -89,12 +89,16 @@ function Table<T>({
 
   // Helper function to resolve label (string or function)
   const getActionLabel = (action: TableAction<T>, item: T): string => {
-    return typeof action.label === 'function' ? action.label(item) : action.label;
+    return typeof action.label === "function"
+      ? action.label(item)
+      : action.label;
   };
 
   // Helper function to resolve variant (string or function)
   const getActionVariant = (action: TableAction<T>, item: T): string => {
-    return typeof action.variant === 'function' ? action.variant(item) : (action.variant || "primary");
+    return typeof action.variant === "function"
+      ? action.variant(item)
+      : action.variant || "primary";
   };
 
   const DefaultEmptyIcon = () => (
@@ -188,17 +192,22 @@ function Table<T>({
                           {renderCell(item, column)}
                         </td>
                       ))}
-                      {actions.length > 0 && (
+                      {actions && (
                         <td className="py-3 px-6 border-b border-gray-200 text-center">
                           <div className="flex justify-center space-x-2">
-                            {actions.map((action, actionIndex) => {
+                            {(typeof actions === "function"
+                              ? actions(item)
+                              : actions
+                            ).map((action, actionIndex) => {
                               const label = getActionLabel(action, item);
                               const variant = getActionVariant(action, item);
-                              
+
                               return (
                                 <button
                                   key={actionIndex}
-                                  className={`px-3 py-1 rounded text-sm transition-colors ${getButtonVariantClass(variant)}`}
+                                  className={`px-3 py-1 rounded text-sm transition-colors ${getButtonVariantClass(
+                                    variant
+                                  )}`}
                                   onClick={() => action.onClick(item)}
                                 >
                                   {label}

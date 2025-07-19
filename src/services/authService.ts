@@ -132,26 +132,39 @@ export const loginService = async (
   password: string
 ): Promise<ApiResponse> => {
   try {
-    const response = await userAxiosInstance.post("/login", {
-      email,
-      password,
-    });
-    console.log("inside login service for user: ", response.data);
-    
-    // Handle successful login
+    const response = await userAxiosInstance.post("/login", { email, password });
+
     if (response.data.success && response.data.data) {
-      localStorage.setItem("accessToken", response.data.data.accessToken);
+      localStorage.setItem("userAccessToken", response.data.data.accessToken);
       localStorage.setItem("user", JSON.stringify(response.data.data.user));
     }
 
     return response.data;
   } catch (error: any) {
-    if (error.response?.data) {
-      return error.response.data;
-    }
+    if (error.response?.data) return error.response.data;
     throw error;
   }
 };
+
+export const logoutUser = async (): Promise<ApiResponse> => {
+  try {
+    const response = await userAxiosInstance.post("/logout");
+
+    if (response.data.success) {
+      localStorage.removeItem("userAccessToken");
+      localStorage.removeItem("user");
+    }
+
+    return response.data;
+  } catch (error: any) {
+    localStorage.removeItem("userAccessToken");
+    localStorage.removeItem("user");
+
+    if (error.response?.data) return error.response.data;
+    throw error;
+  }
+};
+
 
 export const passwordChangeService = async (
   email: string, 
@@ -171,30 +184,7 @@ export const passwordChangeService = async (
   }
 };
 
-export const logoutUser = async (): Promise<ApiResponse> => {
-  try {
-    console.log("inside logout user service");
-    const response = await userAxiosInstance.post("/logout");
-    console.log("response", response);
-    
-    // Clear local storage on successful logout
-    if (response.data.success) {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("user");
-    }
-    
-    return response.data;
-  } catch (error: any) {
-    // Even if logout fails on server, clear local storage
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("user");
-    
-    if (error.response?.data) {
-      return error.response.data;
-    }
-    throw error;
-  }
-};
+
 
 // Updated profile update service for S3 integration
 export const updateUserProfile = async (

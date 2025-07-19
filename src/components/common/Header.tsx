@@ -20,13 +20,26 @@ function Header({ role = null }: HeaderProps) {
   const [userImage, setUserImage] = useState<string>("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isVerified, setIsVerified] = useState(true);
-  const [verificationStatus, setVerificationStatus] = useState<string | null>(null); // New state for verification status
+  const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
   const checkAuthStatus = () => {
-    const accessToken = localStorage.getItem("accessToken");
+    
+    
+    let accessToken = null;
+    
+    // Get the correct access token based on role
+    if (role === "admin") {
+      accessToken = localStorage.getItem("adminAccessToken");
+    } else if (role === "tutor") {
+      accessToken = localStorage.getItem("tutorAccessToken");
+    } else {
+      accessToken = localStorage.getItem("userAccessToken");
+    }
+
+    
 
     if (accessToken) {
       if (role === "admin") {
@@ -35,19 +48,21 @@ function Header({ role = null }: HeaderProps) {
         setUserImage(img);
         setIsVerified(true);
         setVerificationStatus(null);
+        
       } else {
         let userData = null;
         if (role === "tutor") {
           userData = localStorage.getItem("tutor");
-          console.log(userData);
+          
         } else {
           userData = localStorage.getItem("user");
+          
         }
 
         if (userData && userData !== "undefined" && userData !== "null") {
           try {
             const user = JSON.parse(userData);
-            console.log("&&", user.avatar);
+            
             
             setUserName(user?.name || "User");
             setIsLoggedIn(true);
@@ -56,51 +71,68 @@ function Header({ role = null }: HeaderProps) {
             // Check verification status for tutors
             if (role === "tutor") {
               setIsVerified(user?.isVerified || false);
-              // Set verification status (pending, approved, rejected, etc.)
               setVerificationStatus(user?.verificationStatus || null);
+              
             } else {
-              setIsVerified(true); // Users are always considered verified
+              setIsVerified(true);
               setVerificationStatus(null);
             }
+            
+            
           } catch (error) {
-            console.error("Error parsing user data:", error);
+            
             
             if (role === "tutor") {
               localStorage.removeItem("tutor");
+              localStorage.removeItem("tutorAccessToken");
             } else {
               localStorage.removeItem("user");
+              localStorage.removeItem("userAccessToken");
             }
             setIsLoggedIn(false);
             setIsVerified(true);
             setVerificationStatus(null);
           }
         } else {
+          
           setIsLoggedIn(false);
           setIsVerified(true);
           setVerificationStatus(null);
         }
       }
     } else {
+      
       setIsLoggedIn(false);
       setIsVerified(true);
       setVerificationStatus(null);
     }
+    
+    
   };
 
   useEffect(() => {
-    console.log(role);
+    
     checkAuthStatus();
 
     // Listen for storage changes
     const handleStorageChange = (e: StorageEvent) => {
+      
       // Check if the changed key is relevant to our component
-      if (e.key === "user" || e.key === "tutor" || e.key === "accessToken") {
+      if (
+        e.key === "user" || 
+        e.key === "tutor" || 
+        e.key === "userAccessToken" || 
+        e.key === "tutorAccessToken" || 
+        e.key === "adminAccessToken"
+      ) {
+        
         checkAuthStatus();
       }
     };
 
     // Listen for custom storage events (for same-tab updates)
     const handleCustomStorageChange = () => {
+      
       checkAuthStatus();
     };
 
@@ -116,21 +148,21 @@ function Header({ role = null }: HeaderProps) {
   const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("inside handlelogout");
+    console.log("🚪 Starting logout process for role:", role);
 
     try {
       if (role === "user") {
-        localStorage.removeItem("accessToken");
+        localStorage.removeItem("userAccessToken");
         localStorage.removeItem("user");
         await dispatch(logout()).unwrap();
         navigate("/login");
       } else if (role === "tutor") {
-        localStorage.removeItem("accessToken");
+        localStorage.removeItem("tutorAccessToken");
         localStorage.removeItem("tutor");
         await dispatch(logoutTutorAction()).unwrap();
         navigate("/tutor/login");
       } else if (role === "admin") {
-        localStorage.removeItem("accessToken");
+        localStorage.removeItem("adminAccessToken");
         await dispatch(logoutAdminAction()).unwrap();
         navigate("/admin/login");
       }
@@ -140,8 +172,9 @@ function Header({ role = null }: HeaderProps) {
       setIsProfileOpen(false);
       setVerificationStatus(null);
       toast.success("Logged out successfully");
+      
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error("❌ Logout failed:", error);
 
       if (typeof error === "string" && error.includes("Successfully")) {
         setIsLoggedIn(false);
@@ -197,6 +230,9 @@ function Header({ role = null }: HeaderProps) {
   const isVerificationDisabled = () => {
     return role === "tutor" && verificationStatus === "pending";
   };
+
+  // Debug render
+ 
 
   // Admin header - with profile dropdown or simple logout button
   if (role === "admin") {

@@ -25,7 +25,7 @@ interface TutorWithDocuments {
     fileName: string;
     uploadedAt: string;
   }[];
-  verificationStatus: "pending" | "approved" | "rejected";
+  verificationStatus: "pending" | "verified" | "rejected";
   submittedAt: string;
   // Optional fields from UserDetails if needed
   userId?: string;
@@ -327,7 +327,7 @@ function TutorVerification() {
       setTutors((prevTutors) =>
         prevTutors.map((tutor) =>
           tutor.id === tutorId
-            ? { ...tutor, verificationStatus: "approved" as const }
+            ? { ...tutor, verificationStatus: "verified" as const }
             : tutor
         )
       );
@@ -442,13 +442,6 @@ function TutorVerification() {
       ),
     },
     {
-      key: "verificationStatus",
-      title: "Status",
-      align: "center",
-      render: (tutor: TutorWithDocuments) =>
-        getStatusBadge(tutor.verificationStatus),
-    },
-    {
       key: "documents",
       title: "Documents",
       align: "center",
@@ -484,6 +477,33 @@ function TutorVerification() {
     },
   ];
 
+  const getActions = (tutor: TutorWithDocuments): TableAction<TutorWithDocuments>[] => {
+  if (tutor.verificationStatus === "pending") {
+    return [
+      {
+        label: () => "Approve",
+        onClick: () => handleVerifyTutor(tutor.id),
+        variant: () => "success",
+      },
+      {
+        label: () => "Reject",
+        onClick: () => handleOpenRejectionModal(tutor),
+        variant: () => "danger",
+      },
+    ];
+  } else {
+    return [
+      {
+        label: () =>
+          tutor.verificationStatus === "verified" ? "Approved" : "Rejected",
+        onClick: () => {}, // disabled or no-op
+        variant: () => "secondary",
+      },
+    ];
+  }
+};
+
+
   const actions: TableAction<TutorWithDocuments>[] = [
     {
       label: (tutor: TutorWithDocuments) =>
@@ -513,7 +533,7 @@ function TutorVerification() {
       <Table
         data={tutors}
         columns={columns}
-        actions={actions}
+        actions={getActions}
         loading={loading}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}

@@ -60,47 +60,39 @@ export const tutorVerifyOtpService = async (
   }
 };
 
-// Tutor Login
 export const tutorLoginService = async (email: string, password: string) => {
   try {
-    const response = await tutorAxiosInstance.post("/login", {
-      email,
-      password,
-    });
+    const response = await tutorAxiosInstance.post("/login", { email, password });
+
+    const tutorData = response.data.data.tutor;
+      console.log("Verification status:", tutorData.isVerified, tutorData.verificationStatus);
 
     if (response.data.success && response.data.data) {
       console.log("inside tutorloginservice", response.data.data.tutor);
-      localStorage.setItem("accessToken", response.data.data.accessToken);
+      localStorage.setItem("tutorAccessToken", response.data.data.accessToken);
       localStorage.setItem("tutor", JSON.stringify(response.data.data.tutor));
     }
 
-    console.log("inside tutor login service");
     return response.data;
   } catch (error: any) {
-    if (error.response?.data) {
-      return error.response.data;
-    }
+    if (error.response?.data) return error.response.data;
     throw error;
   }
 };
 
-// Tutor Logout
 export const logoutTutor = async () => {
   try {
     const response = await tutorAxiosInstance.post("/logout");
     console.log("inside logout tutor service", response);
 
-    // Clear localStorage on successful logout
     if (response.data.success) {
-      localStorage.removeItem("accessToken");
+      localStorage.removeItem("tutorAccessToken");
       localStorage.removeItem("tutor");
     }
 
     return response.data;
   } catch (error: any) {
-    if (error.response?.data) {
-      return error.response.data;
-    }
+    if (error.response?.data) return error.response.data;
     throw error;
   }
 };

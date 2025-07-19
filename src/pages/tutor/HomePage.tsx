@@ -9,22 +9,32 @@ function HomePage() {
   useEffect(() => {
     // Determine user role based on what's stored in localStorage
     const checkUserRole = () => {
-      const accessToken = localStorage.getItem("accessToken");
+      // Check for tutor authentication first
+      const tutorAccessToken = localStorage.getItem("tutorAccessToken");
+      const tutorData = localStorage.getItem("tutor");
       
-      if (accessToken) {
-        const userData = localStorage.getItem("user");
-        const tutorData = localStorage.getItem("tutor");
+      // Check for user authentication
+      const userAccessToken = localStorage.getItem("userAccessToken");
+      const userData = localStorage.getItem("user");
+      
+
+      
+      if (tutorAccessToken && tutorData) {
+        setUserRole("tutor");
         
-        if (tutorData) {
-          setUserRole("tutor");
-        } else if (userData) {
-          setUserRole("user");
-        }
+      } else if (userAccessToken && userData) {
+        setUserRole("user");
+        
+      } else {
+        setUserRole(null);
+        
       }
     };
 
     checkUserRole();
   }, []);
+
+  console.log('🏠 HomePage rendering with userRole:', userRole);
 
   return (
     <div className="pt-14">
