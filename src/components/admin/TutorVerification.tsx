@@ -27,7 +27,7 @@ interface TutorWithDocuments {
   }[];
   verificationStatus: "pending" | "verified" | "rejected";
   submittedAt: string;
-  // Optional fields from UserDetails if needed
+  
   userId?: string;
   phone?: string;
   avatar?: string;
@@ -35,7 +35,7 @@ interface TutorWithDocuments {
   isBlocked?: boolean;
 }
 
-// Interface for the raw API response
+
 interface RawTutorDoc {
   id: string;
   tutorId: string;
@@ -49,7 +49,7 @@ interface RawTutorDoc {
   submittedAt: string;
 }
 
-// Rejection form validation schema
+
 const rejectionValidationSchema = Yup.object({
   reason: Yup.string()
     .trim()
@@ -58,7 +58,7 @@ const rejectionValidationSchema = Yup.object({
     .required("Please provide a reason for rejection"),
 });
 
-// Rejection form initial values
+
 interface RejectionFormValues {
   reason: string;
 }
@@ -67,7 +67,7 @@ const initialRejectionValues: RejectionFormValues = {
   reason: "",
 };
 
-// Rejection Modal Component
+
 interface RejectionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -214,7 +214,7 @@ function TutorVerification() {
   >([]);
   const [initialDocumentIndex, setInitialDocumentIndex] = useState<number>(0);
 
-  // Rejection modal states
+ 
   const [isRejectionModalOpen, setIsRejectionModalOpen] =
     useState<boolean>(false);
   const [selectedTutorForRejection, setSelectedTutorForRejection] =
@@ -227,7 +227,7 @@ function TutorVerification() {
     return rawTutors.map((rawTutor) => {
       const documents = [];
 
-      // Create document objects for each document type
+     
       if (rawTutor.avatar) {
         documents.push({
           id: `${rawTutor.id}-avatar`,
@@ -269,18 +269,18 @@ function TutorVerification() {
       }
 
       return {
-        id: rawTutor.tutorId, // Use tutorId as the main id
+        id: rawTutor.tutorId, 
         name: rawTutor.tutorName,
         email: rawTutor.tutorEmail,
         documents,
         verificationStatus: rawTutor.verificationStatus,
         submittedAt: rawTutor.submittedAt,
-        // Optional fields - you can add these if available in your API response
+        
         userId: rawTutor.tutorId,
-        phone: undefined, // Add if available in API
+        phone: undefined, 
         avatar: rawTutor.avatar,
         createdAt: rawTutor.submittedAt,
-        isBlocked: false, // Add logic if available in API
+        isBlocked: false, 
       } as TutorWithDocuments;
     });
   };
@@ -293,8 +293,8 @@ function TutorVerification() {
       console.log("tutor verific docs:", response);
 
       if (response && response.success) {
-        // Transform the raw API data
-        const rawTutors = response.data.tutorDocs || []; // Note: using tutorDocs not tutors
+        
+        const rawTutors = response.data.tutorDocs || []; 
         const transformedTutors = transformTutorData(rawTutors);
 
         setTutors(transformedTutors);
@@ -339,7 +339,7 @@ function TutorVerification() {
   const handleRejectTutor = async (tutorId: string, reason: string) => {
     try {
       setRejectionLoading(true);
-      // You'll need to update your rejectTutor service to accept a reason parameter
+     
       await rejectTutor(tutorId, reason);
       setTutors((prevTutors) =>
         prevTutors.map((tutor) =>
@@ -419,7 +419,7 @@ function TutorVerification() {
     );
   };
 
-  // Define table columns
+  
   const columns: TableColumn<TutorWithDocuments>[] = [
     {
       key: "name",
@@ -496,7 +496,7 @@ function TutorVerification() {
       {
         label: () =>
           tutor.verificationStatus === "verified" ? "Approved" : "Rejected",
-        onClick: () => {}, // disabled or no-op
+        onClick: () => {},
         variant: () => "secondary",
       },
     ];
@@ -548,7 +548,7 @@ function TutorVerification() {
         getItemId={(tutor) => tutor.id}
       />
 
-      {/* Enhanced Document View Modal */}
+      
       <DocumentViewModal
         isOpen={isDocumentModalOpen}
         onClose={handleCloseDocumentModal}
@@ -556,7 +556,7 @@ function TutorVerification() {
         initialDocumentIndex={initialDocumentIndex}
       />
 
-      {/* Rejection Modal */}
+      
       <RejectionModal
         isOpen={isRejectionModalOpen}
         onClose={handleCloseRejectionModal}

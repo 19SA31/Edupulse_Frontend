@@ -42,7 +42,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
           .then((data) => {
             console.log("Login successful data:", data);
             toast.success("User Login Successful!");
-            onLoginSuccess(); // Remove navigate("/")
+            onLoginSuccess(); 
           })
           .catch((error: any) => {
             const message =
@@ -54,7 +54,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
           .unwrap()
           .then(() => {
             toast.success("Tutor Login Successful!");
-            onLoginSuccess(); // Remove navigate("/tutor/")
+            onLoginSuccess(); 
           })
           .catch((error: any) => {
             const message =
@@ -66,7 +66,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
           .unwrap()
           .then(() => {
             toast.success("Admin Login Successful!");
-            onLoginSuccess(); // Remove navigate("/admin/dashboard")
+            onLoginSuccess(); 
           })
           .catch((error: any) => {
             const message =

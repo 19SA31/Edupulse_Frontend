@@ -33,7 +33,7 @@ function AdminRoutes() {
             </AdminProtectRoute>
           }
         >
-          {/* Index route - redirects /admin/ to /admin/dashboard */}
+       
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="usersList" element={<UsersListPage />} />

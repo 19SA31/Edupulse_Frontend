@@ -13,13 +13,13 @@ function ReusableSidebar({
 }: SidebarProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Ensure sidebarItems is always an array
+
   const safeSidebarItems = Array.isArray(sidebarItems) ? sidebarItems : [];
   console.log("safeSidebarItems",safeSidebarItems)
 
   return (
     <>
-      {/* Mobile Menu Button - positioned to work with Header */}
+
       <button
         type="button"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -41,7 +41,7 @@ function ReusableSidebar({
         </svg>
       </button>
 
-      {/* Sidebar */}
+
       <aside
         className={`fixed top-14 left-0 z-40 w-64 h-screen pt-6 transition-transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -61,7 +61,7 @@ function ReusableSidebar({
                         : `${textColor} ${hoverColor}`
                     }`
                   }
-                  onClick={() => setIsSidebarOpen(false)} // Close sidebar on mobile when clicking a link
+                  onClick={() => setIsSidebarOpen(false)} 
                 >
                   {({ isActive }) => (
                     <>
@@ -86,7 +86,7 @@ function ReusableSidebar({
         </div>
       </aside>
 
-      {/* Overlay for mobile when sidebar is open */}
+
       {isSidebarOpen && (
         <div
           className="fixed inset-0 z-30 bg-black bg-opacity-50 sm:hidden"

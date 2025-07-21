@@ -11,11 +11,11 @@ function TutorProtectRoute({ children }: TutorProtectRouteProps) {
   const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(true);
   
-  // Access the tutor slice directly with careful null checking
+ 
   const tutorState = useSelector((state: RootState) => state.tutor);
   const isLoggedIn = tutorState && (tutorState.user !== null || tutorState.isAuthenticated);
   
-  // Also check localStorage directly as a fallback
+
   const checkLocalStorageAuth = () => {
     const tutorData = localStorage.getItem('persist:tutor');
     if (tutorData) {
@@ -36,11 +36,11 @@ function TutorProtectRoute({ children }: TutorProtectRouteProps) {
   console.log("tutor protect route - localStorage check:", checkLocalStorageAuth());
   
   useEffect(() => {
-    // Short delay to ensure store is fully hydrated
+   
     const authCheck = setTimeout(() => {
       const hasLocalAuth = checkLocalStorageAuth();
       
-      // If not logged in according to both Redux and localStorage, redirect to login
+      
       if (!isLoggedIn && !hasLocalAuth) {
         console.log("Not logged in, redirecting to login page");
         navigate('/tutor/', {
@@ -55,12 +55,12 @@ function TutorProtectRoute({ children }: TutorProtectRouteProps) {
     return () => clearTimeout(authCheck);
   }, [navigate, isLoggedIn, tutorState]);
   
-  // Show nothing while checking auth status
+
   if (isChecking) {
     return null;
   }
   
-  // After checking, if logged in by either Redux or localStorage, show children
+
   return (isLoggedIn || checkLocalStorageAuth()) ? <>{children}</> : null;
 }
 

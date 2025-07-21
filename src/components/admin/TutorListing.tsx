@@ -85,7 +85,7 @@ function TutorListing() {
     setSelectedTutor(null);
   };
 
-  // Define table columns
+
   const columns: TableColumn<UserDetails>[] = [
     {
       key: "name",
@@ -112,7 +112,7 @@ function TutorListing() {
     },
   ];
 
-  // Define table actions
+
   const actions: TableAction<UserDetails>[] = [
     {
       label: (tutor: UserDetails) => (tutor.isBlocked ? "List" : "Unlist"),

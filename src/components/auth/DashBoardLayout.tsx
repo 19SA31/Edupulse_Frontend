@@ -24,20 +24,19 @@ interface UserData {
   avatar?: string;
 }
 
-interface Category{
+interface Category {
   name?: string;
-  description?:string
+  description?: string;
 }
 
 const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState<UserData | null>(null);
-  // const [category,setCategory]=useState<Category|null>
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [avatarError, setAvatarError] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
 
-  // Load user data from localStorage with error handling
   const loadUserData = useCallback(() => {
     setIsLoading(true);
     try {
@@ -75,9 +74,10 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
           setUserData(null);
         }
       } else {
-        // Admin role
         setUserData(null);
       }
+      
+      setAvatarError(false);
     } catch (error) {
       console.error("Error loading user data:", error);
       setUserData(null);
@@ -87,25 +87,26 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
     }
   }, [role]);
 
-  // Load data on component mount and role change
   useEffect(() => {
     loadUserData();
   }, [loadUserData]);
 
-  // Handle profile update callback
   const handleProfileUpdate = useCallback(() => {
-  toast.success("Profile updated successfully!");
-  loadUserData(); // 
-}, [loadUserData]);
-
-  // Handle modal close
-  const handleModalClose = useCallback(() => {
-    setIsEditModalOpen(false);
-    // Reload data to ensure we have the latest from localStorage
-    loadUserData();
+    toast.success("Profile updated successfully!");
+    
+    setTimeout(() => {
+      loadUserData();
+    }, 100);
   }, [loadUserData]);
 
-  // Format date display
+  const handleModalClose = useCallback(() => {
+    setIsEditModalOpen(false);
+  }, []);
+
+  const handleAvatarError = useCallback(() => {
+    setAvatarError(true);
+  }, []);
+
   const formatDate = (dateString: string) => {
     try {
       return new Date(dateString).toLocaleDateString('en-US', {
@@ -118,7 +119,6 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
     }
   };
 
-  // Render user details section
   const renderUserDetails = () => {
     if (role === "admin") {
       return (
@@ -147,32 +147,27 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
 
     return (
       <div className="mb-6">
-        {/* Profile Image */}
+        
         <div className="mb-6">
           <div className="w-24 h-24 rounded-full mx-auto overflow-hidden border-2 border-gray-500 shadow-lg">
             <img
-              src={userData?.avatar || img}
+              src={avatarError ? img : (userData?.avatar || img)}
               alt="Profile"
               className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = img;
-              }}
+              onError={handleAvatarError}
             />
           </div>
         </div>
 
-        {/* Welcome Message */}
+        
         <h1 className="text-2xl font-semibold text-white mb-6 text-center">
           Welcome{" "}
           {userData?.name ||
             `${role.charAt(0).toUpperCase() + role.slice(1)}`}
           !
         </h1>
-        <h3>
-          <input type="dropdown"></input>
-        </h3>
 
-        {/* User Details Grid */}
+        
         <div className="space-y-4">
           {userData?.name && (
             <div className="flex items-center space-x-3 p-3 bg-gray-700 rounded-lg">
@@ -224,7 +219,7 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
             </div>
           )}
 
-          {/* Show message if no additional info */}
+          
           {(!userData?.name && !userData?.phone && !userData?.DOB && !userData?.gender) && (
             <div className="text-center py-4">
               <p className="text-gray-400 text-sm">
@@ -234,7 +229,7 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
           )}
         </div>
 
-        {/* Edit Button */}
+       
         <div className="mt-6">
           <button
             onClick={() => setIsEditModalOpen(true)}
@@ -252,17 +247,11 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
     <>
       <div className="flex justify-center items-center w-full min-h-screen p-4 bg-transparent">
         <div className="bg-gray-800 p-8 rounded-3xl shadow-2xl w-full max-w-lg">
-        
-          
-          {/* Content */}
           {renderUserDetails()}
-
-          {/* Additional Actions for Non-Admin Users */}
-          
         </div>
       </div>
 
-      {/* Edit Profile Modal */}
+      
       {(role === "user" || role === "tutor") && userData && (
         <EditProfileModal
           isOpen={isEditModalOpen}

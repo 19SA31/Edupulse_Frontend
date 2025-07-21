@@ -99,11 +99,11 @@ function Register({ role }: RegisterProps) {
       className="h-screen w-screen flex items-center justify-center bg-cover bg-center bg-no-repeat relative"
       style={{ backgroundImage: `url(${bg_img})` }}
     >
-      {/* Overlay */}
+      
       <div className="absolute inset-0 bg-black/60"></div>
 
       <div className="relative z-10 flex flex-col lg:flex-row w-full max-w-4xl overflow-hidden bg-white/5 rounded-3xl border border-white/30 backdrop-blur-md">
-        {/* Left Side - Welcome Section */}
+        
         <div className="w-full lg:w-1/2 flex flex-col bg-black items-center justify-center p-10 bg-blend-saturation text-white">
           <img src={logo} alt="Logo" className="w-50 h-auto mb-6" />
           <h2 className="text-3xl font-bold text-center">
@@ -115,13 +115,13 @@ function Register({ role }: RegisterProps) {
           </p>
         </div>
 
-        {/* Right Side - Registration Form */}
+        
         <div className="w-full lg:w-1/2 p-10 bg-transparent rounded-3xl">
           <h2 className="text-3xl font-semibold text-white mb-6 text-center lg:text-left">
             {role === "user" ? "User Registration" : "Tutor Registration"}
           </h2>
           <form onSubmit={formik.handleSubmit} className="space-y-5">
-            {/* Input Fields */}
+            
             <div className="space-y-4">
               <input
                 type="text"
@@ -192,7 +192,7 @@ function Register({ role }: RegisterProps) {
                 )}
             </div>
 
-            {/* Register Button */}
+           
             <button
               type="submit"
               className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-200"

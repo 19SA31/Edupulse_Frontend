@@ -19,10 +19,10 @@ function TutorRoutes() {
       <Toaster richColors position="top-center" />
 
       <Routes>
-        {/* Public HomePage: decides what to show based on auth inside the component */}
+    
         <Route path="" element={<HomePage />} />
 
-        {/* Protected from already logged-in tutors */}
+       
         <Route
           path="login"
           element={
@@ -48,7 +48,7 @@ function TutorRoutes() {
           }
         />
 
-        {/* Protected for logged-in tutors only - Verification first */}
+       
         <Route
           path="verify-tutor"
           element={
@@ -58,7 +58,7 @@ function TutorRoutes() {
           }
         />
 
-        {/* Protected for logged-in tutors only - Profile nested routes (will be protected by verification later) */}
+        
         <Route
           path="profile"
           element={
@@ -71,7 +71,7 @@ function TutorRoutes() {
           <Route path="dashboard" element={<DashboardPage />} />
         </Route>
 
-        {/* Public routes */}
+       
         <Route path="forgot-password" element={<ForgotPassword />} />
         <Route path="reset-password" element={<PasswordUpdate />} />
       </Routes>

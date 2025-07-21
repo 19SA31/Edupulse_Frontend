@@ -19,20 +19,20 @@ function AddCourseCategory() {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
-  // Category listing states
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Edit mode states
+
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
     null
   );
 
-  // Formik configuration
+
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -63,7 +63,7 @@ function AddCourseCategory() {
             values.description.trim()
           );
         } else {
-          // Add new category
+
           response = await addCategoryService(
             values.name.trim(),
             values.description.trim()
@@ -123,7 +123,7 @@ function AddCourseCategory() {
       console.log("Full response:", response);
 
       if (response.data && response.data.success && response.data.data) {
-        // Fix: Change 'category' to 'categories'
+
         const { categories, totalPages } = response.data.data;
 
         setCategories(categories || []);
@@ -179,7 +179,6 @@ function AddCourseCategory() {
     }
   };
 
-  // Edit functionality
   const handleEditCategory = (category: Category) => {
     setIsEditMode(true);
     setEditingCategoryId(category.id);
@@ -188,7 +187,7 @@ function AddCourseCategory() {
       description: category.description,
     });
 
-    // Scroll to form
+  
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -271,9 +270,9 @@ function AddCourseCategory() {
 
   return (
     <div className="p-3 mt-4">
-      {/* Main content container with proper spacing */}
+      
       <div className="pt-20 px-6 pb-6">
-        {/* Add/Edit Category Form */}
+       
         <div className="bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden mb-8">
           <div className="bg-gray-100 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-xl font-semibold text-gray-800">
@@ -283,7 +282,7 @@ function AddCourseCategory() {
 
           <form onSubmit={formik.handleSubmit} className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Category Name */}
+             
               <div>
                 <label
                   htmlFor="name"
@@ -313,7 +312,7 @@ function AddCourseCategory() {
                 )}
               </div>
 
-              {/* Description */}
+              
               <div>
                 <label
                   htmlFor="description"
@@ -344,7 +343,7 @@ function AddCourseCategory() {
               </div>
             </div>
 
-            {/* Form Actions */}
+           
             <div className="flex justify-end space-x-4 mt-6">
               <button
                 type="button"
@@ -371,7 +370,7 @@ function AddCourseCategory() {
           </form>
         </div>
 
-        {/* Category Listing Section */}
+      
         <div className="bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden">
 
 

@@ -23,7 +23,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
 }) => {
   if (!isOpen || !user) return null;
   console.log("inside modal",user)
-  // Format date
+ 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -34,14 +34,14 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     });
   };
 
-  // Handle outside click
+
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       onClose();
     }
   };
 
-  // Handle escape key
+
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -66,7 +66,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       onClick={handleOverlayClick}
     >
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
-        {/* Header */}
+       
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
           <button
@@ -89,7 +89,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
           </button>
         </div>
 
-        {/* Content */}
+      
         <div className="p-6">
           {/* Avatar */}
           <div className="flex justify-center mb-6">
@@ -99,20 +99,20 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                 alt={user.name}
                 className="w-20 h-20 rounded-full object-cover border-4 border-gray-200 shadow-md"
                 onError={(e) => {
-                  // Fallback to default avatar if image fails to load
+              
                   e.currentTarget.style.display = 'none';
                   e.currentTarget.nextElementSibling?.classList.remove('hidden');
                 }}
               />
             ) : null}
             
-            {/* Default Avatar (shown when no avatar or image fails to load) */}
+       
             <div className={`w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-2xl font-semibold shadow-md ${user.avatar ? 'hidden' : ''}`}>
               {user.name.charAt(0).toUpperCase()}
             </div>
           </div>
 
-          {/* User Details */}
+          
           <div className="space-y-4">
             <div className="flex items-center">
               <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">

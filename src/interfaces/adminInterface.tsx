@@ -35,10 +35,10 @@ export interface SidebarItem {
 }
 
 export interface SidebarProps {
-  // Required props
+
   sidebarItems?: SidebarItem[];
   
-  // Optional customization props
+ 
   backgroundColor?: string;
   activeColor?: string;
   hoverColor?: string;

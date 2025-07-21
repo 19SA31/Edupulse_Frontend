@@ -51,7 +51,7 @@ function Banner() {
         </div>
       </div>
 
-      {/* 2x2 Images Grid Below Buttons */}
+      
       <div className="w-full max-w-5xl mx-auto mb-16">
         <div className="grid grid-cols-2 gap-8">
           {courseImages.map((image, index) => (
@@ -61,7 +61,7 @@ function Banner() {
                 alt={image.alt}
                 className="w-full h-80 lg:h-96 object-cover transition-transform duration-300 group-hover:scale-110"
                 onError={(e) => {
-                  // Fallback if image fails to load
+                  
                   const target = e.target as HTMLImageElement;
                   target.src = `https://via.placeholder.com/500x400/1f2937/ffffff?text=${encodeURIComponent(image.title)}`;
                 }}
@@ -74,7 +74,7 @@ function Banner() {
           ))}
         </div>
         
-        {/* Explore More Button */}
+        
         <div className="text-center mt-12">
           <button 
             onClick={() => window.location.href = '/login'}
@@ -85,7 +85,7 @@ function Banner() {
         </div>
       </div>
 
-      {/* Tutor Section */}
+    
       <div className="w-full max-w-4xl mx-auto">
         <div className="relative group overflow-hidden rounded-xl cursor-pointer" onClick={() => window.location.href = '/tutor/login'}>
           <img

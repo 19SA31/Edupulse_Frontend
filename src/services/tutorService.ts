@@ -1,7 +1,23 @@
 import { tutorAxiosInstance } from "../api/tutorAxiosInstance";
 
+interface CropData {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+export interface UpdateProfileData {
+  id?: string;
+  name?: string;
+  phone?: string;
+  DOB?: string;
+  gender?: string;
+  avatar?: File;
+  cropData?: CropData;
+}
+
 interface VerificationDocuments {
-  avatar: File,
+  avatar: File;
   degree: File;
   aadharFront: File;
   aadharBack: File;
@@ -9,7 +25,6 @@ interface VerificationDocuments {
   phone?: string;
 }
 
-// Tutor Signup Service
 export const tutorSignUpService = async (
   name: string,
   email: string,
@@ -26,7 +41,6 @@ export const tutorSignUpService = async (
     console.log("inside tutor signup service");
     return response.data;
   } catch (error: any) {
-    // Return the error response data if available, otherwise throw
     if (error.response?.data) {
       return error.response.data;
     }
@@ -34,7 +48,6 @@ export const tutorSignUpService = async (
   }
 };
 
-// Tutor OTP Verification
 export const tutorVerifyOtpService = async (
   name: string,
   email: string,
@@ -62,10 +75,18 @@ export const tutorVerifyOtpService = async (
 
 export const tutorLoginService = async (email: string, password: string) => {
   try {
-    const response = await tutorAxiosInstance.post("/login", { email, password });
+    const response = await tutorAxiosInstance.post("/login", {
+      email,
+      password,
+    });
 
     const tutorData = response.data.data.tutor;
-      console.log("Verification status:", tutorData.isVerified, tutorData.verificationStatus);
+    console.log(
+      "Verification status:",
+      tutorData,
+      tutorData.isVerified,
+      tutorData.verificationStatus
+    );
 
     if (response.data.success && response.data.data) {
       console.log("inside tutorloginservice", response.data.data.tutor);
@@ -97,7 +118,6 @@ export const logoutTutor = async () => {
   }
 };
 
-// Forgot Password - Send OTP
 export const tutorForgotPasswordService = async (
   email: string,
   isForgot: boolean
@@ -117,7 +137,6 @@ export const tutorForgotPasswordService = async (
   }
 };
 
-// Forgot Password - Verify OTP
 export const tutorVerifyForgotOtpService = async (
   email: string,
   otp: string,
@@ -139,7 +158,6 @@ export const tutorVerifyForgotOtpService = async (
   }
 };
 
-// Reset Password
 export const tutorPasswordChangeService = async (
   email: string,
   password: string
@@ -159,21 +177,18 @@ export const tutorPasswordChangeService = async (
   }
 };
 
-// Tutor Verification Service
 export const tutorVerificationService = async (
   documents: VerificationDocuments
 ) => {
   try {
-    // Create FormData for file upload
     const formData = new FormData();
-    console.log("inside verifytutor front service",documents)
-    // Append files
-    formData.append("avatar",documents.avatar)
+    console.log("inside verifytutor front service", documents);
+
+    formData.append("avatar", documents.avatar);
     formData.append("degree", documents.degree);
     formData.append("aadharFront", documents.aadharFront);
     formData.append("aadharBack", documents.aadharBack);
 
-    // Add tutor info from localStorage if not provided
     if (documents.email) {
       formData.append("email", documents.email);
     }
@@ -181,7 +196,6 @@ export const tutorVerificationService = async (
       formData.append("phone", documents.phone);
     }
 
-    // If email/phone not provided, get from localStorage
     if (!documents.email || !documents.phone) {
       const tutorData = localStorage.getItem("tutor");
       if (tutorData) {
@@ -216,7 +230,6 @@ export const tutorVerificationService = async (
   }
 };
 
-// Get verification status
 export const getTutorVerificationStatus = async () => {
   try {
     const response = await tutorAxiosInstance.get("/verification-status");
@@ -231,41 +244,89 @@ export const getTutorVerificationStatus = async () => {
   }
 };
 
+export const updateTutorProfile = async (
+  profileData: UpdateProfileData
+): Promise<{
+  success: boolean;
+  message: string;
+  data?: any;
+}> => {
+  try {
+    const formData = new FormData();
+    if (profileData.name) formData.append("name", profileData.name);
+    if (profileData.phone) formData.append("phone", profileData.phone);
+    if (profileData.DOB) formData.append("DOB", profileData.DOB);
+    if (profileData.gender) formData.append("gender", profileData.gender);
+    if (profileData.avatar) formData.append("avatar", profileData.avatar);
 
+    const response = await tutorAxiosInstance.put(
+      "/profile/update-profile",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        timeout: 60000, 
+      }
+    );
 
-// export const updateTutorProfile = async (profileData: UpdateProfileData) => {
-//   try {
-//     const formData = new FormData();
+    console.log('Profile update response:', response.data);
+    if (!response.data.success) {
+      return {
+        success: false,
+        message: response.data.message || 'Failed to update profile',
+        data: null
+      };
+    }
 
-//     if (profileData.name) formData.append('name', profileData.name);
-//     if (profileData.phone) formData.append('phone', profileData.phone);
-//     if (profileData.DOB) formData.append('DOB', profileData.DOB);
-//     if (profileData.gender) formData.append('gender', profileData.gender);
-//     if (profileData.avatar) formData.append('avatar', profileData.avatar);
+    const currentTutor = JSON.parse(localStorage.getItem('tutor') || '{}');
+    const currentTutorData = response.data.data?.tutor || response.data.tutor || {};
 
-//     const response = await userAxiosInstance.put('/tutor/profile/update-profile', formData, {
-//       headers: {
-//         'Content-Type': 'multipart/form-data',
-//       },
-//     });
+    const updatedTutor = { 
+      ...currentTutor, 
+      ...currentTutorData,
+   
+      avatar: currentTutorData.avatar || currentTutor.avatar
+    };
 
-//     if (response.data.success) {
-//       // Update localStorage with new tutor data
-//       const currentTutor = JSON.parse(localStorage.getItem('tutor') || '{}');
-//       const updatedTutor = { ...currentTutor, ...response.data.tutor };
-//       localStorage.setItem('tutor', JSON.stringify(updatedTutor));
-//     }
+    localStorage.setItem('tutor', JSON.stringify(updatedTutor));
+    console.log("Updated user data with S3 URL:", updatedTutor);
+    
+    return {
+      success: true,
+      data: { user: updatedTutor },
+      message: response.data.message || 'Profile updated successfully'
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to update profile",
+      data: null,
+    };
+  }
+};
 
-//     return {
-//       success: true,
-//       data: response.data,
-//       message: response.data.message || 'Profile updated successfully'
-//     };
-//   } catch (error: any) {
-//     return {
-//       success: false,
-//       message: error.response?.data?.message || 'Failed to update profile',
-//       data: null
-//     };
-//   }
-// };
+export const getCurrentUserProfile = (): any | null => {
+  try {
+    const userStr = localStorage.getItem("tutor");
+    return userStr ? JSON.parse(userStr) : null;
+  } catch (error) {
+    console.error("Error getting tutor profile from localStorage:", error);
+    return null;
+  }
+};
+
+export const updateUserInStorage = (userData: any): void => {
+  try {
+    const currentUser = getCurrentUserProfile() || {};
+    const updatedUser = { ...currentUser, ...userData };
+    localStorage.setItem("tutor", JSON.stringify(updatedUser));
+  } catch (error) {
+    console.error("Error updating tutor in localStorage:", error);
+  }
+};
+
+export const clearUserData = (): void => {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("tutor");
+};

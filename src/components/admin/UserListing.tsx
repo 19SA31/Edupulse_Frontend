@@ -96,7 +96,7 @@ function UserListing() {
 
   console.log("frontend listing", users);
 
-  // Define table columns
+
   const columns: TableColumn<UserDetails>[] = [
     {
       key: "name",
@@ -123,11 +123,11 @@ function UserListing() {
     },
   ];
 
-  // Define table actions
+
   const actions: TableAction<UserDetails>[] = [
     {
       label: (user: UserDetails) => (user.isBlocked ? "List" : "Unlist"),
-      onClick: (user) => toggleListState(user.id), // Changed from user._id to user.id
+      onClick: (user) => toggleListState(user.id), 
       variant: (user: UserDetails) => (user.isBlocked ? "success" : "danger"),
     },
   ];
@@ -149,7 +149,7 @@ function UserListing() {
         itemsPerPage={7}
         emptyMessage="No users found."
         loadingMessage="Loading Users..."
-        getItemId={(user) => user.id} // Changed from user._id to user.id
+        getItemId={(user) => user.id} 
       />
 
       {/* User Details Modal */}
@@ -157,7 +157,7 @@ function UserListing() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         user={selectedUser ? {
-          id: selectedUser.id, // Changed from selectedUser._id to selectedUser.id
+          id: selectedUser.id, 
           name: selectedUser.name,
           email: selectedUser.email,
           phone: selectedUser.phone,

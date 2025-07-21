@@ -71,7 +71,7 @@ const validationSchema = Yup.object({
 });
 
 function VerifyTutor() {
-  const navigate = useNavigate(); // Add this hook
+  const navigate = useNavigate(); 
   
   const initialValues: FormValues = {
     avatar: null,
@@ -85,19 +85,19 @@ function VerifyTutor() {
     setFieldValue: (field: string, value: any) => void,
     fieldName: string
   ) => {
-    // Validate file type
+  
     if (!file.type.startsWith("image/")) {
       toast.error("Please upload only image files (JPG, PNG, etc.)");
       return;
     }
 
-    // Validate file size (5MB limit)
+  
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File size must be less than 5MB");
       return;
     }
 
-    // Create preview URL
+
     const preview = URL.createObjectURL(file);
 
     setFieldValue(fieldName, { file, preview });
@@ -137,16 +137,16 @@ function VerifyTutor() {
     toast.info("File removed");
   };
 
-  // Updated handleSubmit function with tutor photo
+ 
   const handleSubmit = async (values: FormValues, { setSubmitting }: any) => {
     try {
-      // Validate that all required files are present
+      
       if (!values.avatar || !values.degree || !values.aadharFront || !values.aadharBack) {
         toast.error("Please upload all required documents");
         return;
       }
 
-      // Prepare documents for submission
+     
       const documents = {
         avatar: values.avatar.file,
         degree: values.degree.file,
@@ -155,7 +155,7 @@ function VerifyTutor() {
       };
       console.log("verify tutor ui", documents);
       
-      // Call the verification service
+     
       const result = await tutorVerificationService(documents);
       console.log("verifytutor front", result);
       
@@ -164,33 +164,33 @@ function VerifyTutor() {
           "Verification documents submitted successfully! We will review your application and get back to you within 2-3 business days."
         );
 
-        // Clean up preview URLs
+     
         if (values.avatar) URL.revokeObjectURL(values.avatar.preview);
         if (values.degree) URL.revokeObjectURL(values.degree.preview);
         if (values.aadharFront) URL.revokeObjectURL(values.aadharFront.preview);
         if (values.aadharBack) URL.revokeObjectURL(values.aadharBack.preview);
 
-        // Update tutor data in localStorage to reflect verification status
+      
         const tutorData = localStorage.getItem("tutor");
         if (tutorData) {
           try {
             const tutor = JSON.parse(tutorData);
-            // Update verification status to pending (you can adjust this based on your backend response)
-            tutor.verificationStatus = result.data.status; // 'pending'
+           
+            tutor.verificationStatus = result.data.status;
             tutor.verificationId = result.data.verificationId;
             tutor.verificationSubmittedAt = result.data.submittedAt;
             
-            // Save updated tutor data
+
             localStorage.setItem("tutor", JSON.stringify(tutor));
             
-            // Trigger storage event for header to update
+
             window.dispatchEvent(new Event('userProfileUpdated'));
           } catch (error) {
             console.error("Error updating tutor data:", error);
           }
         }
 
-        // Redirect to tutor dashboard
+
         navigate("/tutor");
       } else {
         toast.error(

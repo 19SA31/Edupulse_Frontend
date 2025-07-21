@@ -16,6 +16,7 @@ import {
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { updateUserProfile } from "../../services/authService";
+import { updateTutorProfile } from "../../services/tutorService";
 import img from "../../assets/unknown-user.jpg";
 
 interface EditProfileModalProps {
@@ -48,7 +49,6 @@ interface FormValues {
   gender: string;
 }
 
-// Validation schema using Yup
 const validationSchema = Yup.object({
   name: Yup.string()
     .trim()
@@ -61,7 +61,7 @@ const validationSchema = Yup.object({
   DOB: Yup.date()
     .max(new Date(), "Date of birth cannot be in the future")
     .test("age", "You must be at least 13 years old", function (value) {
-      if (!value) return true; // Allow empty DOB
+      if (!value) return true;
       const today = new Date();
       const birthDate = new Date(value);
       const age = today.getFullYear() - birthDate.getFullYear();
@@ -116,7 +116,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const imageRef = useRef<HTMLImageElement>(null);
   const cropperRef = useRef<HTMLDivElement>(null);
 
-  // Initial form values
   const initialValues: FormValues = {
     name: userData?.name || "",
     phone: userData?.phone || "",
@@ -126,7 +125,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     gender: userData?.gender || "",
   };
 
-  // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
       setAvatarPreview(userData?.avatar || "");
@@ -139,9 +137,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     }
   }, [isOpen, userData]);
 
-  // Enhanced file validation
   const validateFile = (file: File): { isValid: boolean; error?: string } => {
-    // File size validation (10MB limit for S3)
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       return {
@@ -150,7 +146,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       };
     }
 
-    // File type validation
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
       return {
@@ -159,7 +154,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       };
     }
 
-    // File name validation
     if (file.name.length > 255) {
       return { isValid: false, error: "File name too long." };
     }
@@ -181,7 +175,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     setIsImageLoading(true);
     setAvatarFile(file);
 
-    // Create preview for cropping
     const reader = new FileReader();
     reader.onload = () => {
       setAvatarPreview(reader.result as string);
@@ -201,7 +194,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         imageRef.current;
       setImageNaturalSize({ width: naturalWidth, height: naturalHeight });
 
-      // Initialize crop area to center square
       const minDimension = Math.min(clientWidth, clientHeight);
       const size = minDimension * 0.8;
       const newCropData = {
@@ -269,7 +261,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
   const handleCropConfirm = () => {
-    // Store the final crop data when user confirms
     if (imageRef.current && cropData.width > 0 && cropData.height > 0) {
       const { clientWidth, clientHeight } = imageRef.current;
       const scaleX = imageNaturalSize.width / clientWidth;
@@ -302,117 +293,116 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   };
 
   const handleSubmit = async (values: FormValues, { setSubmitting }: any) => {
-    setIsLoading(true);
-    setSubmitting(true);
-    setUploadProgress(0);
-    setUploadStatus("");
-    setError("");
+  setIsLoading(true);
+  setSubmitting(true);
+  setUploadProgress(0);
+  setUploadStatus("");
+  setError("");
 
-    try {
-      // Check if there are any changes
-      const hasFormChanges = Object.keys(values).some(
-        (key) => values[key as keyof FormValues] !== (userData as any)?.[key]
-      );
+  try {
+    const hasFormChanges = Object.keys(values).some(
+      (key) => values[key as keyof FormValues] !== (userData as any)?.[key]
+    );
 
-      if (!hasFormChanges && !avatarFile) {
-        setError("No changes to update");
-        setIsLoading(false);
-        setSubmitting(false);
-        return;
-      }
-
-      // Prepare update data
-      const updateData: any = { ...values };
-
-      // Add avatar and crop data for S3 upload and Sharp processing
-      if (avatarFile) {
-        updateData.avatar = avatarFile;
-        setUploadProgress(20);
-        setUploadStatus("Preparing image for upload...");
-
-        // Use the stored final crop data
-        if (finalCropData) {
-          updateData.cropData = finalCropData;
-          console.log("Using stored crop data:", finalCropData);
-        } else {
-          console.log("No crop data available - using full image");
-        }
-
-        setUploadProgress(40);
-        setUploadStatus("Uploading to S3...");
-      }
-
-      setUploadProgress(60);
-      setUploadStatus("Processing profile data...");
-
-      console.log("Submitting profile update with S3 upload:", updateData);
-
-      // Add these console logs right before calling updateUserProfile service
-      console.log("=== DEBUG: Profile Update Data ===");
-      console.log("updateData keys:", Object.keys(updateData));
-      console.log("avatarFile exists:", !!avatarFile);
-      console.log("avatarFile details:", {
-        name: avatarFile?.name,
-        type: avatarFile?.type,
-        size: avatarFile?.size,
-        lastModified: avatarFile?.lastModified,
-      });
-      console.log("cropData:", updateData.cropData);
-      console.log("Full updateData:", updateData);
-
-      // Check if avatar is actually in the updateData
-      if (updateData.avatar) {
-        console.log("Avatar in updateData:", {
-          isFile: updateData.avatar instanceof File,
-          constructor: updateData.avatar.constructor.name,
-          name: updateData.avatar.name,
-          type: updateData.avatar.type,
-          size: updateData.avatar.size,
-        });
-      }
-      const response = await updateUserProfile(updateData);
-
-      setUploadProgress(90);
-      setUploadStatus("Finalizing update...");
-
-      if (response.success) {
-        setUploadProgress(100);
-        setUploadStatus("Profile updated successfully!");
-
-        // Update localStorage with new user data including S3 URL
-        const storageKey = role === "user" ? "user" : "tutor";
-        localStorage.setItem(storageKey, JSON.stringify(response.data.user));
-
-        // Notify parent component
-        if (onProfileUpdate) {
-          onProfileUpdate(response.data.user);
-        }
-
-        // Show success message briefly before closing
-        setTimeout(() => {
-          onClose();
-        }, 1000);
-      } else {
-        setError(response.message || "Failed to update profile");
-      }
-    } catch (error: any) {
-      console.error("Profile update error:", error);
-      if (error.message?.includes("timeout")) {
-        setError("Upload timeout. Please check your connection and try again.");
-      } else if (error.message?.includes("413")) {
-        setError("File too large. Please select a smaller image.");
-      } else {
-        setError("Failed to update profile. Please try again.");
-      }
-    } finally {
+    if (!hasFormChanges && !avatarFile) {
+      setError("No changes to update");
       setIsLoading(false);
       setSubmitting(false);
-      setTimeout(() => {
-        setUploadProgress(0);
-        setUploadStatus("");
-      }, 2000);
+      return;
     }
-  };
+
+    const updateData: any = { ...values };
+
+    if (avatarFile) {
+      updateData.avatar = avatarFile;
+      setUploadProgress(20);
+      setUploadStatus("Preparing image for upload...");
+
+      if (finalCropData) {
+        updateData.cropData = finalCropData;
+        console.log("Using stored crop data:", finalCropData);
+      } else {
+        console.log("No crop data available - using full image");
+      }
+
+      setUploadProgress(40);
+      setUploadStatus("Uploading to S3...");
+    }
+
+    setUploadProgress(60);
+    setUploadStatus("Processing profile data...");
+
+    console.log("Submitting profile update with S3 upload:", updateData);
+
+    console.log("=== DEBUG: Profile Update Data ===");
+    console.log("updateData keys:", Object.keys(updateData));
+    console.log("avatarFile exists:", !!avatarFile);
+    console.log("avatarFile details:", {
+      name: avatarFile?.name,
+      type: avatarFile?.type,
+      size: avatarFile?.size,
+      lastModified: avatarFile?.lastModified,
+    });
+    console.log("cropData:", updateData.cropData);
+    console.log("Full updateData:", updateData);
+
+    if (updateData.avatar) {
+      console.log("Avatar in updateData:", {
+        isFile: updateData.avatar instanceof File,
+        constructor: updateData.avatar.constructor.name,
+        name: updateData.avatar.name,
+        type: updateData.avatar.type,
+        size: updateData.avatar.size,
+      });
+    }
+
+    let response;
+    if (role === "tutor") {
+      response = await updateTutorProfile(updateData);
+    } else {
+      response = await updateUserProfile(updateData);
+    }
+
+    setUploadProgress(90);
+    setUploadStatus("Finalizing update...");
+
+    if (response.success) {
+      setUploadProgress(100);
+      setUploadStatus("Profile updated successfully!");
+
+      
+      const storageKey = role === "user" ? "user" : "tutor";
+      const userKey = role === "user" ? "user" : "tutor";
+      localStorage.setItem(storageKey, JSON.stringify(response.data[userKey]));
+
+      if (onProfileUpdate) {
+        onProfileUpdate(response.data[userKey]);
+      }
+
+      setTimeout(() => {
+        onClose();
+      }, 1000);
+    } else {
+      setError(response.message || "Failed to update profile");
+    }
+  } catch (error: any) {
+    console.error("Profile update error:", error);
+    if (error.message?.includes("timeout")) {
+      setError("Upload timeout. Please check your connection and try again.");
+    } else if (error.message?.includes("413")) {
+      setError("File too large. Please select a smaller image.");
+    } else {
+      setError("Failed to update profile. Please try again.");
+    }
+  } finally {
+    setIsLoading(false);
+    setSubmitting(false);
+    setTimeout(() => {
+      setUploadProgress(0);
+      setUploadStatus("");
+    }, 2000);
+  }
+};
 
   const handleClose = (values: FormValues, dirty: boolean) => {
     const hasAvatarChange = avatarFile !== null;
@@ -458,7 +448,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 </button>
               </div>
 
-              {/* Image Cropper Modal */}
               {showCropper && (
                 <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-60">
                   <div className="bg-gray-800 rounded-lg p-6 max-w-lg w-full mx-4">
@@ -493,7 +482,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                           />
                         )}
 
-                        {/* Crop overlay */}
                         {cropData.width > 0 && (
                           <div
                             ref={cropperRef}
@@ -506,12 +494,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                             }}
                             onMouseDown={handleMouseDown}
                           >
-                            {/* Crop indicator */}
                             <div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-2 py-1 rounded">
                               Drag to move
                             </div>
 
-                            {/* Corner indicators */}
                             <div className="absolute top-0 left-0 w-3 h-3 bg-blue-500 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
                             <div className="absolute top-0 right-0 w-3 h-3 bg-blue-500 rounded-full translate-x-1/2 -translate-y-1/2"></div>
                             <div className="absolute bottom-0 left-0 w-3 h-3 bg-blue-500 rounded-full -translate-x-1/2 translate-y-1/2"></div>
@@ -519,15 +505,13 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                           </div>
                         )}
 
-                        {/* Dark overlays */}
                         {cropData.width > 0 && (
                           <div className="absolute top-0 left-0 w-full h-full z-20 pointer-events-none">
-                            {/* Top */}
                             <div
                               className="absolute left-0 w-full bg-black bg-opacity-60"
                               style={{ height: `${cropData.y}px` }}
                             />
-                            {/* Bottom */}
+
                             <div
                               className="absolute left-0 w-full bg-black bg-opacity-60"
                               style={{
@@ -535,7 +519,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                                 bottom: 0,
                               }}
                             />
-                            {/* Left */}
+
                             <div
                               className="absolute top-0 bg-black bg-opacity-60"
                               style={{
@@ -545,7 +529,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                                 top: `${cropData.y}px`,
                               }}
                             />
-                            {/* Right */}
+
                             <div
                               className="absolute top-0 bg-black bg-opacity-60"
                               style={{
@@ -584,9 +568,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 </div>
               )}
 
-              {/* Form Content */}
               <div className="p-6 space-y-6">
-                {/* Error Display */}
                 {error && (
                   <div className="bg-red-500 bg-opacity-10 border border-red-500 rounded-lg p-4 flex items-center gap-2">
                     <AlertCircle
@@ -597,7 +579,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   </div>
                 )}
 
-                {/* Upload Progress */}
                 {isLoading && uploadProgress > 0 && (
                   <div className="bg-gray-700 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
@@ -618,7 +599,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   </div>
                 )}
 
-                {/* Avatar Upload */}
                 <div className="text-center">
                   <div className="relative inline-block">
                     <div className="w-24 h-24 rounded-full mx-auto overflow-hidden border-2 border-gray-600">
@@ -653,7 +633,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   </p>
                 </div>
 
-                {/* Name Field */}
                 <div>
                   <label className="block text-gray-300 text-sm font-medium mb-2">
                     <User size={16} className="inline mr-2" />
@@ -677,7 +656,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   />
                 </div>
 
-                {/* Email Field (Read-only) */}
                 <div>
                   <label className="block text-gray-300 text-sm font-medium mb-2">
                     Email
@@ -693,7 +671,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   </p>
                 </div>
 
-                {/* Phone Field */}
                 <div>
                   <label className="block text-gray-300 text-sm font-medium mb-2">
                     <Phone size={16} className="inline mr-2" />
@@ -718,7 +695,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   />
                 </div>
 
-                {/* Date of Birth */}
                 <div>
                   <label className="block text-gray-300 text-sm font-medium mb-2">
                     <Calendar size={16} className="inline mr-2" />
@@ -742,7 +718,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   />
                 </div>
 
-                {/* Gender */}
                 <div>
                   <label className="block text-gray-300 text-sm font-medium mb-2">
                     <Users size={16} className="inline mr-2" />
@@ -770,7 +745,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   />
                 </div>
 
-                {/* Buttons */}
                 <div className="flex space-x-4 pt-4">
                   <button
                     type="button"

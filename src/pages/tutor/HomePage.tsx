@@ -7,13 +7,13 @@ function HomePage() {
   const [userRole, setUserRole] = useState<"user" | "tutor" | null>(null);
 
   useEffect(() => {
-    // Determine user role based on what's stored in localStorage
+  
     const checkUserRole = () => {
-      // Check for tutor authentication first
+    
       const tutorAccessToken = localStorage.getItem("tutorAccessToken");
       const tutorData = localStorage.getItem("tutor");
       
-      // Check for user authentication
+ 
       const userAccessToken = localStorage.getItem("userAccessToken");
       const userData = localStorage.getItem("user");
       

@@ -87,14 +87,14 @@ function Table<T>({
     }[align];
   };
 
-  // Helper function to resolve label (string or function)
+
   const getActionLabel = (action: TableAction<T>, item: T): string => {
     return typeof action.label === "function"
       ? action.label(item)
       : action.label;
   };
 
-  // Helper function to resolve variant (string or function)
+ 
   const getActionVariant = (action: TableAction<T>, item: T): string => {
     return typeof action.variant === "function"
       ? action.variant(item)
@@ -121,7 +121,7 @@ function Table<T>({
     <div
       className={`bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden ${className}`}
     >
-      {/* Header with Search */}
+
       {showSearch && (
         <div className="bg-gray-100 px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex space-x-4 items-center w-full sm:w-auto ml-auto">
@@ -142,7 +142,6 @@ function Table<T>({
         </div>
       )}
 
-      {/* Loading State */}
       {loading ? (
         <div className="flex justify-center py-10">
           <div className="text-center">
@@ -152,7 +151,7 @@ function Table<T>({
         </div>
       ) : (
         <>
-          {/* Table */}
+
           {data && data.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="min-w-full">
@@ -223,7 +222,7 @@ function Table<T>({
               </table>
             </div>
           ) : (
-            /* Empty State */
+
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4">
                 {emptyIcon || <DefaultEmptyIcon />}
@@ -234,7 +233,7 @@ function Table<T>({
         </>
       )}
 
-      {/* Pagination */}
+
       {data.length > 0 && (
         <div className="flex flex-col items-center py-6 border-t border-gray-200">
           <span className="text-sm text-slate-500 mb-4">

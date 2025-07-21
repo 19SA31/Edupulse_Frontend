@@ -11,12 +11,12 @@ function UserProtectRoute({ children }: UserProtectRouteProps) {
   const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(true);
 
-  // Access the user slice directly with careful null checking
+
   const userState = useSelector((state: RootState) => state.user);
   const isLoggedIn =
     userState && (userState.user !== null || userState.isAuthenticated);
 
-  // Also check localStorage directly as a fallback
+
   const checkLocalStorageAuth = () => {
     const persistedData = localStorage.getItem("persist:user");
     if (persistedData) {
@@ -43,11 +43,11 @@ function UserProtectRoute({ children }: UserProtectRouteProps) {
   );
 
   useEffect(() => {
-    // Short delay to ensure store is fully hydrated
+
     const authCheck = setTimeout(() => {
       const hasLocalAuth = checkLocalStorageAuth();
 
-      // If not logged in according to both Redux and localStorage, redirect to login
+
       if (!isLoggedIn && !hasLocalAuth) {
         console.log("Not logged in, redirecting to login page");
         navigate("/", {
@@ -62,12 +62,12 @@ function UserProtectRoute({ children }: UserProtectRouteProps) {
     return () => clearTimeout(authCheck);
   }, [navigate, isLoggedIn, userState]);
 
-  // Show nothing while checking auth status
+
   if (isChecking) {
     return null;
   }
 
-  // After checking, if logged in by either Redux or localStorage, show children
+
   return isLoggedIn || checkLocalStorageAuth() ? <>{children}</> : null;
 }
 

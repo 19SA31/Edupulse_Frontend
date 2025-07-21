@@ -1,7 +1,7 @@
 import { userAxiosInstance } from "../api/userAxiosInstance";
 import axios from "axios";
 
-// Profile update interface
+
 export interface UpdateProfileData {
   id?: string;
   name?: string;
@@ -19,7 +19,7 @@ interface CropData {
   height: number;
 }
 
-// Response interfaces
+
 interface ApiResponse<T = any> {
   success: boolean;
   message: string;
@@ -41,7 +41,7 @@ interface ProfileUpdateResponse {
   };
 }
 
-// Authentication Services
+
 export const signUpService = async (
   name: string,
   email: string,
@@ -186,7 +186,7 @@ export const passwordChangeService = async (
 
 
 
-// Updated profile update service for S3 integration
+
 export const updateUserProfile = async (
   profileData: UpdateProfileData
 ): Promise<{
@@ -207,27 +207,27 @@ export const updateUserProfile = async (
       };
     }
 
-    // Create FormData for multipart/form-data request
+   
     const formData = new FormData();
     formData.append('id', userId);
     console.log("%%%",profileData)
-    // Append only provided fields
+   
     if (profileData.name?.trim()) formData.append('name', profileData.name.trim());
     if (profileData.phone?.trim()) formData.append('phone', profileData.phone.trim());
     if (profileData.DOB) formData.append('DOB', profileData.DOB);
     if (profileData.gender) formData.append('gender', profileData.gender);
     
-    // Handle avatar and crop data for S3 upload
+    
     if (profileData.avatar) {
       formData.append('avatar', profileData.avatar);
       
-      // Add crop data if available for server-side processing with Sharp
+    
       if (profileData.cropData) {
         formData.append('cropData', JSON.stringify(profileData.cropData));
       }
     }
 
-    // Log the data being sent (for debugging)
+   
     console.log('Sending profile update data:', {
       id: userId,
       name: profileData.name,
@@ -243,7 +243,7 @@ export const updateUserProfile = async (
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      timeout: 60000, // Increased timeout for S3 uploads
+      timeout: 60000, 
     });
 
     console.log('Profile update response:', response.data);
@@ -256,14 +256,13 @@ export const updateUserProfile = async (
       };
     }
 
-    // Update localStorage with new user data including S3 URL
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     const updatedUserData = response.data.data?.user || response.data.user || {};
     
     const updatedUser = { 
       ...currentUser, 
       ...updatedUserData,
-      // Avatar will now be the S3 signed URL returned from server
+   
       avatar: updatedUserData.avatar || currentUser.avatar
     };
     
@@ -278,8 +277,7 @@ export const updateUserProfile = async (
     
   } catch (error: any) {
     console.error('Profile update error:', error);
-    
-    // Handle specific error cases
+
     if (error.code === 'ECONNABORTED') {
       return {
         success: false,
@@ -320,7 +318,6 @@ export const updateUserProfile = async (
   }
 };
 
-// Get current user profile
 export const getCurrentUserProfile = (): any | null => {
   try {
     const userStr = localStorage.getItem('user');
@@ -331,7 +328,7 @@ export const getCurrentUserProfile = (): any | null => {
   }
 };
 
-// Update user in localStorage
+
 export const updateUserInStorage = (userData: any): void => {
   try {
     const currentUser = getCurrentUserProfile() || {};
@@ -342,7 +339,7 @@ export const updateUserInStorage = (userData: any): void => {
   }
 };
 
-// Clear user data
+
 export const clearUserData = (): void => {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('user');

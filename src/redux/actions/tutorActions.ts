@@ -21,7 +21,7 @@ export const tutorSignUp = createAsyncThunk(
     try {
       const result = await tutorSignUpService(name, email, phone, password);
       if (result.success) {
-        return result.data; // Return the data if success is true
+        return result.data; 
       } else {
         return rejectWithValue(result.message || "Signup failed");
       }
@@ -46,7 +46,7 @@ export const tutorVerifyOtp = createAsyncThunk(
         otp
       );
       if (result.success) {
-        return result.data; // Return the data if success is true
+        return result.data; 
       } else {
         return rejectWithValue(result.message || "OTP Verification failed");
       }
@@ -62,7 +62,7 @@ export const tutorLogin = createAsyncThunk(
     try {
       const result = await tutorLoginService(email, password);
       if (result.success) {
-        return result.data; // Return the data if success is true
+        return result.data; 
       } else {
         return rejectWithValue(result.message || "Login failed");
       }

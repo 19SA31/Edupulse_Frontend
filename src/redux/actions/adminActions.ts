@@ -8,7 +8,7 @@ export const adminLogin = createAsyncThunk(
     try {
       const result = await adminLoginService(email, password);
       if (result.success) {
-        // Store admin data in localStorage (this is already done in your service)
+        
         return result.data; 
       } else {
         return rejectWithValue(result.message || "Login failed");
@@ -24,10 +24,10 @@ export const logoutAdminAction = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       console.log("inside front end logoutadminaction")
-      // Call the API logout endpoint
+      
       const result = await logoutAdmin();
       
-      // Regardless of API response, clear localStorage items
+      
       localStorage.removeItem('accessToken');
       localStorage.removeItem('admin');
       
@@ -37,7 +37,7 @@ export const logoutAdminAction = createAsyncThunk(
         return rejectWithValue(result.message || "Logout failed");
       }
     } catch (error: any) {
-      // Even if there's an error, we should still clear localStorage
+      
       localStorage.removeItem('accessToken');
       localStorage.removeItem('admin');
       

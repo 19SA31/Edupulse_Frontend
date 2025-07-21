@@ -20,17 +20,16 @@ function Header({ role = null }: HeaderProps) {
   const [userImage, setUserImage] = useState<string>("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isVerified, setIsVerified] = useState(true);
-  const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
+  const [verificationStatus, setVerificationStatus] = useState<string | null>(
+    null
+  );
 
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
   const checkAuthStatus = () => {
-    
-    
     let accessToken = null;
-    
-    // Get the correct access token based on role
+
     if (role === "admin") {
       accessToken = localStorage.getItem("adminAccessToken");
     } else if (role === "tutor") {
@@ -39,8 +38,6 @@ function Header({ role = null }: HeaderProps) {
       accessToken = localStorage.getItem("userAccessToken");
     }
 
-    
-
     if (accessToken) {
       if (role === "admin") {
         setUserName("Admin");
@@ -48,40 +45,30 @@ function Header({ role = null }: HeaderProps) {
         setUserImage(img);
         setIsVerified(true);
         setVerificationStatus(null);
-        
       } else {
         let userData = null;
         if (role === "tutor") {
           userData = localStorage.getItem("tutor");
-          
         } else {
           userData = localStorage.getItem("user");
-          
         }
 
         if (userData && userData !== "undefined" && userData !== "null") {
           try {
             const user = JSON.parse(userData);
-            
-            
+
             setUserName(user?.name || "User");
             setIsLoggedIn(true);
-            setUserImage(user?.avatar || ""); 
-            
-            // Check verification status for tutors
+            setUserImage(user?.avatar || "");
+
             if (role === "tutor") {
               setIsVerified(user?.isVerified || false);
               setVerificationStatus(user?.verificationStatus || null);
-              
             } else {
               setIsVerified(true);
               setVerificationStatus(null);
             }
-            
-            
           } catch (error) {
-            
-            
             if (role === "tutor") {
               localStorage.removeItem("tutor");
               localStorage.removeItem("tutorAccessToken");
@@ -94,54 +81,46 @@ function Header({ role = null }: HeaderProps) {
             setVerificationStatus(null);
           }
         } else {
-          
           setIsLoggedIn(false);
           setIsVerified(true);
           setVerificationStatus(null);
         }
       }
     } else {
-      
       setIsLoggedIn(false);
       setIsVerified(true);
       setVerificationStatus(null);
     }
-    
-    
   };
 
   useEffect(() => {
-    
     checkAuthStatus();
 
-    // Listen for storage changes
     const handleStorageChange = (e: StorageEvent) => {
-      
-      // Check if the changed key is relevant to our component
       if (
-        e.key === "user" || 
-        e.key === "tutor" || 
-        e.key === "userAccessToken" || 
-        e.key === "tutorAccessToken" || 
+        e.key === "user" ||
+        e.key === "tutor" ||
+        e.key === "userAccessToken" ||
+        e.key === "tutorAccessToken" ||
         e.key === "adminAccessToken"
       ) {
-        
         checkAuthStatus();
       }
     };
 
-    // Listen for custom storage events (for same-tab updates)
     const handleCustomStorageChange = () => {
-      
       checkAuthStatus();
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('userProfileUpdated', handleCustomStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("userProfileUpdated", handleCustomStorageChange);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('userProfileUpdated', handleCustomStorageChange);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener(
+        "userProfileUpdated",
+        handleCustomStorageChange
+      );
     };
   }, [role]);
 
@@ -172,7 +151,6 @@ function Header({ role = null }: HeaderProps) {
       setIsProfileOpen(false);
       setVerificationStatus(null);
       toast.success("Logged out successfully");
-      
     } catch (error) {
       console.error("❌ Logout failed:", error);
 
@@ -205,12 +183,18 @@ function Header({ role = null }: HeaderProps) {
     if (role === "tutor" && !isVerified && verificationStatus !== "pending") {
       navigate("/tutor/verify-tutor");
     } else {
-      navigate("/profile");
+      
+      if (role === "tutor") {
+        navigate("/tutor/profile");
+      } else if (role === "admin") {
+        navigate("/admin/profile"); 
+      } else {
+        navigate("/profile");
+      }
     }
     setIsProfileOpen(false);
   };
 
-  // Function to get the appropriate button text and status
   const getVerificationButtonText = () => {
     if (role === "tutor") {
       if (isVerified) {
@@ -226,15 +210,10 @@ function Header({ role = null }: HeaderProps) {
     return "Profile";
   };
 
-  // Function to check if verification button should be disabled
   const isVerificationDisabled = () => {
     return role === "tutor" && verificationStatus === "pending";
   };
 
-  // Debug render
- 
-
-  // Admin header - with profile dropdown or simple logout button
   if (role === "admin") {
     return (
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center bg-black text-white p-4 shadow-xl">
@@ -274,7 +253,6 @@ function Header({ role = null }: HeaderProps) {
     );
   }
 
-  // Regular header for user and tutor roles
   return (
     <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center bg-black text-white p-4 shadow-xl">
       <div>
@@ -284,9 +262,10 @@ function Header({ role = null }: HeaderProps) {
       </div>
 
       <div className="md:hidden">
-        <button onClick={() => setIsOpen(!isOpen)} className="text-white">
-          {/* Add your menu icons here */}
-        </button>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="text-white"
+        ></button>
       </div>
 
       <nav
@@ -325,7 +304,6 @@ function Header({ role = null }: HeaderProps) {
             </button>
           </li>
 
-          {/* Mobile auth section */}
           <li className="block md:hidden">
             {isLoggedIn ? (
               <div className="flex flex-col space-y-2">
@@ -370,7 +348,6 @@ function Header({ role = null }: HeaderProps) {
         </ul>
       </nav>
 
-      {/* Desktop auth section */}
       <div className="relative hidden md:block">
         {isLoggedIn ? (
           <div className="relative">
@@ -404,7 +381,6 @@ function Header({ role = null }: HeaderProps) {
               </svg>
             </button>
 
-            {/* Dropdown menu */}
             {isProfileOpen && (
               <div
                 className="cursor-pointer absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg border border-gray-700 z-50"
@@ -440,7 +416,6 @@ function Header({ role = null }: HeaderProps) {
         )}
       </div>
 
-      {/* Click outside to close dropdown */}
       {isProfileOpen && (
         <div
           className="fixed inset-0 z-40"
