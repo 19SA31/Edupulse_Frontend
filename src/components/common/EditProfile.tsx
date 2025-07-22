@@ -293,116 +293,118 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   };
 
   const handleSubmit = async (values: FormValues, { setSubmitting }: any) => {
-  setIsLoading(true);
-  setSubmitting(true);
-  setUploadProgress(0);
-  setUploadStatus("");
-  setError("");
+    setIsLoading(true);
+    setSubmitting(true);
+    setUploadProgress(0);
+    setUploadStatus("");
+    setError("");
 
-  try {
-    const hasFormChanges = Object.keys(values).some(
-      (key) => values[key as keyof FormValues] !== (userData as any)?.[key]
-    );
+    try {
+      const hasFormChanges = Object.keys(values).some(
+        (key) => values[key as keyof FormValues] !== (userData as any)?.[key]
+      );
 
-    if (!hasFormChanges && !avatarFile) {
-      setError("No changes to update");
+      if (!hasFormChanges && !avatarFile) {
+        setError("No changes to update");
+        setIsLoading(false);
+        setSubmitting(false);
+        return;
+      }
+
+      const updateData: any = { ...values };
+
+      if (avatarFile) {
+        updateData.avatar = avatarFile;
+        setUploadProgress(20);
+        setUploadStatus("Preparing image for upload...");
+
+        if (finalCropData) {
+          updateData.cropData = finalCropData;
+          console.log("Using stored crop data:", finalCropData);
+        } else {
+          console.log("No crop data available - using full image");
+        }
+
+        setUploadProgress(40);
+        setUploadStatus("Uploading to S3...");
+      }
+
+      setUploadProgress(60);
+      setUploadStatus("Processing profile data...");
+
+      console.log("Submitting profile update with S3 upload:", updateData);
+
+      console.log("=== DEBUG: Profile Update Data ===");
+      console.log("updateData keys:", Object.keys(updateData));
+      console.log("avatarFile exists:", !!avatarFile);
+      console.log("avatarFile details:", {
+        name: avatarFile?.name,
+        type: avatarFile?.type,
+        size: avatarFile?.size,
+        lastModified: avatarFile?.lastModified,
+      });
+      console.log("cropData:", updateData.cropData);
+      console.log("Full updateData:", updateData);
+
+      if (updateData.avatar) {
+        console.log("Avatar in updateData:", {
+          isFile: updateData.avatar instanceof File,
+          constructor: updateData.avatar.constructor.name,
+          name: updateData.avatar.name,
+          type: updateData.avatar.type,
+          size: updateData.avatar.size,
+        });
+      }
+
+      let response;
+      if (role === "tutor") {
+        response = await updateTutorProfile(updateData);
+      } else {
+        response = await updateUserProfile(updateData);
+      }
+
+      setUploadProgress(90);
+      setUploadStatus("Finalizing update...");
+
+      if (response.success) {
+        setUploadProgress(100);
+        setUploadStatus("Profile updated successfully!");
+
+        const storageKey = role === "user" ? "user" : "tutor";
+        const userKey = role === "user" ? "user" : "tutor";
+        localStorage.setItem(
+          storageKey,
+          JSON.stringify(response.data[userKey])
+        );
+
+        if (onProfileUpdate) {
+          onProfileUpdate(response.data[userKey]);
+        }
+
+        setTimeout(() => {
+          onClose();
+        }, 1000);
+      } else {
+        setError(response.message || "Failed to update profile");
+      }
+    } catch (error: any) {
+      console.error("Profile update error:", error);
+      if (error.message?.includes("timeout")) {
+        setError("Upload timeout. Please check your connection and try again.");
+      } else if (error.message?.includes("413")) {
+        setError("File too large. Please select a smaller image.");
+      } else {
+        setError("Failed to update profile. Please try again.");
+      }
+    } finally {
       setIsLoading(false);
       setSubmitting(false);
-      return;
-    }
-
-    const updateData: any = { ...values };
-
-    if (avatarFile) {
-      updateData.avatar = avatarFile;
-      setUploadProgress(20);
-      setUploadStatus("Preparing image for upload...");
-
-      if (finalCropData) {
-        updateData.cropData = finalCropData;
-        console.log("Using stored crop data:", finalCropData);
-      } else {
-        console.log("No crop data available - using full image");
-      }
-
-      setUploadProgress(40);
-      setUploadStatus("Uploading to S3...");
-    }
-
-    setUploadProgress(60);
-    setUploadStatus("Processing profile data...");
-
-    console.log("Submitting profile update with S3 upload:", updateData);
-
-    console.log("=== DEBUG: Profile Update Data ===");
-    console.log("updateData keys:", Object.keys(updateData));
-    console.log("avatarFile exists:", !!avatarFile);
-    console.log("avatarFile details:", {
-      name: avatarFile?.name,
-      type: avatarFile?.type,
-      size: avatarFile?.size,
-      lastModified: avatarFile?.lastModified,
-    });
-    console.log("cropData:", updateData.cropData);
-    console.log("Full updateData:", updateData);
-
-    if (updateData.avatar) {
-      console.log("Avatar in updateData:", {
-        isFile: updateData.avatar instanceof File,
-        constructor: updateData.avatar.constructor.name,
-        name: updateData.avatar.name,
-        type: updateData.avatar.type,
-        size: updateData.avatar.size,
-      });
-    }
-
-    let response;
-    if (role === "tutor") {
-      response = await updateTutorProfile(updateData);
-    } else {
-      response = await updateUserProfile(updateData);
-    }
-
-    setUploadProgress(90);
-    setUploadStatus("Finalizing update...");
-
-    if (response.success) {
-      setUploadProgress(100);
-      setUploadStatus("Profile updated successfully!");
-
-      
-      const storageKey = role === "user" ? "user" : "tutor";
-      const userKey = role === "user" ? "user" : "tutor";
-      localStorage.setItem(storageKey, JSON.stringify(response.data[userKey]));
-
-      if (onProfileUpdate) {
-        onProfileUpdate(response.data[userKey]);
-      }
-
       setTimeout(() => {
-        onClose();
-      }, 1000);
-    } else {
-      setError(response.message || "Failed to update profile");
+        setUploadProgress(0);
+        setUploadStatus("");
+      }, 2000);
     }
-  } catch (error: any) {
-    console.error("Profile update error:", error);
-    if (error.message?.includes("timeout")) {
-      setError("Upload timeout. Please check your connection and try again.");
-    } else if (error.message?.includes("413")) {
-      setError("File too large. Please select a smaller image.");
-    } else {
-      setError("Failed to update profile. Please try again.");
-    }
-  } finally {
-    setIsLoading(false);
-    setSubmitting(false);
-    setTimeout(() => {
-      setUploadProgress(0);
-      setUploadStatus("");
-    }, 2000);
-  }
-};
+  };
 
   const handleClose = (values: FormValues, dirty: boolean) => {
     const hasAvatarChange = avatarFile !== null;

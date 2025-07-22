@@ -5,11 +5,7 @@ import img from "../../assets/unknown-user.jpg";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
-import { logoutAdminAction } from "../../redux/actions/adminActions";
-import { logout } from "../../redux/actions/userActions";
-import { logoutTutorAction } from "../../redux/actions/tutorActions";
 import EditProfileModal from "../../components/common/EditProfile";
-import { getCurrentUserProfile } from "../../services/authService";
 
 interface DashboardProps {
   role: "user" | "tutor" | "admin";
@@ -59,7 +55,7 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
         }
       } else if (role === "tutor") {
         const storedTutor = localStorage.getItem("tutor");
-        
+        console.log("Loading tutor data:", storedTutor);
         if (storedTutor) {
           const tutor = JSON.parse(storedTutor);
           setUserData({

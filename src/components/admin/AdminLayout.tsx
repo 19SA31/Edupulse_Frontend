@@ -63,7 +63,7 @@ function AdminLayout() {
           hoverColor="hover:bg-gray-800"
           textColor="text-gray-300"
         />
-        <div className="flex-1 ml-0 sm:ml-64 p-4 overflow-y-auto overflow-x-hidden">
+        <div className="flex-1 ml-0 sm:ml-64 p-4 overflow-y-auto overflow-x-hidden h-screen">
           <Outlet />
         </div>
       </div>

@@ -34,7 +34,7 @@ function HomePage() {
     checkUserRole();
   }, []);
 
-  console.log('🏠 HomePage rendering with userRole:', userRole);
+  console.log('Role:', userRole);
 
   return (
     <div className="pt-14">

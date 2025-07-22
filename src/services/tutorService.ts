@@ -294,7 +294,7 @@ export const updateTutorProfile = async (
     
     return {
       success: true,
-      data: { user: updatedTutor },
+      data: { tutor: updatedTutor },
       message: response.data.message || 'Profile updated successfully'
     };
   } catch (error: any) {
