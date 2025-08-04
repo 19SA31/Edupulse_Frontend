@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { adminLoginService, logoutAdmin } from "../../services/adminService";
 import { Admin } from "../../interfaces/adminInterface";
+import { adminLoginService,logoutAdmin } from "../../services/Authentication/AuthenticationService";
 
 export const adminLogin = createAsyncThunk(
   "admin/login",

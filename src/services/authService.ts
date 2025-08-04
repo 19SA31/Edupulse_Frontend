@@ -1,5 +1,8 @@
-import { userAxiosInstance } from "../api/userAxiosInstance";
+// import { userAxiosInstance } from "../api/userAxiosInstance";
+import { createAxiosInstance } from "../api/axiosInstance";
 import axios from "axios";
+
+const userAxiosInstance = createAxiosInstance("user");
 
 
 export interface UpdateProfileData {

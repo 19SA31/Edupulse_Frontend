@@ -1,7 +1,7 @@
 import React from 'react'
-import DashboardLayout from '../auth/DashBoardLayout'
+import ProfileLayout from '../auth/ProfileLayout'
 function Dashboard() {
-  return <DashboardLayout role="user" />
+  return <ProfileLayout role="user" />
  
 }
 

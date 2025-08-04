@@ -5,9 +5,9 @@ import img from "../../assets/unknown-user.jpg";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
-import EditProfileModal from "../../components/common/EditProfile";
+import EditProfileModal from "../common/EditProfile";
 
-interface DashboardProps {
+interface ProfileProps {
   role: "user" | "tutor" | "admin";
 }
 
@@ -25,7 +25,7 @@ interface Category {
   description?: string;
 }
 
-const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
+const ProfileLayout: React.FC<ProfileProps> = ({ role }) => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -261,4 +261,4 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
   );
 };
 
-export default DashboardLayout;
+export default ProfileLayout;

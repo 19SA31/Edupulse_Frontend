@@ -54,6 +54,7 @@ function ReusableSidebar({
               <li key={index}>
                 <NavLink
                   to={item.path}
+                  end={item.path === "/tutor/dashboard"}
                   className={({ isActive }: { isActive: boolean }) =>
                     `flex items-center p-2 rounded-lg group ${
                       isActive

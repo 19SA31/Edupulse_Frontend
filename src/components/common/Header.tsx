@@ -185,7 +185,7 @@ function Header({ role = null }: HeaderProps) {
     } else {
       
       if (role === "tutor") {
-        navigate("/tutor/profile");
+        navigate("/tutor/dashboard");
       } else if (role === "admin") {
         navigate("/admin/profile"); 
       } else {

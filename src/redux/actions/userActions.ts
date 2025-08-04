@@ -1,16 +1,17 @@
-
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import {
-  signUpService,
-  verifyOtpService,
-  loginService,
-  logoutUser,
-} from "../../services/authService";
+
 import {
   UserSignup,
   VerifyOtpArgs,
   UserLogin,
 } from "../../interfaces/userInterface";
+
+import {
+  signUpService,
+  verifyOtpService,
+  loginService,
+  logoutUser,
+} from "../../services/Authentication/AuthenticationService";
 
 export const signUp = createAsyncThunk(
   "user/signUp",
@@ -51,18 +52,19 @@ export const login = createAsyncThunk(
   "user/login",
   async ({ email, password }: UserLogin, { rejectWithValue }) => {
     try {
-      
       const result = await loginService(email, password);
-      
+
       if (result.success) {
         return result.data;
-      } else if(!result.success) {
+      } else if (!result.success) {
         return rejectWithValue(result.message || "Login failed");
       }
     } catch (error: any) {
       console.error("Thunk error:", error);
       return rejectWithValue(
-        error?.response?.data?.message || error?.message || "Unexpected error occurred."
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unexpected error occurred."
       );
     }
   }
@@ -72,9 +74,8 @@ export const logout = createAsyncThunk(
   "user/logout",
   async (_, { rejectWithValue }) => {
     try {
-      
       const result = await logoutUser();
-      
+
       if (result.success) {
         return result;
       } else {

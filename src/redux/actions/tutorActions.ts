@@ -1,16 +1,17 @@
 // redux/actions/userActions.ts
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import {
-  tutorSignUpService,
-  tutorVerifyOtpService,
-  tutorLoginService,
-  logoutTutor,
-} from "../../services/tutorService";
+
 import {
   TutorSignup,
   VerifyOtpArgs,
   TutorLogin,
 } from "../../interfaces/tutorInterface";
+import {
+  tutorSignUpService,
+  tutorVerifyOtpService,
+  tutorLoginService,
+  logoutTutor,
+} from "../../services/Authentication/AuthenticationService";
 
 export const tutorSignUp = createAsyncThunk(
   "tutor/signUp",
@@ -21,7 +22,7 @@ export const tutorSignUp = createAsyncThunk(
     try {
       const result = await tutorSignUpService(name, email, phone, password);
       if (result.success) {
-        return result.data; 
+        return result.data;
       } else {
         return rejectWithValue(result.message || "Signup failed");
       }
@@ -46,7 +47,7 @@ export const tutorVerifyOtp = createAsyncThunk(
         otp
       );
       if (result.success) {
-        return result.data; 
+        return result.data;
       } else {
         return rejectWithValue(result.message || "OTP Verification failed");
       }
@@ -62,7 +63,7 @@ export const tutorLogin = createAsyncThunk(
     try {
       const result = await tutorLoginService(email, password);
       if (result.success) {
-        return result.data; 
+        return result.data;
       } else {
         return rejectWithValue(result.message || "Login failed");
       }
@@ -81,9 +82,8 @@ export const logoutTutorAction = createAsyncThunk(
   "tutor/logout",
   async (_, { rejectWithValue }) => {
     try {
-      
       const result = await logoutTutor();
-      
+
       if (result.success) {
         return result.data || result.message;
       } else {

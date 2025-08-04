@@ -1,4 +1,15 @@
-import { tutorAxiosInstance } from "../api/tutorAxiosInstance";
+import { createAxiosInstance } from "../api/axiosInstance";
+
+const tutorAxiosInstance = createAxiosInstance("tutor");
+
+import {
+  Category,
+  FormData as CourseFormData,
+  Chapter,
+  Lesson,
+  UploadedFile,
+  CourseImage,
+} from "../interfaces/courseInterface";
 
 interface CropData {
   x: number;
@@ -266,36 +277,37 @@ export const updateTutorProfile = async (
         headers: {
           "Content-Type": "multipart/form-data",
         },
-        timeout: 60000, 
+        timeout: 60000,
       }
     );
 
-    console.log('Profile update response:', response.data);
+    console.log("Profile update response:", response.data);
     if (!response.data.success) {
       return {
         success: false,
-        message: response.data.message || 'Failed to update profile',
-        data: null
+        message: response.data.message || "Failed to update profile",
+        data: null,
       };
     }
 
-    const currentTutor = JSON.parse(localStorage.getItem('tutor') || '{}');
-    const currentTutorData = response.data.data?.tutor || response.data.tutor || {};
+    const currentTutor = JSON.parse(localStorage.getItem("tutor") || "{}");
+    const currentTutorData =
+      response.data.data?.tutor || response.data.tutor || {};
 
-    const updatedTutor = { 
-      ...currentTutor, 
+    const updatedTutor = {
+      ...currentTutor,
       ...currentTutorData,
-   
-      avatar: currentTutorData.avatar || currentTutor.avatar
+
+      avatar: currentTutorData.avatar || currentTutor.avatar,
     };
 
-    localStorage.setItem('tutor', JSON.stringify(updatedTutor));
+    localStorage.setItem("tutor", JSON.stringify(updatedTutor));
     console.log("Updated user data with S3 URL:", updatedTutor);
-    
+
     return {
       success: true,
       data: { tutor: updatedTutor },
-      message: response.data.message || 'Profile updated successfully'
+      message: response.data.message || "Profile updated successfully",
     };
   } catch (error: any) {
     return {
@@ -329,4 +341,68 @@ export const updateUserInStorage = (userData: any): void => {
 export const clearUserData = (): void => {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("tutor");
+};
+
+export const getCourseCategories = () => {
+  return tutorAxiosInstance.get("/course/get-category");
+};
+
+
+export const createCourse = async (courseData: CourseFormData & { chapters: Chapter[] }) => {
+  try {
+    const formData = new FormData();
+    console.log("$$$", courseData);
+    
+    formData.append('title', courseData.title);
+    formData.append('description', courseData.description);
+    formData.append('benefits', courseData.benefits);
+    formData.append('requirements', courseData.requirements);
+    formData.append('category', courseData.category);
+    formData.append('price', courseData.price.toString());
+    
+    if (courseData.courseImage?.file) {
+      formData.append('thumbnail', courseData.courseImage.file);
+    }
+
+    formData.append('chapters', JSON.stringify(courseData.chapters));
+
+
+    courseData.chapters.forEach((chapter, chapterIndex) => {
+      chapter.lessons.forEach((lesson, lessonIndex) => {
+
+        lesson.documents.forEach((doc, docIndex) => {
+          if (doc.file) {
+            formData.append(
+              `module_documents_${chapterIndex}_${lessonIndex}_${docIndex}`, 
+              doc.file
+            );
+          }
+        });
+
+        lesson.videos.forEach((video, videoIndex) => {
+          if (video.file) {
+            formData.append(
+              `module_videos_${chapterIndex}_${lessonIndex}_${videoIndex}`, 
+              video.file
+            );
+          }
+        });
+      });
+    });
+
+    const response = await tutorAxiosInstance.post('/course/create', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 120000, 
+    });
+    
+    return response.data;
+  } catch (error: any) {
+    console.error('Error creating course:', error);
+    if (error.response?.data) {
+      return error.response.data;
+    }
+    throw error;
+  }
 };

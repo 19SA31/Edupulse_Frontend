@@ -1,5 +1,8 @@
-import { adminAxiosInstance } from "../api/adminAxiosInstance";
-import axios from "axios";
+// import { adminAxiosInstance } from "../api/adminAxiosInstance";
+import { createAxiosInstance } from "../api/axiosInstance";
+
+
+const adminAxiosInstance = createAxiosInstance("admin");
 
 export const adminLoginService = async (email: string, password: string) => {
   const response = await adminAxiosInstance.post("/login", { email, password });
