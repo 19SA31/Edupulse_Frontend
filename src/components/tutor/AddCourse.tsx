@@ -1,4 +1,5 @@
 import React, { useState, ChangeEvent, useEffect } from "react";
+import { toast } from "sonner";
 import {
   Formik,
   Form,
@@ -109,6 +110,7 @@ const AddCourse: React.FC = () => {
   >(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const initialValues: FormValues = {
     title: "",
@@ -129,7 +131,7 @@ const AddCourse: React.FC = () => {
         console.log("categories", fetchedResponse);
         const categoriesData = fetchedResponse.data.data.categories;
         const transformedCategories = categoriesData.map((cat: any) => ({
-          id: cat.id, 
+          id: cat.id,
           name: cat.name,
         }));
         setCategories(transformedCategories);
@@ -141,6 +143,14 @@ const AddCourse: React.FC = () => {
     };
     fetchCategories();
   }, []);
+
+  const resetFormData = (resetFormik: () => void) => {
+    setCurrentStep(1);
+    setExpandedChapter(null);
+    setExpandedVerifyChapter(null);
+    setIsSubmitting(false);
+    resetFormik();
+  };
 
   const getCategoryName = (categoryId: string): string => {
     const category = categories.find((cat) => cat.id.toString() === categoryId);
@@ -430,7 +440,8 @@ const AddCourse: React.FC = () => {
   const handleNext = async (
     validateForm: FormikProps<FormValues>["validateForm"],
     values: FormValues,
-    setTouched: FormikProps<FormValues>["setTouched"]
+    setTouched: FormikProps<FormValues>["setTouched"],
+    resetFormik: () => void
   ): Promise<void> => {
     const errors = await validateForm();
 
@@ -455,12 +466,24 @@ const AddCourse: React.FC = () => {
     } else if (currentStep === 2) {
       setCurrentStep(3);
     } else {
+      setIsSubmitting(true);
       console.log("Course Data:", values);
       try {
         const courseResponse = await createCourse(values);
         console.log("course creation res", courseResponse);
+        if (courseResponse.success) {
+          toast.success(
+            "Course has been applied for verification successfully!"
+          );
+          setTimeout(() => {
+            resetFormData(resetFormik);
+          }, 1000);
+        }
       } catch (error) {
         console.log(error);
+        toast.error("Failed to create course. Please try again.");
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
@@ -497,6 +520,7 @@ const AddCourse: React.FC = () => {
           setTouched,
           validateForm,
           isValid,
+          resetForm,
         }) => (
           <Form>
             <div className="flex items-center justify-between mb-6">
@@ -1602,13 +1626,18 @@ const AddCourse: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={() => handleNext(validateForm, values, setTouched)}
-                className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors"
+                onClick={() =>
+                  handleNext(validateForm, values, setTouched, resetForm)
+                }
+                disabled={isSubmitting}
+                className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {currentStep === 1
                   ? "Next: Add Content"
                   : currentStep === 2
                   ? "Next: Review Course"
+                  : isSubmitting
+                  ? "Creating Course..."
                   : "Create Course"}
               </button>
             </div>

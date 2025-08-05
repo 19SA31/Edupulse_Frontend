@@ -347,59 +347,108 @@ export const getCourseCategories = () => {
   return tutorAxiosInstance.get("/course/get-category");
 };
 
-
-export const createCourse = async (courseData: CourseFormData & { chapters: Chapter[] }) => {
+export const createCourse = async (
+  courseData: CourseFormData & { chapters: Chapter[] }
+) => {
   try {
     const formData = new FormData();
-    console.log("$$$", courseData);
-    
-    formData.append('title', courseData.title);
-    formData.append('description', courseData.description);
-    formData.append('benefits', courseData.benefits);
-    formData.append('requirements', courseData.requirements);
-    formData.append('category', courseData.category);
-    formData.append('price', courseData.price.toString());
-    
+    console.log("Full courseData:", courseData);
+
+    formData.append("title", courseData.title);
+    formData.append("description", courseData.description);
+    formData.append("benefits", courseData.benefits);
+    formData.append("requirements", courseData.requirements);
+    formData.append("category", courseData.category);
+    formData.append("price", courseData.price.toString());
+
+  
     if (courseData.courseImage?.file) {
-      formData.append('thumbnail', courseData.courseImage.file);
+      console.log("Thumbnail file found:", courseData.courseImage.file);
+      formData.append("thumbnail", courseData.courseImage.file);
+    } else {
+      console.log("No thumbnail file found");
     }
 
-    formData.append('chapters', JSON.stringify(courseData.chapters));
+    
+    formData.append("chapters", JSON.stringify(courseData.chapters));
 
+    let totalDocuments = 0;
+    let totalVideos = 0;
+    let documentsAppended = 0;
+    let videosAppended = 0;
 
     courseData.chapters.forEach((chapter, chapterIndex) => {
       chapter.lessons.forEach((lesson, lessonIndex) => {
-
         lesson.documents.forEach((doc, docIndex) => {
-          if (doc.file) {
-            formData.append(
-              `module_documents_${chapterIndex}_${lessonIndex}_${docIndex}`, 
-              doc.file
-            );
+          totalDocuments++;
+
+          if (doc.file && doc.file instanceof File) {
+            const fieldName = `lesson_documents_${chapterIndex}_${lessonIndex}_${docIndex}`;
+            formData.append(fieldName, doc.file);
+            documentsAppended++;
+            console.log(`    ✓ Appended document to field: ${fieldName}`);
+          } else {
+            console.log(`    ✗ No valid file for document ${docIndex}`);
           }
         });
 
+        console.log(`  Videos count: ${lesson.videos.length}`);
         lesson.videos.forEach((video, videoIndex) => {
-          if (video.file) {
-            formData.append(
-              `module_videos_${chapterIndex}_${lessonIndex}_${videoIndex}`, 
-              video.file
-            );
+          totalVideos++;
+          console.log(`    Video ${videoIndex}:`, {
+            name: video.name,
+            hasFile: !!video.file,
+            fileType: video.file?.constructor?.name,
+            fileSize: video.file?.size,
+            fileName: video.file?.name,
+          });
+
+          if (video.file && video.file instanceof File) {
+            const fieldName = `lesson_videos_${chapterIndex}_${lessonIndex}_${videoIndex}`;
+            formData.append(fieldName, video.file);
+            videosAppended++;
+            console.log(`    ✓ Appended video to field: ${fieldName}`);
+          } else {
+            console.log(`    ✗ No valid file for video ${videoIndex}`);
           }
         });
       });
     });
 
-    const response = await tutorAxiosInstance.post('/course/create', formData, {
+    console.log("\n=== SUMMARY ===");
+    console.log(
+      `Total documents expected: ${totalDocuments}, appended: ${documentsAppended}`
+    );
+    console.log(
+      `Total videos expected: ${totalVideos}, appended: ${videosAppended}`
+    );
+
+  
+    console.log("\n=== FORMDATA CONTENTS ===");
+    for (let [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(
+          `${key}: File(${value.name}, ${value.size} bytes, ${value.type})`
+        );
+      } else {
+        console.log(
+          `${key}: ${
+            typeof value === "string" ? value.substring(0, 100) + "..." : value
+          }`
+        );
+      }
+    }
+
+    const response = await tutorAxiosInstance.post("/course/create", formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
-      timeout: 120000, 
+      timeout: 120000,
     });
-    
+
     return response.data;
   } catch (error: any) {
-    console.error('Error creating course:', error);
+    console.error("Error creating course:", error);
     if (error.response?.data) {
       return error.response.data;
     }
