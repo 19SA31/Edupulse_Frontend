@@ -43,14 +43,41 @@ export interface Chapter {
   lessons: Lesson[];
 }
 
-
-interface ChapterErrors {
-  title?: string;
+export interface Course {
+  _id: string;
+  title: string;
   description?: string;
-  lessons?: LessonErrors[] | string;
+  benefits?: string;
+  requirements?: string;
+  categoryId: {
+    _id?: string;
+    name: string;
+  };
+  price: number;
+  thumbnailImage?: string;
+  chapters?: Array<{
+    title: string;
+    description?: string;
+    lessons?: Array<{
+      title: string;
+      description?: string;
+      documents?: Array<{ fileName: string; _id?: string }>;
+      videos?: Array<{ fileName: string; _id?: string }>;
+      order?: number;
+      _id?: string;
+    }>;
+    order?: number;
+    _id?: string;
+  }>;
+  tutorId: {
+    _id?: string;
+    name: string;
+    email?: string;
+  };
+  isPublished: boolean;
+  isListed?: boolean;
+  createdAt: string | Date;
+  updatedAt: string | Date;
 }
 
-interface LessonErrors {
-  title?: string;
-  description?: string;
-}
+

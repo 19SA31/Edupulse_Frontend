@@ -386,58 +386,28 @@ export const createCourse = async (
             const fieldName = `lesson_documents_${chapterIndex}_${lessonIndex}_${docIndex}`;
             formData.append(fieldName, doc.file);
             documentsAppended++;
-            console.log(`    ✓ Appended document to field: ${fieldName}`);
+            console.log(`Appended document to field: ${fieldName}`);
           } else {
-            console.log(`    ✗ No valid file for document ${docIndex}`);
+            console.log(`No valid file for document ${docIndex}`);
           }
         });
 
-        console.log(`  Videos count: ${lesson.videos.length}`);
         lesson.videos.forEach((video, videoIndex) => {
           totalVideos++;
-          console.log(`    Video ${videoIndex}:`, {
-            name: video.name,
-            hasFile: !!video.file,
-            fileType: video.file?.constructor?.name,
-            fileSize: video.file?.size,
-            fileName: video.file?.name,
-          });
+          
 
           if (video.file && video.file instanceof File) {
             const fieldName = `lesson_videos_${chapterIndex}_${lessonIndex}_${videoIndex}`;
             formData.append(fieldName, video.file);
             videosAppended++;
-            console.log(`    ✓ Appended video to field: ${fieldName}`);
+            console.log(`Appended video to field: ${fieldName}`);
           } else {
-            console.log(`    ✗ No valid file for video ${videoIndex}`);
+            console.log(`No valid file for video ${videoIndex}`);
           }
         });
       });
     });
 
-    console.log("\n=== SUMMARY ===");
-    console.log(
-      `Total documents expected: ${totalDocuments}, appended: ${documentsAppended}`
-    );
-    console.log(
-      `Total videos expected: ${totalVideos}, appended: ${videosAppended}`
-    );
-
-  
-    console.log("\n=== FORMDATA CONTENTS ===");
-    for (let [key, value] of formData.entries()) {
-      if (value instanceof File) {
-        console.log(
-          `${key}: File(${value.name}, ${value.size} bytes, ${value.type})`
-        );
-      } else {
-        console.log(
-          `${key}: ${
-            typeof value === "string" ? value.substring(0, 100) + "..." : value
-          }`
-        );
-      }
-    }
 
     const response = await tutorAxiosInstance.post("/course/create", formData, {
       headers: {
