@@ -19,19 +19,16 @@ function AddCourseCategory() {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
-
   const [categories, setCategories] = useState<Category[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
 
-
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
     null
   );
-
 
   const formik = useFormik({
     initialValues: {
@@ -63,7 +60,6 @@ function AddCourseCategory() {
             values.description.trim()
           );
         } else {
-
           response = await addCategoryService(
             values.name.trim(),
             values.description.trim()
@@ -123,7 +119,6 @@ function AddCourseCategory() {
       console.log("Full response:", response);
 
       if (response.data && response.data.success && response.data.data) {
-
         const { categories, totalPages } = response.data.data;
 
         setCategories(categories || []);
@@ -187,7 +182,6 @@ function AddCourseCategory() {
       description: category.description,
     });
 
-  
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -270,9 +264,13 @@ function AddCourseCategory() {
 
   return (
     <div className="p-3 mt-4">
-      
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Category Management
+        </h1>
+        <p className="text-gray-600">Manage and publish categories</p>
+      </div>
       <div className="pt-20 px-6 pb-6">
-       
         <div className="bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden mb-8">
           <div className="bg-gray-100 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-xl font-semibold text-gray-800">
@@ -282,7 +280,6 @@ function AddCourseCategory() {
 
           <form onSubmit={formik.handleSubmit} className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             
               <div>
                 <label
                   htmlFor="name"
@@ -312,7 +309,6 @@ function AddCourseCategory() {
                 )}
               </div>
 
-              
               <div>
                 <label
                   htmlFor="description"
@@ -327,7 +323,7 @@ function AddCourseCategory() {
                   value={formik.values.description}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`w-80 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     formik.touched.description && formik.errors.description
                       ? "border-red-500"
                       : "border-gray-300"
@@ -343,7 +339,6 @@ function AddCourseCategory() {
               </div>
             </div>
 
-           
             <div className="flex justify-end space-x-4 mt-6">
               <button
                 type="button"
@@ -370,10 +365,7 @@ function AddCourseCategory() {
           </form>
         </div>
 
-      
         <div className="bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden">
-
-
           {loading ? (
             <div className="flex justify-center py-10">
               <div className="text-center">
@@ -384,7 +376,7 @@ function AddCourseCategory() {
           ) : (
             <>
               {categories && categories.length > 0 ? (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto max-w-full">
                   <Table
                     data={categories}
                     columns={categoryColumns}
@@ -416,7 +408,6 @@ function AddCourseCategory() {
                     }
                     loadingMessage="Loading categories..."
                     getItemId={(category) => category.id}
-                    
                   />
                 </div>
               ) : (

@@ -134,6 +134,14 @@ function UserListing() {
 
   return (
     <div className="p-6 mt-4">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Users
+        </h1>
+        <p className="text-gray-600">
+          Manage Users
+        </p>
+      </div>
       <Table
         data={users}
         columns={columns}

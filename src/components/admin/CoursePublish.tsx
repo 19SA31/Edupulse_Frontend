@@ -1,7 +1,57 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Table, { TableColumn, TableAction } from "../common/Table";
 import { Course } from "../../interfaces/courseInterface";
+import { getUnpublishedCourses } from "../../services/adminService";
 
+// Update these interfaces to match your actual API response
+interface CourseDocument {
+  _id: string;
+  fileName: string;
+  signedUrl: string;
+  originalName: string;
+}
+
+interface CourseVideo {
+  _id: string;
+  fileName: string;
+  signedUrl: string;
+  originalName: string;
+}
+
+interface Lesson {
+  title: string;
+  description?: string;
+  documents?: CourseDocument[];
+  videos?: CourseVideo[];
+}
+
+interface Chapter {
+  title: string;
+  description?: string;
+  lessons?: Lesson[];
+}
+
+// Add a type guard to check if an object is a valid CourseDocument
+const isValidCourseDocument = (doc: any): doc is CourseDocument => {
+  return (
+    doc &&
+    typeof doc._id === "string" &&
+    typeof doc.fileName === "string" &&
+    typeof doc.signedUrl === "string" &&
+    typeof doc.originalName === "string"
+  );
+};
+
+// Add a type guard to check if an object is a valid CourseVideo
+const isValidCourseVideo = (video: any): video is CourseVideo => {
+  return (
+    video &&
+    typeof video._id === "string" &&
+    typeof video.fileName === "string" &&
+    typeof video.signedUrl === "string" &&
+    typeof video.originalName === "string"
+  );
+};
 
 const CoursePublishingComponent: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -10,6 +60,14 @@ const CoursePublishingComponent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalCourses, setTotalCourses] = useState<number>(0);
+  const [selectedDocument, setSelectedDocument] =
+    useState<CourseDocument | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<CourseVideo | null>(null);
+  const [isDocumentModalOpen, setIsDocumentModalOpen] =
+    useState<boolean>(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState<boolean>(false);
   const itemsPerPage = 10;
 
   const filteredCourses = courses.filter(
@@ -19,10 +77,6 @@ const CoursePublishingComponent: React.FC = () => {
       course.categoryId?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredCourses.length / itemsPerPage)
-  );
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedCourses = filteredCourses.slice(
     startIndex,
@@ -56,9 +110,58 @@ const CoursePublishingComponent: React.FC = () => {
     );
   };
 
+  // Add validation before setting selected document
+  const handleDocumentClick = (document: any): void => {
+    if (isValidCourseDocument(document)) {
+      setSelectedDocument(document);
+      setIsDocumentModalOpen(true);
+    } else {
+      console.warn("Invalid document format:", document);
+    }
+  };
+
+  // Add validation before setting selected video
+  const handleVideoClick = (video: any): void => {
+    if (isValidCourseVideo(video)) {
+      setSelectedVideo(video);
+      setIsVideoModalOpen(true);
+    } else {
+      console.warn("Invalid video format:", video);
+    }
+  };
+
   const closeModal = (): void => {
     setIsModalOpen(false);
     setSelectedCourse(null);
+  };
+
+  const closeDocumentModal = (): void => {
+    setIsDocumentModalOpen(false);
+    setSelectedDocument(null);
+  };
+
+  const closeVideoModal = (): void => {
+    setIsVideoModalOpen(false);
+    setSelectedVideo(null);
+  };
+
+  const getFileIcon = (fileName: string): string => {
+    const extension = fileName.split(".").pop()?.toLowerCase();
+    switch (extension) {
+      case "pdf":
+        return "📄";
+      case "doc":
+      case "docx":
+        return "📝";
+      case "ppt":
+      case "pptx":
+        return "📊";
+      case "xls":
+      case "xlsx":
+        return "📈";
+      default:
+        return "📄";
+    }
   };
 
   const columns: TableColumn<Course>[] = [
@@ -87,7 +190,7 @@ const CoursePublishingComponent: React.FC = () => {
       title: "Price",
       align: "center",
       width: "10%",
-      render: (course: Course) => `$${course.price || 0}`,
+      render: (course: Course) => `₹${course.price || 0}`,
     },
     {
       key: "status",
@@ -114,12 +217,29 @@ const CoursePublishingComponent: React.FC = () => {
       onClick: handleViewCourse,
       variant: "secondary",
     },
-    {
-      label: (course: Course) => (course.isPublished ? "Unpublish" : "Publish"),
-      onClick: handlePublishToggle,
-      variant: (course: Course) => (course.isPublished ? "danger" : "success"),
-    },
   ];
+
+  const fetchCourses = async (page: number = 1, search: string = "") => {
+    setLoading(true);
+    try {
+      const response = await getUnpublishedCourses(page, itemsPerPage, search);
+
+      console.log("response", response);
+      if (response.success) {
+        setCourses(response.data.courses);
+        setTotalPages(response.data.pagination.totalPages);
+        setTotalCourses(response.data.pagination.totalCount);
+      }
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCourses(currentPage, searchQuery);
+  }, [currentPage]);
 
   return (
     <div className="p-6">
@@ -165,6 +285,7 @@ const CoursePublishingComponent: React.FC = () => {
         className="shadow-lg"
       />
 
+      {/* Main Course Details Modal */}
       {isModalOpen && selectedCourse && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -215,7 +336,7 @@ const CoursePublishingComponent: React.FC = () => {
                       Price
                     </label>
                     <p className="text-gray-900 font-semibold">
-                      ${selectedCourse.price || 0}
+                      ₹{selectedCourse.price || 0}
                     </p>
                   </div>
                   <div>
@@ -308,15 +429,84 @@ const CoursePublishingComponent: React.FC = () => {
                                       {lesson.description}
                                     </p>
                                   )}
-                                  <div className="mt-2 flex gap-4 text-sm text-gray-500">
-                                    <span>
-                                      📄 {lesson.documents?.length || 0}{" "}
-                                      Documents
-                                    </span>
-                                    <span>
-                                      🎥 {lesson.videos?.length || 0} Videos
-                                    </span>
-                                  </div>
+
+                                  {/* Documents Section */}
+                                  {lesson.documents &&
+                                    lesson.documents.length > 0 && (
+                                      <div className="mt-3">
+                                        <h6 className="text-sm font-medium text-gray-700 mb-2">
+                                          📄 Documents (
+                                          {lesson.documents.length})
+                                        </h6>
+                                        <div className="space-y-1">
+                                          {lesson.documents
+                                            .filter(isValidCourseDocument)
+                                            .map((document, docIndex) => (
+                                              <button
+                                                key={document._id}
+                                                onClick={() =>
+                                                  handleDocumentClick(document)
+                                                }
+                                                className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded transition-colors w-full text-left"
+                                                disabled={!document.signedUrl}
+                                              >
+                                                <span>
+                                                  {getFileIcon(
+                                                    document.originalName ||
+                                                      document.fileName
+                                                  )}
+                                                </span>
+                                                <span className="text-sm truncate">
+                                                  {document.originalName ||
+                                                    document.fileName ||
+                                                    "Unnamed Document"}
+                                                </span>
+                                                {!document.signedUrl && (
+                                                  <span className="text-xs text-red-500 ml-2">
+                                                    (Unavailable)
+                                                  </span>
+                                                )}
+                                              </button>
+                                            ))}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                  {/* Videos Section */}
+                                  {lesson.videos &&
+                                    lesson.videos.length > 0 && (
+                                      <div className="mt-3">
+                                        <h6 className="text-sm font-medium text-gray-700 mb-2">
+                                          🎥 Videos ({lesson.videos.length})
+                                        </h6>
+                                        <div className="space-y-1">
+                                          {lesson.videos
+                                            .filter(isValidCourseVideo)
+                                            .map((video, videoIndex) => (
+                                              <button
+                                                key={video._id}
+                                                onClick={() =>
+                                                  handleVideoClick(video)
+                                                }
+                                                className="flex items-center space-x-2 text-green-600 hover:text-green-800 hover:bg-green-50 p-2 rounded transition-colors w-full text-left"
+                                                disabled={!video.signedUrl}
+                                              >
+                                                <span>▶️</span>
+                                                <span className="text-sm truncate">
+                                                  {video.originalName ||
+                                                    video.fileName ||
+                                                    "Unnamed Video"}
+                                                </span>
+                                                {!video.signedUrl && (
+                                                  <span className="text-xs text-red-500 ml-2">
+                                                    (Unavailable)
+                                                  </span>
+                                                )}
+                                              </button>
+                                            ))}
+                                        </div>
+                                      </div>
+                                    )}
                                 </div>
                               ))}
                             </div>
@@ -382,6 +572,90 @@ const CoursePublishingComponent: React.FC = () => {
                   ? "Unpublish Course"
                   : "Publish Course"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Document Viewer Modal */}
+      {isDocumentModalOpen && selectedDocument && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4">
+          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[95vh] overflow-hidden flex flex-col">
+            <div className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-gray-900">
+                {selectedDocument.originalName ||
+                  selectedDocument.fileName ||
+                  "Document"}
+              </h3>
+              <div className="flex items-center space-x-3">
+                <a
+                  href={selectedDocument.signedUrl}
+                  download={
+                    selectedDocument.originalName || selectedDocument.fileName
+                  }
+                  className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
+                >
+                  Download
+                </a>
+                <button
+                  onClick={closeDocumentModal}
+                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 p-4">
+              {selectedDocument.signedUrl ? (
+                <iframe
+                  src={selectedDocument.signedUrl}
+                  className="w-full h-full border border-gray-300 rounded"
+                  title={
+                    selectedDocument.originalName || selectedDocument.fileName
+                  }
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-gray-500">Document not available</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Video Player Modal */}
+      {isVideoModalOpen && selectedVideo && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[95vh] overflow-hidden flex flex-col">
+            <div className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-gray-900">
+                {selectedVideo.originalName ||
+                  selectedVideo.fileName ||
+                  "Video"}
+              </h3>
+              <button
+                onClick={closeVideoModal}
+                className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+            <div className="flex-1 p-4 bg-black">
+              {selectedVideo.signedUrl ? (
+                <video
+                  controls
+                  className="w-full h-full max-h-[70vh]"
+                  preload="metadata"
+                >
+                  <source src={selectedVideo.signedUrl} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-white">Video not available</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
