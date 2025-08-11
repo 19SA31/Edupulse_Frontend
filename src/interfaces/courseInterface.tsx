@@ -74,10 +74,30 @@ export interface Course {
     name: string;
     email?: string;
   };
-  isPublished: boolean;
+  isPublished: string;
   isListed?: boolean;
   createdAt: string | Date;
   updatedAt: string | Date;
 }
 
+export interface CourseDocument {
+  _id: string;
+  fileName: string;
+  signedUrl: string;
+  originalName: string;
+}
 
+export interface CourseVideo {
+  _id: string;
+  fileName: string;
+  signedUrl: string;
+  originalName: string;
+}
+
+export interface CourseListing{
+  courseId:string;
+  courseName:string;
+  courseCategory:string;
+  tutorName:string;
+  isListed:boolean
+}

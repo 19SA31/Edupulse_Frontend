@@ -11,6 +11,7 @@ import AdminProtectRoute from "./ProtectedRoutes/AdminProtectRoute";
 import AddCourseCategoryPage from "../pages/admin/AddCourseCategoryPage";
 import TutorVerificationPage from "../pages/admin/TutorVerificationPage";
 import CoursePublishPage from "../pages/admin/CoursePublishPage";
+import CourseManagementPage from "../pages/admin/CourseManagementPage";
 
 function AdminRoutes() {
   return (
@@ -42,6 +43,7 @@ function AdminRoutes() {
           <Route path="addCourseCategory" element={<AddCourseCategoryPage />} />
           <Route path="tutorVerification" element={<TutorVerificationPage/>}/>
           <Route path="coursePublish" element={<CoursePublishPage/>}/>
+          <Route path="courseManagement" element={<CourseManagementPage/>}/>
         </Route>
       </Routes>
     </div>

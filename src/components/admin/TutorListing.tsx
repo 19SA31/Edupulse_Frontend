@@ -149,7 +149,7 @@ function TutorListing() {
         getItemId={(tutor) => tutor.id}
       />
 
-      {/* Tutor Details Modal */}
+
       <UserDetailsModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}

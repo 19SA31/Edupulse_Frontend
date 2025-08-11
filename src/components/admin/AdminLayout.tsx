@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import Header from "../../components/common/Header";
 import ReusableSidebar from "../../components/common/Sidebar";
 import { SidebarItem } from "../../interfaces/adminInterface";
-import { FiUploadCloud } from "react-icons/fi";
+import { FiUploadCloud, FiBook  } from "react-icons/fi";
 
 function AdminLayout() {
   const adminSidebarItems: SidebarItem[] = [
@@ -55,6 +55,11 @@ function AdminLayout() {
       path: "/admin/coursePublish",
       label: "Publish Course",
       icon: <FiUploadCloud className="w-5 h-5" />,
+    },
+    {
+      path: "/admin/courseManagement",
+      label: "Manage Course",
+      icon: <FiBook  className="w-5 h-5" />,
     },
   ];
 

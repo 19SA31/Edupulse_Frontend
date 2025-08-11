@@ -118,3 +118,21 @@ export const getUnpublishedCourses = async (
   });
   return response.data;
 };
+
+export const publishCourse = async (id:string)=>{
+  console.log(id)
+  const response = await adminAxiosInstance.put(`/publish-course/${id}`)
+  return response.data
+}
+export const rejectCourse = async (id:string, reason?: string)=>{
+  const response = await adminAxiosInstance.put(`/reject-course/${id}`,{
+    reason
+  })
+  return response.data
+}
+export const getPublishedCourses = async(page: number, search: string)=>{
+  const response = await adminAxiosInstance.get(`/course-listing`, {
+    params: { page, limit: 7, search },
+  });
+  return response.data
+};
