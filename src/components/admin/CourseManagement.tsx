@@ -1,30 +1,25 @@
 import React, { useState, useEffect } from "react";
-import {
-  FiBook
-} from "react-icons/fi";
+import { FiBook } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
 import { logoutAdminAction } from "../../redux/actions/adminActions";
 import Table, { TableColumn, TableAction } from "../../components/common/Table";
 import { Course, CourseListing } from "../../interfaces/courseInterface";
-import { getPublishedCourses } from "../../services/adminService";
+import { getPublishedCourses, listUnlistCourse } from "../../services/adminService";
 
-
-const courseColumns: TableColumn<CourseListing>[] = [
+const courseColumns: TableColumn<Course>[] = [
+  { key: "title", title: "Course Name", align: "center" },
   {
-    key: "courseName",
-    title: "Course Name",
-    align: "center",
-  },
-  {
-    key: "courseCategory",
+    key: "categoryId",
     title: "Category",
+    render: (course) => course.categoryId.name,
     align: "center",
   },
   {
-    key: "tutorName",
+    key: "tutorId",
     title: "Tutor Name",
+    render: (course) => course.tutorId.name,
     align: "center",
   },
   {
@@ -56,15 +51,22 @@ function CourseManagement() {
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage] = useState(7);
 
-
-
   const fetchCourses = async (page: number, search: string = "") => {
     setLoading(true);
     try {
       const response = await getPublishedCourses(page, search);
-      console.log("[[[",response)
+      console.log("[[[", response);
       if (response.success && response.data) {
-        setCourses(response.data.courses);
+        setCourses(
+          response.data.courses.map((c: CourseListing) => ({
+            _id: c.courseId,
+            title: c.courseName,
+            categoryId: { name: c.courseCategory },
+            tutorId: { name: c.tutorName },
+            isListed: c.isListed,
+          }))
+        );
+
         setTotalPages(response.data.totalPages);
       } else {
         setCourses([]);
@@ -88,9 +90,7 @@ function CourseManagement() {
   const toggleListState = async (courseId: string) => {
     try {
       console.log("Toggling list state for course:", courseId);
-      
-
-        
+      const toggleResponse = await listUnlistCourse(courseId)
       setCourses((prevCourses) =>
         prevCourses.map((course) =>
           course._id === courseId
@@ -114,7 +114,6 @@ function CourseManagement() {
       variant: (course: Course) => (course.isListed ? "danger" : "success"),
     },
   ];
-
 
   const handlePageChange = (direction: "next" | "previous") => {
     if (direction === "next" && currentPage < totalPages) {
@@ -149,9 +148,7 @@ function CourseManagement() {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Course Management
         </h1>
-        <p className="text-gray-600">
-          List and Unlist Courses
-        </p>
+        <p className="text-gray-600">List and Unlist Courses</p>
       </div>
 
       <Table
@@ -162,7 +159,7 @@ function CourseManagement() {
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
         onSearch={handleSearch}
-        searchPlaceholder="Search courses by title, tutor, or category..."
+        searchPlaceholder="Search courses by title"
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}

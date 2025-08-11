@@ -136,3 +136,8 @@ export const getPublishedCourses = async(page: number, search: string)=>{
   });
   return response.data
 };
+
+export const listUnlistCourse = async (id:string)=>{
+  const response = await adminAxiosInstance.put(`/listunlist-course/${id}`)
+  return response.data
+}
