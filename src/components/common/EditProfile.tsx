@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { updateUserProfile } from "../../services/authService";
+import { updateUserProfile } from "../../services/userService";
 import { updateTutorProfile } from "../../services/tutorService";
 import img from "../../assets/unknown-user.jpg";
 

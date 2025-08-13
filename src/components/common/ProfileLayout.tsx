@@ -5,7 +5,7 @@ import img from "../../assets/unknown-user.jpg";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
-import EditProfileModal from "../common/EditProfile";
+import EditProfileModal from "./EditProfile";
 
 interface ProfileProps {
   role: "user" | "tutor" | "admin";

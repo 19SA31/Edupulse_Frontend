@@ -300,7 +300,7 @@ function Header({ role = null }: HeaderProps) {
           </li>
           <li>
             <button className="hover:text-yellow-400 transition-colors duration-200">
-              Services
+              Courses
             </button>
           </li>
 

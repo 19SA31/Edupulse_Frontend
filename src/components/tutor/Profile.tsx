@@ -1,5 +1,5 @@
 import React from 'react'
-import ProfileLayout from '../auth/ProfileLayout'
+import ProfileLayout from '../common/ProfileLayout'
 function Profile() {
   return (
     <div>

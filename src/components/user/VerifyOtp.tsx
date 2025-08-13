@@ -6,7 +6,7 @@ import {
   verifyOtpService,
   verifyForgotOtpService,
   forgotPasswordService
-} from "../../services/authService";
+} from "../../services/userService";
 import logo from "../../assets/epulse.png";
 import bg_img from "../../assets/ep-background.jpg";
 

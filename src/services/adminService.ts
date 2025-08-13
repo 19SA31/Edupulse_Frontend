@@ -45,7 +45,7 @@ export const listUnlistTutor = (id: string) => {
 
 export const getCategories = (page: number, search: string) => {
   return adminAxiosInstance.get("/categories", {
-    params: { page, limit: 10, search },
+    params: { page, limit: 7, search },
   });
 };
 
