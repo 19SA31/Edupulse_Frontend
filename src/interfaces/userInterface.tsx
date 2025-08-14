@@ -61,6 +61,8 @@ export interface TutorListingUser {
   tutorId: string;
   name: string;
   avatar?: string;
+  about: string;
+  designation: string;
   isVerified: boolean;
   isListed: boolean;
 }
@@ -69,6 +71,7 @@ export interface CourseListingUser {
   courseId: string;
   title: string;
   thumbnailImage?: string;
+  description?: string;
   categoryName: string;
   enrollmentCount: number;
   tutorName: string;

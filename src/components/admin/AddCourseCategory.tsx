@@ -272,8 +272,8 @@ function AddCourseCategory() {
       </div>
       <div className="pt-20 px-6 pb-6">
         <div className="bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden mb-8">
-          <div className="bg-gray-100 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-800">
+          <div className="bg-gray-700 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 className="text-xl font-semibold text-white">
               {isEditMode ? "Edit Category" : "Add New Category"}
             </h2>
           </div>

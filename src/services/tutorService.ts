@@ -22,6 +22,8 @@ export interface UpdateProfileData {
   name?: string;
   phone?: string;
   DOB?: string;
+  designation?: string;
+  about?: string;
   gender?: string;
   avatar?: File;
   cropData?: CropData;
@@ -269,6 +271,9 @@ export const updateTutorProfile = async (
     if (profileData.DOB) formData.append("DOB", profileData.DOB);
     if (profileData.gender) formData.append("gender", profileData.gender);
     if (profileData.avatar) formData.append("avatar", profileData.avatar);
+    if (profileData.designation)
+      formData.append("designation", profileData.designation);
+    if (profileData.about) formData.append("about", profileData.about);
 
     const response = await tutorAxiosInstance.put(
       "/profile/update-profile",
@@ -361,7 +366,6 @@ export const createCourse = async (
     formData.append("category", courseData.category);
     formData.append("price", courseData.price.toString());
 
-  
     if (courseData.courseImage?.file) {
       console.log("Thumbnail file found:", courseData.courseImage.file);
       formData.append("thumbnail", courseData.courseImage.file);
@@ -369,7 +373,6 @@ export const createCourse = async (
       console.log("No thumbnail file found");
     }
 
-    
     formData.append("chapters", JSON.stringify(courseData.chapters));
 
     let totalDocuments = 0;
@@ -394,7 +397,6 @@ export const createCourse = async (
 
         lesson.videos.forEach((video, videoIndex) => {
           totalVideos++;
-          
 
           if (video.file && video.file instanceof File) {
             const fieldName = `lesson_videos_${chapterIndex}_${lessonIndex}_${videoIndex}`;
@@ -407,7 +409,6 @@ export const createCourse = async (
         });
       });
     });
-
 
     const response = await tutorAxiosInstance.post("/course/create", formData, {
       headers: {

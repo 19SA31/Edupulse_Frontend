@@ -12,6 +12,7 @@ import UserProtectRoute from "./ProtectedRoutes/UserProtectRoute";
 import { Toaster } from "sonner";
 import UserLayoutPage from "../pages/user/UserLayoutPage";
 import DashboardPage from "../pages/user/DashboardPage";
+import CourseListingPage from "../pages/user/CourseListingPage";
 
 function UserRoutes() {
   return (
@@ -20,6 +21,7 @@ function UserRoutes() {
 
       <Routes>
         <Route path="" element={<HomePage />} />
+        <Route path="course-listing" element={<CourseListingPage/>}/>
 
         <Route
           path="login"
@@ -58,6 +60,7 @@ function UserRoutes() {
             </UserProtectRoute>
           }
         >
+
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
         </Route>

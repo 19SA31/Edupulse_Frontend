@@ -120,14 +120,14 @@ function Table<T>({
       className={`bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden ${className}`}
     >
       {showSearch && (
-        <div className="bg-gray-100 px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="bg-gray-600 px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex space-x-4 items-center w-full sm:w-auto ml-auto">
             <input
               type="text"
               placeholder={searchPlaceholder}
               value={searchQuery}
               onChange={(e) => onSearchChange?.(e.target.value)}
-              className="flex-1 sm:flex-none px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 sm:flex-none px-3 py-2 rounded-lg border text-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-white focus:border-white"
             />
             <button
               className="text-sm px-4 py-2 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 whitespace-nowrap"

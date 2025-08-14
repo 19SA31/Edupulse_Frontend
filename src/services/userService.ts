@@ -10,9 +10,9 @@ import {
   ProfileUpdateResponse,
 } from "../interfaces/userInterface";
 import { AxiosResponse } from "axios";
+import { Course } from "../interfaces/courseInterface";
 
 const userAxiosInstance = createAxiosInstance("user");
-
 
 export const signUpService = async (
   name: string,
@@ -335,5 +335,12 @@ export const getAllListedCategories = async (): Promise<
 > => {
   const response: AxiosResponse<CategoryListingUser[]> =
     await userAxiosInstance.get("/listed-categories");
+  return response.data;
+};
+
+export const fetchCourseDetails = async (courseId: string): Promise<Course> => {
+  const response: AxiosResponse<Course> = await userAxiosInstance.get(
+    `course-details/${courseId}`
+  );
   return response.data;
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Play, Users, BookOpen, Award, ChevronRight } from "lucide-react";
-
+import { Link, useNavigate } from "react-router-dom";
 import {
   getAllListedTutors,
   getAllListedCourses,
@@ -58,9 +58,6 @@ function Banner() {
             getAllListedCourses(),
             getAllListedCategories(),
           ]);
-        console.log("coursesResponse", coursesResponse);
-        console.log("tutorsResponse", tutorsResponse);
-        console.log("categoriesResponse", categoriesResponse);
         setTutors(tutorsResponse?.data || []);
         setCourses(coursesResponse?.data || []);
         setCategories(categoriesResponse?.data || []);
@@ -291,9 +288,11 @@ function Banner() {
               </div>
 
               <div className="text-center">
-                <button className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-lg hover:shadow-yellow-500/25 transition-all duration-300 transform hover:scale-105">
-                  View All Courses
-                </button>
+                <Link to={"/course-listing"}>
+                  <button className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-lg hover:shadow-yellow-500/25 transition-all duration-300 transform hover:scale-105">
+                    View All Courses
+                  </button>
+                </Link>
               </div>
             </>
           ) : (
@@ -326,7 +325,7 @@ function Banner() {
                         <img
                           src={tutor.avatar}
                           alt={tutor.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover object-top"
                           onError={handleTutorImageError}
                         />
                       ) : null}
@@ -335,7 +334,9 @@ function Banner() {
                         <h3 className="text-3xl font-bold text-white mb-3">
                           {tutor.name}
                         </h3>
-                        <p className="text-white/90 text-lg">Expert Tutor</p>
+                        <p className="text-white/90 text-lg">
+                          {tutor.designation}
+                        </p>
                       </div>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       {tutor.isListed && (
@@ -348,6 +349,11 @@ function Banner() {
                     </div>
                   </div>
                 ))}
+              </div>
+              <div className="text-center">
+                <button className="bg-gradient-to-r from-gray-700 to-gray-900 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-lg hover:shadow-gray-400/25 transition-all duration-300 transform hover:scale-105">
+                  And more...
+                </button>
               </div>
             </div>
           ) : (
