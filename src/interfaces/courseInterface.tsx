@@ -1,3 +1,90 @@
+
+export interface CourseDocument {
+  _id: string;
+  fileName: string;
+  signedUrl: string;
+  originalName: string;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data?: T;
+}
+
+
+export interface CourseVideo {
+  _id: string;
+  fileName: string;
+  signedUrl: string;
+  originalName: string;
+}
+
+export interface CourseLesson {
+  _id: string;
+  title: string;
+  description: string;
+  documents: CourseDocument[];
+  videos: CourseVideo[];
+  order: number;
+}
+
+export interface CourseChapter {
+  _id: string;
+  title: string;
+  description: string;
+  lessons: CourseLesson[];
+  order: number;
+}
+
+export interface CourseTutor {
+  _id: string;
+  name: string;
+  email: string;
+  designation: string;
+  about: string;
+  avatar: string;
+}
+
+export interface CourseCategory {
+  _id: string;
+  name: string;
+  description: string;
+}
+
+export interface CourseDetails {
+  _id: string;
+  title: string;
+  description: string;
+  benefits: string;
+  requirements: string;
+  category: CourseCategory;
+  tutor: CourseTutor;
+  price: number;
+  thumbnailImage: string;
+  chapters: CourseChapter[];
+  isPublished: boolean;
+  isListed: boolean;
+  enrollmentCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CourseDetailsComponentProps {
+  courseData: CourseDetails;
+}
+
+export interface VideoPlayerProps {
+  video: CourseVideo;
+  onPaywallTrigger: () => void;
+  freeWatchTime: number;
+}
+
+export interface DocumentViewerProps {
+  documents: CourseDocument[];
+  onClose: () => void;
+}
+
 export interface Category {
   id: number;
   name: string;
@@ -80,24 +167,35 @@ export interface Course {
   updatedAt: string | Date;
 }
 
-export interface CourseDocument {
-  _id: string;
-  fileName: string;
-  signedUrl: string;
-  originalName: string;
+export interface CourseListing {
+  courseId: string;
+  courseName: string;
+  courseCategory: string;
+  tutorName: string;
+  isListed: boolean;
 }
 
-export interface CourseVideo {
-  _id: string;
-  fileName: string;
-  signedUrl: string;
-  originalName: string;
+
+export interface TutorListingUser {
+  tutorId: string;
+  name: string;
+  designation: string;
+  about: string;
+  avatar: string;
+  isVerified: boolean;
 }
 
-export interface CourseListing{
-  courseId:string;
-  courseName:string;
-  courseCategory:string;
-  tutorName:string;
-  isListed:boolean
+export interface CourseListingUser {
+  courseId: string;
+  title: string;
+  description: string;
+  categoryName: string;
+  tutorName: string;
+  price: number;
+  thumbnailImage: string;
+  enrollmentCount: number;
+}
+
+export interface CategoryListingUser {
+  name: string;
 }

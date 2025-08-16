@@ -9,6 +9,7 @@ import {
   ApiResponse,
   ProfileUpdateResponse,
 } from "../interfaces/userInterface";
+import { CourseDetails } from "../interfaces/courseInterface";
 import { AxiosResponse } from "axios";
 import { Course } from "../interfaces/courseInterface";
 
@@ -338,9 +339,11 @@ export const getAllListedCategories = async (): Promise<
   return response.data;
 };
 
-export const fetchCourseDetails = async (courseId: string): Promise<Course> => {
-  const response: AxiosResponse<Course> = await userAxiosInstance.get(
-    `course-details/${courseId}`
-  );
-  return response.data;
-};
+
+export async function fetchCourseDetails(
+  courseId: string
+): Promise<CourseDetails> {
+    const response = await userAxiosInstance.get(`/course-details/${courseId}`);
+    console.log("fetchCourseDetails frnt serv",response.data)
+    return response.data
+}

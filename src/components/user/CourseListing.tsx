@@ -4,7 +4,7 @@ import {
   getAllListedTutors,
   getAllListedCourses,
   getAllListedCategories,
-  fetchCourseDetails
+  fetchCourseDetails,
 } from "../../services/userService";
 import {
   TutorListingUser,
@@ -82,15 +82,15 @@ const CourseListing = () => {
     }).format(price);
   };
 
-  const handleCourseClick = async (courseId: string) => {
+  const handleCourseClick = async (id: string) => {
     try {
       setLoading(true);
-      const courseDetails = await fetchCourseDetails(courseId);
-      navigate("/course-details", { 
-        state: { 
-          courseId, 
-          courseDetails 
-        } 
+      const courseDetails = await fetchCourseDetails(id);
+      navigate("/course-details", {
+        state: {
+          id,
+          courseDetails,
+        },
       });
     } catch (error) {
       console.error("Error fetching course details:", error);
@@ -105,7 +105,10 @@ const CourseListing = () => {
 
     return (
       <div className="bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group">
-        <div className="relative overflow-hidden">
+        <div
+          className="relative overflow-hidden"
+          onClick={() => handleCourseClick(course.courseId)}
+        >
           <img
             src={course.thumbnailImage}
             alt={course.title}
@@ -360,7 +363,7 @@ const CourseListing = () => {
                                   d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                                   clipRule="evenodd"
                                 />
-                                </svg>
+                              </svg>
                             </div>
                           )}
                         </div>
