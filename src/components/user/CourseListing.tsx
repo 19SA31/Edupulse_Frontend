@@ -14,29 +14,35 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 
 const CourseListing = () => {
-  const [selectedCategory, setSelectedCategory] =
-    useState<string>("All classes");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All classes");
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [courses, setCourses] = useState<CourseListingUser[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [tutors, setTutors] = useState<TutorListingUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [minPrice, setMinPrice] = useState<number | ''>('');
+  const [maxPrice, setMaxPrice] = useState<number | ''>('');
+  const [sortBy, setSortBy] = useState<string>('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
       try {
-        setLoading(true);
-        const [tutorsRes, coursesRes, categoriesRes] = await Promise.all([
+        const [tutorsRes, categoriesRes] = await Promise.all([
           getAllListedTutors(),
-          getAllListedCourses(),
           getAllListedCategories(),
         ]);
 
-        if (coursesRes.success) {
-          setCourses(coursesRes.data);
-        }
         if (categoriesRes.success) {
           setCategories([
             "All classes",
@@ -47,32 +53,44 @@ const CourseListing = () => {
           setTutors(tutorsRes.data);
         }
       } catch (err) {
-        setError("Failed to fetch data. Please try again later.");
-        console.error("Error fetching data:", err);
-      } finally {
-        setLoading(false);
+        setError("Failed to fetch initial data. Please try again later.");
+        console.error("Error fetching initial data:", err);
       }
     };
 
-    fetchData();
+    fetchInitialData();
   }, []);
+
+
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      const coursesRes = await getAllListedCourses({
+        search: debouncedSearchTerm,
+        category: selectedCategory,
+        minPrice: minPrice || undefined,
+        maxPrice: maxPrice || undefined,
+        sortBy: sortBy || undefined,
+      });
+
+      if (coursesRes.success) {
+        setCourses(coursesRes.data);
+      }
+    } catch (err) {
+      setError("Failed to fetch courses. Please try again later.");
+      console.error("Error fetching courses:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCourses();
+  }, [selectedCategory, debouncedSearchTerm, minPrice, maxPrice, sortBy]);
 
   const getTutorInfo = (tutorName: string): TutorListingUser | undefined => {
     return tutors.find((tutor) => tutor.name === tutorName);
   };
-
-  const filteredCourses = courses.filter((course) => {
-    const matchesCategory =
-      selectedCategory === "All classes" ||
-      course.categoryName === selectedCategory;
-
-    const matchesSearch =
-      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.tutorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.categoryName.toLowerCase().includes(searchTerm.toLowerCase());
-
-    return matchesCategory && matchesSearch;
-  });
 
   const formatPrice = (price: number): string => {
     return new Intl.NumberFormat("en-IN", {
@@ -98,6 +116,14 @@ const CourseListing = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const clearAllFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("All classes");
+    setMinPrice('');
+    setMaxPrice('');
+    setSortBy('');
   };
 
   const CourseCard = ({ course }: { course: CourseListingUser }) => {
@@ -189,7 +215,7 @@ const CourseListing = () => {
     );
   };
 
-  if (loading) {
+  if (loading && courses.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -200,7 +226,7 @@ const CourseListing = () => {
     );
   }
 
-  if (error) {
+  if (error && courses.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -248,6 +274,7 @@ const CourseListing = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
+
           <div className="lg:w-64 flex-shrink-0">
             <div className="bg-black rounded-lg p-6 shadow-sm sticky top-4">
               <h3 className="font-semibold text-white mb-4">Categories</h3>
@@ -268,7 +295,46 @@ const CourseListing = () => {
                 ))}
               </ul>
 
-              <div className="mt-6 pt-6 border-t border-gray-200"></div>
+              <div className="mt-6 pt-6 border-t border-gray-700">
+                <h3 className="font-semibold text-white mb-4">Price Range</h3>
+                <div className="space-y-3">
+                  <div>
+                    <input
+                      type="number"
+                      placeholder="Min Price (₹)"
+                      value={minPrice}
+                      onChange={(e) => setMinPrice(e.target.value ? Number(e.target.value) : '')}
+                      className="w-full px-3 py-2 bg-gray-700 text-white rounded text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="number"
+                      placeholder="Max Price (₹)"
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(e.target.value ? Number(e.target.value) : '')}
+                      className="w-full px-3 py-2 bg-gray-700 text-white rounded text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                      min="0"
+                    />
+                  </div>
+                  <button
+                    onClick={() => { setMinPrice(''); setMaxPrice(''); }}
+                    className="text-yellow-400 text-sm hover:text-yellow-300 transition-colors"
+                  >
+                    Clear Price Filter
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-gray-700">
+                <button
+                  onClick={clearAllFilters}
+                  className="w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm transition-colors"
+                >
+                  Clear All Filters
+                </button>
+              </div>
             </div>
           </div>
 
@@ -281,16 +347,40 @@ const CourseListing = () => {
               </h2>
               <div className="w-16 h-1 bg-yellow-400 rounded"></div>
               {searchTerm && (
-                <p className="text-gray-600 mt-2">
+                <p className="text-gray-400 mt-2">
                   Showing results for "
-                  <span className="font-medium">{searchTerm}</span>"
+                  <span className="font-medium text-white">{searchTerm}</span>"
                 </p>
               )}
             </div>
 
-            {filteredCourses.length > 0 ? (
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+              <div className="flex items-center gap-4">
+                <span className="text-white text-sm">Sort by:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="bg-gray-700 text-white px-3 py-2 rounded text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                >
+                  <option value="">Default</option>
+                  <option value="title_asc">Title A-Z</option>
+                  <option value="title_desc">Title Z-A</option>
+                  <option value="price_asc">Price Low to High</option>
+                  <option value="price_desc">Price High to Low</option>
+                </select>
+              </div>
+              
+              <div className="flex items-center gap-2 text-gray-400 text-sm">
+                {loading && courses.length > 0 && (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                )}
+                <span>{courses.length} courses found</span>
+              </div>
+            </div>
+
+            {courses.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredCourses.map((course) => (
+                {courses.map((course) => (
                   <CourseCard key={course.courseId} course={course} />
                 ))}
               </div>
@@ -299,29 +389,22 @@ const CourseListing = () => {
                 <div className="text-gray-400 mb-4">
                   <Search size={48} className="mx-auto" />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-white mb-2">
                   No courses found
                 </h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-400 mb-4">
                   {searchTerm
-                    ? `No courses match "${searchTerm}" in ${
-                        selectedCategory === "All classes"
-                          ? "any category"
-                          : selectedCategory
-                      }`
-                    : `No courses available in ${selectedCategory}`}
+                    ? `No courses match "${searchTerm}"`
+                    : `No courses available`}
+                  {selectedCategory !== "All classes" && ` in ${selectedCategory}`}
+                  {(minPrice || maxPrice) && ` within the specified price range`}
                 </p>
-                {(searchTerm || selectedCategory !== "All classes") && (
-                  <button
-                    onClick={() => {
-                      setSearchTerm("");
-                      setSelectedCategory("All classes");
-                    }}
-                    className="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded font-medium"
-                  >
-                    Clear Filters
-                  </button>
-                )}
+                <button
+                  onClick={clearAllFilters}
+                  className="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded font-medium transition-colors"
+                >
+                  Clear All Filters
+                </button>
               </div>
             )}
 
@@ -373,7 +456,7 @@ const CourseListing = () => {
                         <p className="text-sm text-gray-200 mb-2">
                           {tutor.designation}
                         </p>
-                        <p className="text-xs text-gray-500 line-clamp-2">
+                        <p className="text-xs text-gray-400 line-clamp-2">
                           {tutor.about}
                         </p>
                       </div>

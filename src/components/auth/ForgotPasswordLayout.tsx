@@ -7,7 +7,7 @@ import { forgotPasswordService } from "../../services/userService";
 import { tutorForgotPasswordService } from "../../services/tutorService";
 
 interface ForgotPasswordProps {
-    role: "user" | "tutor"; // 
+    role: "user" | "tutor"; 
   }
 
 const ForgotPasswordLayout = ({ role }:ForgotPasswordProps) => {

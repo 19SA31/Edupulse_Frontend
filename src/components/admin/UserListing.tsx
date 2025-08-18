@@ -160,7 +160,6 @@ function UserListing() {
         getItemId={(user) => user.id} 
       />
 
-      {/* User Details Modal */}
       <UserDetailsModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}

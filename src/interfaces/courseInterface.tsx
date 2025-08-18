@@ -199,3 +199,11 @@ export interface CourseListingUser {
 export interface CategoryListingUser {
   name: string;
 }
+
+export interface CourseSearchParams {
+  search?: string;
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: 'title_asc' | 'title_desc' | 'price_asc' | 'price_desc' | 'category_asc' | 'category_desc';
+}

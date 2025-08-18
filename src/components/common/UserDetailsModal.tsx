@@ -91,7 +91,6 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
 
       
         <div className="p-6">
-          {/* Avatar */}
           <div className="flex justify-center mb-6">
             {user.avatar ? (
               <img

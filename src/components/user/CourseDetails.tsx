@@ -361,10 +361,8 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
                                     }`}
                                     type="button"
                                   >
-                                    {/* Play icon stays the same */}
                                     <Play className="w-4 h-4 text-purple-600" />
 
-                                    {/* Text changes based on selection */}
                                     <span
                                       className={`text-sm ${
                                         selectedVideo?._id === video._id

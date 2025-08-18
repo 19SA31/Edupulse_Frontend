@@ -1,17 +1,15 @@
-// import { userAxiosInstance } from "../api/userAxiosInstance";
+
 import { createAxiosInstance } from "../api/axiosInstance";
 import {
   TutorListingUser,
   CourseListingUser,
   CategoryListingUser,
   UpdateProfileData,
-  CropData,
   ApiResponse,
-  ProfileUpdateResponse,
 } from "../interfaces/userInterface";
 import { CourseDetails } from "../interfaces/courseInterface";
 import { AxiosResponse } from "axios";
-import { Course } from "../interfaces/courseInterface";
+import { Course,CourseSearchParams } from "../interfaces/courseInterface";
 
 const userAxiosInstance = createAxiosInstance("user");
 
@@ -325,10 +323,49 @@ export const getAllListedTutors = async (): Promise<TutorListingUser[]> => {
   return response.data;
 };
 
-export const getAllListedCourses = async (): Promise<CourseListingUser[]> => {
-  const response: AxiosResponse<CourseListingUser[]> =
-    await userAxiosInstance.get("/listed-courses");
-  return response.data;
+export const getAllListedCourses = async (params?: CourseSearchParams): Promise<{
+  success: boolean;
+  data: CourseListingUser[];
+  message?: string;
+}> => {
+  try {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.search) {
+      queryParams.append('search', params.search);
+    }
+    if (params?.category && params.category !== 'All classes') {
+      queryParams.append('category', params.category);
+    }
+    if (params?.minPrice !== undefined) {
+      queryParams.append('minPrice', params.minPrice.toString());
+    }
+    if (params?.maxPrice !== undefined) {
+      queryParams.append('maxPrice', params.maxPrice.toString());
+    }
+    if (params?.sortBy) {
+      queryParams.append('sortBy', params.sortBy);
+    }
+
+    const queryString = queryParams.toString();
+    console.log("get all listed courses",queryString)
+    const url = queryString ? `/listed-courses?${queryString}` : '/listed-courses';
+    
+    const response: AxiosResponse<{
+      success: boolean;
+      data: CourseListingUser[];
+      message?: string;
+    }> = await userAxiosInstance.get(url);
+    
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching courses:', error);
+    return {
+      success: false,
+      data: [],
+      message: error.response?.data?.message || 'Failed to fetch courses'
+    };
+  }
 };
 
 export const getAllListedCategories = async (): Promise<
@@ -347,3 +384,4 @@ export async function fetchCourseDetails(
     console.log("fetchCourseDetails frnt serv",response.data)
     return response.data
 }
+

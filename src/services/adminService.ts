@@ -1,4 +1,4 @@
-// import { adminAxiosInstance } from "../api/adminAxiosInstance";
+
 import { createAxiosInstance } from "../api/axiosInstance";
 
 const adminAxiosInstance = createAxiosInstance("admin");
