@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import logo from "../../assets/epulse.png";
 import bg_img from "../../assets/ep-background.jpg";
-import { forgotPasswordService } from "../../services/authService";
+import { forgotPasswordService } from "../../services/userService";
 import { tutorForgotPasswordService } from "../../services/tutorService";
 
 interface ForgotPasswordProps {
-    role: "user" | "tutor"; // 
+    role: "user" | "tutor"; 
   }
 
 const ForgotPasswordLayout = ({ role }:ForgotPasswordProps) => {

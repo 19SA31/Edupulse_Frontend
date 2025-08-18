@@ -3,7 +3,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "sonner";
 import { useNavigate, useLocation } from "react-router-dom";
-import { passwordChangeService } from "../../services/authService";
+import { passwordChangeService } from "../../services/userService";
 import { tutorPasswordChangeService } from "../../services/tutorService";
 import bg_img from "../../assets/ep-background.jpg";
 import logo from "../../assets/epulse.png";

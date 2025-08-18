@@ -56,3 +56,67 @@ export interface SidebarItem {
   label: string;
   icon: ReactNode;
 }
+
+export interface TutorListingUser {
+  tutorId: string;
+  name: string;
+  avatar?: string;
+  about: string;
+  designation: string;
+  isVerified: boolean;
+  isListed: boolean;
+}
+
+export interface CourseListingUser {
+  courseId: string;
+  title: string;
+  thumbnailImage?: string;
+  description?: string;
+  categoryName: string;
+  enrollmentCount: number;
+  tutorName: string;
+  price: number;
+}
+
+export interface CategoryListingUser {
+  categoryId: string;
+  name: string;
+}
+
+export interface UpdateProfileData {
+  id?: string;
+  name?: string;
+  phone?: string;
+  DOB?: string;
+  gender?: string;
+  avatar?: File;
+  cropData?: CropData;
+}
+
+ export interface CropData {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface ApiResponse<T = any> {
+  success: boolean;
+  message: string;
+  data?: T;
+}
+
+ export interface ProfileUpdateResponse {
+  success: boolean;
+  message: string;
+  data: {
+    user: {
+      name: string;
+      email: string;
+      phone: string;
+      DOB: string;
+      gender: string;
+      avatar: string;
+    };
+  };
+ }

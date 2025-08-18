@@ -12,10 +12,12 @@ import {
   Upload,
   Image as ImageIcon,
   AlertCircle,
+  FileText,
+  Briefcase,
 } from "lucide-react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { updateUserProfile } from "../../services/authService";
+import { updateUserProfile } from "../../services/userService";
 import { updateTutorProfile } from "../../services/tutorService";
 import img from "../../assets/unknown-user.jpg";
 
@@ -30,6 +32,8 @@ interface EditProfileModalProps {
     DOB?: string;
     gender?: string;
     avatar?: string;
+    about?: string;
+    designation?: string;
   };
   role: "user" | "tutor";
   onProfileUpdate?: (updatedData: any) => void;
@@ -47,6 +51,8 @@ interface FormValues {
   phone: string;
   DOB: string;
   gender: string;
+  about: string;
+  designation: string;
 }
 
 const validationSchema = Yup.object({
@@ -78,6 +84,14 @@ const validationSchema = Yup.object({
     .nullable(),
   gender: Yup.string()
     .oneOf(["male", "female", "other", ""], "Please select a valid gender")
+    .nullable(),
+  about: Yup.string()
+    .trim()
+    .max(500, "About section must not exceed 500 characters")
+    .nullable(),
+  designation: Yup.string()
+    .trim()
+    .max(100, "Designation must not exceed 100 characters")
     .nullable(),
 });
 
@@ -123,6 +137,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       ? new Date(userData.DOB).toISOString().split("T")[0]
       : "",
     gender: userData?.gender || "",
+    about: userData?.about || "",
+    designation: userData?.designation || "",
   };
 
   useEffect(() => {
@@ -435,7 +451,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         >
           {({ values, errors, touched, isSubmitting, dirty }) => (
             <Form>
-              {/* Header */}
               <div className="flex justify-between items-center p-6 border-b border-gray-700">
                 <h2 className="text-xl font-semibold text-white">
                   Edit Profile
@@ -673,6 +688,31 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   </p>
                 </div>
 
+                {role === "tutor" && (
+                  <div>
+                    <label className="block text-gray-300 text-sm font-medium mb-2">
+                      <Briefcase size={16} className="inline mr-2" />
+                      Designation
+                    </label>
+                    <Field
+                      name="designation"
+                      type="text"
+                      disabled={isLoading}
+                      placeholder="Enter your designation..."
+                      className={`w-full px-4 py-3 bg-gray-700 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 ${
+                        errors.designation && touched.designation
+                          ? "border-red-500"
+                          : "border-gray-600"
+                      }`}
+                    />
+                    <ErrorMessage
+                      name="designation"
+                      component="div"
+                      className="text-red-400 text-sm mt-1"
+                    />
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-gray-300 text-sm font-medium mb-2">
                     <Phone size={16} className="inline mr-2" />
@@ -746,6 +786,37 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                     className="text-red-400 text-sm mt-1"
                   />
                 </div>
+
+                {role === "tutor" && (
+                  <div>
+                    <label className="block text-gray-300 text-sm font-medium mb-2">
+                      <FileText size={16} className="inline mr-2" />
+                      About
+                    </label>
+                    <Field
+                      as="textarea"
+                      name="about"
+                      rows={4}
+                      disabled={isLoading}
+                      placeholder="Tell us about yourself, your experience, and qualifications..."
+                      className={`w-full px-4 py-3 bg-gray-700 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 resize-none ${
+                        errors.about && touched.about
+                          ? "border-red-500"
+                          : "border-gray-600"
+                      }`}
+                    />
+                    <div className="flex justify-between items-center mt-1">
+                      <ErrorMessage
+                        name="about"
+                        component="div"
+                        className="text-red-400 text-sm"
+                      />
+                      <span className="text-gray-500 text-xs">
+                        {values.about?.length || 0}/500
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex space-x-4 pt-4">
                   <button

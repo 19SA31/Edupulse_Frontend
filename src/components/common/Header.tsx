@@ -183,11 +183,10 @@ function Header({ role = null }: HeaderProps) {
     if (role === "tutor" && !isVerified && verificationStatus !== "pending") {
       navigate("/tutor/verify-tutor");
     } else {
-      
       if (role === "tutor") {
-        navigate("/tutor/profile");
+        navigate("/tutor/dashboard");
       } else if (role === "admin") {
-        navigate("/admin/profile"); 
+        navigate("/admin/profile");
       } else {
         navigate("/profile");
       }
@@ -277,7 +276,7 @@ function Header({ role = null }: HeaderProps) {
           <li>
             <Link
               to="/"
-              className="hover:text-yellow-400 transition-colors duration-200"
+              className="hover:text-yellow-400 transition-colors duration-200 cursor-pointer"
             >
               Home
             </Link>
@@ -285,7 +284,7 @@ function Header({ role = null }: HeaderProps) {
           <li>
             <Link
               to="/aboutUs"
-              className="hover:text-yellow-400 transition-colors duration-200"
+              className="hover:text-yellow-400 transition-colors duration-200 cursor-pointer"
             >
               About
             </Link>
@@ -293,15 +292,18 @@ function Header({ role = null }: HeaderProps) {
           <li>
             <Link
               to="/tutors"
-              className="hover:text-yellow-400 transition-colors duration-200"
+              className="hover:text-yellow-400 transition-colors duration-200 cursor-pointer"
             >
               Tutors
             </Link>
           </li>
           <li>
-            <button className="hover:text-yellow-400 transition-colors duration-200">
-              Services
-            </button>
+            <Link
+              to="/course-listing"
+              className="hover:text-yellow-400 transition-colors duration-200 cursor-pointer"
+            >
+              Courses
+            </Link>
           </li>
 
           <li className="block md:hidden">
@@ -311,13 +313,14 @@ function Header({ role = null }: HeaderProps) {
                   <img
                     src={userImage || img}
                     alt="User"
-                    className="w-8 h-8 rounded-full"
+                    className="w-10 h-10 rounded-full object-cover object-top"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = img;
                     }}
                   />
                   <span className="text-white">{userName}</span>
                 </div>
+
                 <button
                   onClick={handleProfileOrVerify}
                   disabled={isVerificationDisabled()}

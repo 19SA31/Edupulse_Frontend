@@ -123,6 +123,14 @@ function TutorListing() {
 
   return (
     <div className="p-6 mt-4">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Tutors 
+        </h1>
+        <p className="text-gray-600">
+          Manage Tutors
+        </p>
+      </div>
       <Table
         data={tutors}
         columns={columns}
@@ -141,7 +149,7 @@ function TutorListing() {
         getItemId={(tutor) => tutor.id}
       />
 
-      {/* Tutor Details Modal */}
+
       <UserDetailsModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}

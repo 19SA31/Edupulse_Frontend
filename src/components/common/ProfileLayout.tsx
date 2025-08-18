@@ -1,13 +1,22 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Edit, User, Mail, Phone, Calendar, Users as GenderIcon } from "lucide-react";
+import {
+  Edit,
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  Users as GenderIcon,
+  FileText,
+  Briefcase,
+} from "lucide-react";
 import img from "../../assets/unknown-user.jpg";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
-import EditProfileModal from "../../components/common/EditProfile";
+import EditProfileModal from "./EditProfile";
 
-interface DashboardProps {
+interface ProfileProps {
   role: "user" | "tutor" | "admin";
 }
 
@@ -18,6 +27,8 @@ interface UserData {
   DOB?: string;
   gender?: string;
   avatar?: string;
+  about?: string;
+  designation?: string;
 }
 
 interface Category {
@@ -25,7 +36,7 @@ interface Category {
   description?: string;
 }
 
-const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
+const ProfileLayout: React.FC<ProfileProps> = ({ role }) => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -39,7 +50,7 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
       if (role === "user") {
         const storedUser = localStorage.getItem("user");
         console.log("Loading user data:", storedUser);
-        
+
         if (storedUser) {
           const user = JSON.parse(storedUser);
           setUserData({
@@ -65,6 +76,8 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
             DOB: tutor?.DOB || null,
             gender: tutor?.gender || null,
             avatar: tutor?.avatar || null,
+            about: tutor?.about || null,
+            designation: tutor?.designation || null,
           });
         } else {
           setUserData(null);
@@ -72,7 +85,7 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
       } else {
         setUserData(null);
       }
-      
+
       setAvatarError(false);
     } catch (error) {
       console.error("Error loading user data:", error);
@@ -89,7 +102,7 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
 
   const handleProfileUpdate = useCallback(() => {
     toast.success("Profile updated successfully!");
-    
+
     setTimeout(() => {
       loadUserData();
     }, 100);
@@ -105,10 +118,10 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
 
   const formatDate = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
+      return new Date(dateString).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       });
     } catch (error) {
       return dateString;
@@ -143,34 +156,32 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
 
     return (
       <div className="mb-6">
-        
         <div className="mb-6">
           <div className="w-24 h-24 rounded-full mx-auto overflow-hidden border-2 border-gray-500 shadow-lg">
             <img
-              src={avatarError ? img : (userData?.avatar || img)}
+              src={avatarError ? img : userData?.avatar || img}
               alt="Profile"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-center scale-100"
+              style={{ objectPosition: "80% 30%" }}
               onError={handleAvatarError}
             />
           </div>
         </div>
 
-        
         <h1 className="text-2xl font-semibold text-white mb-6 text-center">
           Welcome{" "}
-          {userData?.name ||
-            `${role.charAt(0).toUpperCase() + role.slice(1)}`}
-          !
+          {userData?.name || `${role.charAt(0).toUpperCase() + role.slice(1)}`}!
         </h1>
 
-        
         <div className="space-y-4">
           {userData?.name && (
             <div className="flex items-center space-x-3 p-3 bg-gray-700 rounded-lg">
               <User size={20} className="text-blue-400 flex-shrink-0" />
               <div className="min-w-0 flex-1">
                 <span className="text-gray-400 text-sm block">Name</span>
-                <p className="text-white text-base font-medium truncate">{userData.name}</p>
+                <p className="text-white text-base font-medium truncate">
+                  {userData.name}
+                </p>
               </div>
             </div>
           )}
@@ -180,7 +191,21 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
               <Mail size={20} className="text-green-400 flex-shrink-0" />
               <div className="min-w-0 flex-1">
                 <span className="text-gray-400 text-sm block">Email</span>
-                <p className="text-white text-base font-medium break-all">{userData.email}</p>
+                <p className="text-white text-base font-medium break-all">
+                  {userData.email}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {role === "tutor" && userData?.designation && (
+            <div className="flex items-center space-x-3 p-3 bg-gray-700 rounded-lg">
+              <Briefcase size={20} className="text-yellow-400 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <span className="text-gray-400 text-sm block">Designation</span>
+                <p className="text-white text-base font-medium">
+                  {userData.designation}
+                </p>
               </div>
             </div>
           )}
@@ -190,7 +215,9 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
               <Phone size={20} className="text-purple-400 flex-shrink-0" />
               <div className="min-w-0 flex-1">
                 <span className="text-gray-400 text-sm block">Phone</span>
-                <p className="text-white text-base font-medium">{userData.phone}</p>
+                <p className="text-white text-base font-medium">
+                  {userData.phone}
+                </p>
               </div>
             </div>
           )}
@@ -199,8 +226,12 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
             <div className="flex items-center space-x-3 p-3 bg-gray-700 rounded-lg">
               <Calendar size={20} className="text-orange-400 flex-shrink-0" />
               <div className="min-w-0 flex-1">
-                <span className="text-gray-400 text-sm block">Date of Birth</span>
-                <p className="text-white text-base font-medium">{formatDate(userData.DOB)}</p>
+                <span className="text-gray-400 text-sm block">
+                  Date of Birth
+                </span>
+                <p className="text-white text-base font-medium">
+                  {formatDate(userData.DOB)}
+                </p>
               </div>
             </div>
           )}
@@ -210,22 +241,55 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
               <GenderIcon size={20} className="text-pink-400 flex-shrink-0" />
               <div className="min-w-0 flex-1">
                 <span className="text-gray-400 text-sm block">Gender</span>
-                <p className="text-white text-base font-medium capitalize">{userData.gender}</p>
+                <p className="text-white text-base font-medium capitalize">
+                  {userData.gender}
+                </p>
               </div>
             </div>
           )}
 
-          
-          {(!userData?.name && !userData?.phone && !userData?.DOB && !userData?.gender) && (
-            <div className="text-center py-4">
-              <p className="text-gray-400 text-sm">
-                Complete your profile to get started!
-              </p>
+          {role === "tutor" && userData?.about && (
+            <div className="flex items-start space-x-3 p-3 bg-gray-700 rounded-lg">
+              <FileText
+                size={20}
+                className="text-cyan-400 flex-shrink-0 mt-1"
+              />
+              <div className="min-w-0 flex-1">
+                <span className="text-gray-400 text-sm block">About</span>
+                <p className="text-white text-base font-medium leading-relaxed">
+                  {userData.about}
+                </p>
+              </div>
             </div>
           )}
+
+          {role === "user" &&
+            !userData?.name &&
+            !userData?.phone &&
+            !userData?.DOB &&
+            !userData?.gender && (
+              <div className="text-center py-4">
+                <p className="text-gray-400 text-sm">
+                  Complete your profile to get started!
+                </p>
+              </div>
+            )}
+
+          {role === "tutor" &&
+            !userData?.name &&
+            !userData?.phone &&
+            !userData?.DOB &&
+            !userData?.gender &&
+            !userData?.about &&
+            !userData?.designation && (
+              <div className="text-center py-4">
+                <p className="text-gray-400 text-sm">
+                  Complete your profile to get started!
+                </p>
+              </div>
+            )}
         </div>
 
-       
         <div className="mt-6">
           <button
             onClick={() => setIsEditModalOpen(true)}
@@ -247,7 +311,6 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
         </div>
       </div>
 
-      
       {(role === "user" || role === "tutor") && userData && (
         <EditProfileModal
           isOpen={isEditModalOpen}
@@ -261,4 +324,4 @@ const DashboardLayout: React.FC<DashboardProps> = ({ role }) => {
   );
 };
 
-export default DashboardLayout;
+export default ProfileLayout;

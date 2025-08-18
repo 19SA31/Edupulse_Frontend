@@ -87,14 +87,12 @@ function Table<T>({
     }[align];
   };
 
-
   const getActionLabel = (action: TableAction<T>, item: T): string => {
     return typeof action.label === "function"
       ? action.label(item)
       : action.label;
   };
 
- 
   const getActionVariant = (action: TableAction<T>, item: T): string => {
     return typeof action.variant === "function"
       ? action.variant(item)
@@ -121,16 +119,15 @@ function Table<T>({
     <div
       className={`bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden ${className}`}
     >
-
       {showSearch && (
-        <div className="bg-gray-100 px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="bg-gray-600 px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex space-x-4 items-center w-full sm:w-auto ml-auto">
             <input
               type="text"
               placeholder={searchPlaceholder}
               value={searchQuery}
               onChange={(e) => onSearchChange?.(e.target.value)}
-              className="flex-1 sm:flex-none px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 sm:flex-none px-3 py-2 rounded-lg border text-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-white focus:border-white"
             />
             <button
               className="text-sm px-4 py-2 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 whitespace-nowrap"
@@ -151,19 +148,21 @@ function Table<T>({
         </div>
       ) : (
         <>
-
           {data && data.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
+            <div className="overflow-x-auto max-w-full">
+              <table className="w-full table-auto">
                 <thead className="bg-gray-50">
                   <tr>
                     {columns.map((column, index) => (
                       <th
                         key={index}
-                        className={`py-3 px-6 border-b border-gray-300 text-gray-700 font-medium ${getAlignmentClass(
+                        className={`py-3 px-4 border-b border-gray-300 text-gray-700 font-medium ${getAlignmentClass(
                           column.align
-                        )}`}
-                        style={{ width: column.width }}
+                        )} whitespace-nowrap`}
+                        style={{
+                          width: column.width || "200px",
+                          maxWidth: "200px",
+                        }}
                       >
                         {column.title}
                       </th>
@@ -184,9 +183,9 @@ function Table<T>({
                       {columns.map((column, index) => (
                         <td
                           key={index}
-                          className={`py-3 px-6 border-b border-gray-200 ${getAlignmentClass(
+                          className={`py-3 px-4 border-b border-gray-200 ${getAlignmentClass(
                             column.align
-                          )}`}
+                          )} max-w-[200px] truncate whitespace-nowrap overflow-hidden`}
                         >
                           {renderCell(item, column)}
                         </td>
@@ -222,7 +221,6 @@ function Table<T>({
               </table>
             </div>
           ) : (
-
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4">
                 {emptyIcon || <DefaultEmptyIcon />}
@@ -232,7 +230,6 @@ function Table<T>({
           )}
         </>
       )}
-
 
       {data.length > 0 && (
         <div className="flex flex-col items-center py-6 border-t border-gray-200">

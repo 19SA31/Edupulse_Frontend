@@ -1,9 +1,4 @@
 
-
-
-
-
-
 import React from "react";
 import TutorLayout from "../../components/tutor/TutorLayout";
 

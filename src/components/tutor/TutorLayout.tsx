@@ -2,25 +2,33 @@ import { Outlet } from "react-router-dom";
 import Header from "../../components/common/Header";
 import ReusableSidebar from "../../components/common/Sidebar";
 import { SidebarItem } from "../../interfaces/userInterface";
-
+import { MdLibraryAdd, MdDashboard, MdPerson } from "react-icons/md";
 
 function TutorLayout() {
   const tutorSidebarItems: SidebarItem[] = [
     {
-      path: "/tutor/profile",
+      path: "/tutor/dashboard",
+      label: "Dashboard",
+      icon: <MdDashboard className="w-5 h-5" />,
+    },
+    {
+      path: "/tutor/dashboard/profile",
       label: "Profile",
-      icon: (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-        </svg>
-      ),
+      icon: <MdPerson className="w-5 h-5" />,
+    },
+    {
+      path: "/tutor/dashboard/add-course",
+      label: "Add Course",
+      icon: <MdLibraryAdd className="w-5 h-5" />,
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Header role="tutor" />
-      <div className="flex pt-14 h-screen overflow-hidden">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <div className="fixed top-0 left-0 right-0 z-10">
+        <Header role="tutor" />
+      </div>
+      <div className="flex flex-1 pt-14">
         <ReusableSidebar
           sidebarItems={tutorSidebarItems}
           backgroundColor="bg-black"
@@ -28,12 +36,10 @@ function TutorLayout() {
           hoverColor="hover:bg-gray-800"
           textColor="text-gray-300"
         />
-  
-        <div className="flex-1 ml-0 sm:ml-64 p-4 overflow-y-auto overflow-x-hidden h-screen">
+        <main className="flex-1 ml-0 sm:ml-64 p-4 overflow-y-auto overflow-x-hidden h-screen">
           <Outlet />
-        </div>
+        </main>
       </div>
-
     </div>
   );
 }

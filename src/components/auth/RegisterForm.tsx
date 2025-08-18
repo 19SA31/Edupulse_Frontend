@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import logo from "../../assets/epulse.png";
 import bg_img from "../../assets/ep-background.jpg";
-import { signUpService } from "../../services/authService";
+import { signUpService } from "../../services/userService";
 import { tutorSignUpService } from "../../services/tutorService";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";

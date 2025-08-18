@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import Header from "../../components/common/Header";
 import ReusableSidebar from "../../components/common/Sidebar";
 import { SidebarItem } from "../../interfaces/adminInterface";
+import { FiUploadCloud, FiBook  } from "react-icons/fi";
 
 function AdminLayout() {
   const adminSidebarItems: SidebarItem[] = [
@@ -34,7 +35,7 @@ function AdminLayout() {
     },
     {
       path: "/admin/addCourseCategory",
-      label: "Courses",
+      label: "Add Category",
       icon: (
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
           <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
@@ -49,6 +50,16 @@ function AdminLayout() {
           <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 3a3 3 0 110 6 3 3 0 010-6zm0 14.2a7.2 7.2 0 01-6-3.2c.03-2 4-3.1 6-3.1s5.97 1.1 6 3.1a7.2 7.2 0 01-6 3.2zm7.71-9.21a1 1 0 10-1.42-1.42l-3.3 3.3-1.3-1.29a1 1 0 10-1.42 1.42l2 2a1 1 0 001.42 0l4-4z" />
         </svg>
       ),
+    },
+    {
+      path: "/admin/coursePublish",
+      label: "Publish Course",
+      icon: <FiUploadCloud className="w-5 h-5" />,
+    },
+    {
+      path: "/admin/courseManagement",
+      label: "Manage Course",
+      icon: <FiBook  className="w-5 h-5" />,
     },
   ];
 

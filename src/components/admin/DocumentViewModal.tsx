@@ -103,7 +103,6 @@ const DocumentViewModal: React.FC<DocumentViewModalProps> = ({
     return labels[type as keyof typeof labels] || type;
   };
 
-  // Direct download function
   const downloadFile = async (url: string, fileName: string) => {
     try {
       const response = await fetch(url);
@@ -117,8 +116,6 @@ const DocumentViewModal: React.FC<DocumentViewModalProps> = ({
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
-      console.error('Download failed:', error);
-      // Fallback to simple download
       const link = document.createElement('a');
       link.href = url;
       link.download = fileName;
@@ -195,7 +192,7 @@ const DocumentViewModal: React.FC<DocumentViewModalProps> = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-5xl max-h-[90vh] w-full overflow-hidden">
-        {/* Header */}
+
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <span className="text-2xl">
@@ -229,9 +226,9 @@ const DocumentViewModal: React.FC<DocumentViewModalProps> = ({
           </div>
         </div>
 
-        {/* Main Content with Navigation */}
+
         <div className="relative">
-          {/* Navigation Arrows */}
+
           {documents.length > 1 && (
             <>
               <button
@@ -253,13 +250,11 @@ const DocumentViewModal: React.FC<DocumentViewModalProps> = ({
             </>
           )}
 
-          {/* Document Content */}
           <div className="p-4">
             {renderDocumentContent()}
           </div>
         </div>
 
-        {/* Document Thumbnails */}
         {documents.length > 1 && (
           <div className="border-t border-gray-200 p-4">
             <div className="flex justify-center gap-2 overflow-x-auto">

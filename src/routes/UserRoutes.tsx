@@ -12,6 +12,8 @@ import UserProtectRoute from "./ProtectedRoutes/UserProtectRoute";
 import { Toaster } from "sonner";
 import UserLayoutPage from "../pages/user/UserLayoutPage";
 import DashboardPage from "../pages/user/DashboardPage";
+import CourseListingPage from "../pages/user/CourseListingPage";
+import CourseDetailsPage from "../pages/user/CourseDetailsPage";
 
 function UserRoutes() {
   return (
@@ -20,6 +22,7 @@ function UserRoutes() {
 
       <Routes>
         <Route path="" element={<HomePage />} />
+        
 
         <Route
           path="login"
@@ -50,6 +53,9 @@ function UserRoutes() {
         <Route path="forgot-password" element={<ForgotPassword />} />
         <Route path="reset-password" element={<PasswordUpdate />} />
 
+        <Route path="course-listing" element={<CourseListingPage/>}/>
+        <Route path="course-details" element={<CourseDetailsPage/>}/>
+
         <Route
           path="profile"
           element={
@@ -58,6 +64,7 @@ function UserRoutes() {
             </UserProtectRoute>
           }
         >
+
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
         </Route>

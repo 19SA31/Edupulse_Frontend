@@ -1,5 +1,6 @@
 import React from 'react'
 import Dashboard from '../../components/tutor/Dashboard'
+
 function DashboardPage() {
   return (
     <div>
@@ -7,5 +8,5 @@ function DashboardPage() {
     </div>
   )
 }
- 
+
 export default DashboardPage
