@@ -30,8 +30,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg w-full max-w-4xl h-5/6 flex flex-col">
         <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="text-lg font-semibold">
-          </h3>
+          <h3 className="text-lg font-semibold"></h3>
           <div className="flex items-center space-x-2">
             {documents.length > 1 && (
               <select
@@ -55,11 +54,16 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
             </button>
           </div>
         </div>
-        <div className="flex-1 p-4">
+        <div className="w-full h-screen p-2">
           <iframe
-            src={currentDocument.signedUrl}
+            src={`https://docs.google.com/gview?url=${encodeURIComponent(
+              currentDocument.signedUrl
+            )}&embedded=true`}
             className="w-full h-full border rounded"
-            title={`Document Viewer - ${ "Document"}`}
+            title="Document Viewer"
+            frameBorder="0"
+            sandbox="allow-scripts allow-same-origin"
+            onContextMenu={(e) => e.preventDefault()}
           />
         </div>
       </div>

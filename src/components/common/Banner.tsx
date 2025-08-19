@@ -3,7 +3,7 @@ import { Play, Users, BookOpen, Award, ChevronRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   getAllListedTutors,
-  getAllListedCourses,
+  getAllCourses,
   getAllListedCategories,
 } from "../../services/userService";
 import {
@@ -55,7 +55,7 @@ function Banner() {
         const [tutorsResponse, coursesResponse, categoriesResponse] =
           await Promise.all([
             getAllListedTutors(),
-            getAllListedCourses(),
+            getAllCourses(),
             getAllListedCategories(),
           ]);
         setTutors(tutorsResponse?.data || []);
