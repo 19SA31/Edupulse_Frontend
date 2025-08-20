@@ -119,7 +119,6 @@ export const getUnpublishedCourses = async (
 };
 
 export const publishCourse = async (id: string) => {
-  console.log(id);
   const response = await adminAxiosInstance.put(`/publish-course/${id}`);
   return response.data;
 };
@@ -151,7 +150,6 @@ export const getAdminRevenue = async (
     const response = await adminAxiosInstance.get("/admin-revenue", {
       params: { page, limit: 10, search, status, date },
     });
-    console.log("getAdminRevenue", response.data);
     return response.data;
   } catch (error) {
     console.error("error in fetching admin revenue:", error);

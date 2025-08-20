@@ -128,7 +128,6 @@ const AddCourse: React.FC = () => {
       setCategoriesLoading(true);
       try {
         const fetchedResponse = await getCourseCategories();
-        console.log("categories", fetchedResponse);
         const categoriesData = fetchedResponse.data.data.categories;
         const transformedCategories = categoriesData.map((cat: any) => ({
           id: cat.id,
@@ -467,10 +466,8 @@ const AddCourse: React.FC = () => {
       setCurrentStep(3);
     } else {
       setIsSubmitting(true);
-      console.log("Course Data:", values);
       try {
         const courseResponse = await createCourse(values);
-        console.log("course creation res", courseResponse);
         if (courseResponse.success) {
           toast.success(
             "Course has been applied for verification successfully!"
@@ -493,8 +490,6 @@ const AddCourse: React.FC = () => {
       setCurrentStep(2);
     } else if (currentStep === 2) {
       setCurrentStep(1);
-    } else {
-      console.log("Navigate back");
     }
   };
 

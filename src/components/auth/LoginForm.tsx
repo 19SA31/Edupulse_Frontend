@@ -40,9 +40,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
         dispatch(login({ email: values.email, password: values.password }))
           .unwrap()
           .then((data) => {
-            console.log("Login successful data:", data);
             toast.success("User Login Successful!");
-            onLoginSuccess(); 
+            onLoginSuccess();
           })
           .catch((error: any) => {
             const message =
@@ -54,7 +53,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
           .unwrap()
           .then(() => {
             toast.success("Tutor Login Successful!");
-            onLoginSuccess(); 
+            onLoginSuccess();
           })
           .catch((error: any) => {
             const message =
@@ -66,7 +65,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
           .unwrap()
           .then(() => {
             toast.success("Admin Login Successful!");
-            onLoginSuccess(); 
+            onLoginSuccess();
           })
           .catch((error: any) => {
             const message =

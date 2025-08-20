@@ -185,7 +185,7 @@ const VideoPlayer: React.FC<ExtendedVideoPlayerProps> = ({
       <div
         className={`w-full ${
           isEnrolled
-            ? "aspect-video max-h-[calc(100vh-150px)]" 
+            ? "aspect-video max-h-[calc(100vh-150px)]"
             : "h-64 md:h-80 lg:h-96"
         }`}
       >

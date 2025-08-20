@@ -45,7 +45,7 @@ export const signUpService = async (
       phone,
       password,
     });
-    console.log("inside signup service");
+
     return response.data;
   } catch (error: any) {
     if (error.response?.data) {
@@ -198,7 +198,6 @@ export const updateUserProfile = async (
 
     const formData = new FormData();
     formData.append("id", userId);
-    console.log("%%%", profileData);
 
     if (profileData.name?.trim())
       formData.append("name", profileData.name.trim());
@@ -215,17 +214,6 @@ export const updateUserProfile = async (
       }
     }
 
-    console.log("Sending profile update data:", {
-      id: userId,
-      name: profileData.name,
-      phone: profileData.phone,
-      DOB: profileData.DOB,
-      gender: profileData.gender,
-      hasAvatar: !!profileData.avatar,
-      hasCropData: !!profileData.cropData,
-      cropData: profileData.cropData,
-    });
-
     const response = await userAxiosInstance.put(
       "/profile/update-profile",
       formData,
@@ -237,7 +225,6 @@ export const updateUserProfile = async (
       }
     );
 
-    console.log("Profile update response:", response.data);
 
     if (!response.data.success) {
       return {
@@ -259,7 +246,6 @@ export const updateUserProfile = async (
     };
 
     localStorage.setItem("user", JSON.stringify(updatedUser));
-    console.log("Updated user data with S3 URL:", updatedUser);
 
     return {
       success: true,
@@ -375,7 +361,6 @@ export const getAllListedCourses = async (
     }
 
     const queryString = queryParams.toString();
-    console.log("get all listed courses", queryString);
     const url = queryString
       ? `/listed-courses?${queryString}`
       : "/listed-courses";
@@ -409,7 +394,6 @@ export async function fetchCourseDetails(
   courseId: string
 ): Promise<CourseDetails> {
   const response = await userAxiosInstance.get(`/course-details/${courseId}`);
-  console.log("fetchCourseDetails frnt serv", response.data);
   return response.data;
 }
 
@@ -495,10 +479,11 @@ export const verifyEnrollment = async (courseId: string) => {
 
 export const getUserEnrollments = async (page: number, search: string = "") => {
   try {
+    console.log(search)
     const response = await userAxiosInstance.get("/user-payments", {
       params: { page, limit: 10, search },
     });
-    console.log("getUserEnrollments", response.data);
+    console.log(response.data)
     return response.data;
   } catch (error) {
     console.error("error in fetching user enrollments:", error);

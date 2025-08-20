@@ -59,6 +59,7 @@ function PaymentHistory() {
     }
 
     if (enrollment.tutorId && typeof enrollment.tutorId === 'object') {
+      console.log("$$$$",enrollment.tutorId.name)
       tutorName = enrollment.tutorId.name || tutorName;
     }
 
@@ -90,7 +91,6 @@ function PaymentHistory() {
       setError(null);
 
       const response = await getUserEnrollments(currentPage, debouncedSearch);
-      console.log("fetched payments", response.data);
       
       const apiData: ApiResponse = response.data || {
         enrollments: [],
@@ -253,7 +253,7 @@ function PaymentHistory() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onSearch={handleSearch}
-        searchPlaceholder="Search by course or tutor name..."
+        searchPlaceholder="Search by course..."
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}

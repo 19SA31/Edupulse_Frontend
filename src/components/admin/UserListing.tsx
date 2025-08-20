@@ -23,7 +23,7 @@ function UserListing() {
     try {
       setLoading(true);
       const response = await getUsers(page, search);
-      
+
       if (response.data) {
         if (response.data.response) {
           setUsers(response.data.response.users || []);
@@ -39,7 +39,6 @@ function UserListing() {
         setUsers([]);
         setTotalPages(1);
       }
-      
     } catch (error: any) {
       if (error.response && error.response.status === 401) {
         console.error("Unauthorized: Redirecting to login page.");
@@ -94,9 +93,6 @@ function UserListing() {
     setSelectedUser(null);
   };
 
-  console.log("frontend listing", users);
-
-
   const columns: TableColumn<UserDetails>[] = [
     {
       key: "name",
@@ -123,11 +119,10 @@ function UserListing() {
     },
   ];
 
-
   const actions: TableAction<UserDetails>[] = [
     {
       label: (user: UserDetails) => (user.isBlocked ? "List" : "Unlist"),
-      onClick: (user) => toggleListState(user.id), 
+      onClick: (user) => toggleListState(user.id),
       variant: (user: UserDetails) => (user.isBlocked ? "success" : "danger"),
     },
   ];
@@ -135,12 +130,8 @@ function UserListing() {
   return (
     <div className="p-6 mt-4">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Users
-        </h1>
-        <p className="text-gray-600">
-          Manage Users
-        </p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Users</h1>
+        <p className="text-gray-600">Manage Users</p>
       </div>
       <Table
         data={users}
@@ -157,21 +148,25 @@ function UserListing() {
         itemsPerPage={7}
         emptyMessage="No users found."
         loadingMessage="Loading Users..."
-        getItemId={(user) => user.id} 
+        getItemId={(user) => user.id}
       />
 
       <UserDetailsModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        user={selectedUser ? {
-          id: selectedUser.id, 
-          name: selectedUser.name,
-          email: selectedUser.email,
-          phone: selectedUser.phone,
-          avatar: selectedUser.avatar,
-          createdAt: selectedUser.createdAt,
-          isBlocked: selectedUser.isBlocked
-        } : null}
+        user={
+          selectedUser
+            ? {
+                id: selectedUser.id,
+                name: selectedUser.name,
+                email: selectedUser.email,
+                phone: selectedUser.phone,
+                avatar: selectedUser.avatar,
+                createdAt: selectedUser.createdAt,
+                isBlocked: selectedUser.isBlocked,
+              }
+            : null
+        }
         title="User Details"
       />
     </div>

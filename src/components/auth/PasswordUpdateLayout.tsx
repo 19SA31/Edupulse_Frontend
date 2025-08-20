@@ -9,7 +9,7 @@ import bg_img from "../../assets/ep-background.jpg";
 import logo from "../../assets/epulse.png";
 
 interface PasswordUpdateProps {
-  role: "user" | "tutor"; 
+  role: "user" | "tutor";
 }
 
 const PasswordUpdateLayout: React.FC<PasswordUpdateProps> = ({ role }) => {
@@ -31,12 +31,10 @@ const PasswordUpdateLayout: React.FC<PasswordUpdateProps> = ({ role }) => {
         .required("Required"),
     }),
     onSubmit: async (values) => {
-      if(role==="user"){
+      if (role === "user") {
         try {
-          console.log("password update:", email, values.password, role);
           const response = await passwordChangeService(email, values.password);
-          console.log("Response:", response);
-  
+
           if (response?.success) {
             toast.success("Password updated successfully!");
             navigate("/login");
@@ -44,12 +42,13 @@ const PasswordUpdateLayout: React.FC<PasswordUpdateProps> = ({ role }) => {
         } catch (error) {
           toast.error("Failed to update password. Try again.");
         }
-      }else if(role==="tutor"){
+      } else if (role === "tutor") {
         try {
-          console.log("password update:", email, values.password, role);
-          const response = await tutorPasswordChangeService(email, values.password);
-          console.log("Response:", response);
-  
+          const response = await tutorPasswordChangeService(
+            email,
+            values.password
+          );
+
           if (response?.success) {
             toast.success("Password updated successfully!");
             navigate("/tutor/login");
@@ -58,16 +57,20 @@ const PasswordUpdateLayout: React.FC<PasswordUpdateProps> = ({ role }) => {
           toast.error("Failed to update password. Try again.");
         }
       }
-      
     },
   });
 
   return (
-    <div className="h-screen flex items-center justify-center bg-cover relative" style={{ backgroundImage: `url(${bg_img})` }}>
+    <div
+      className="h-screen flex items-center justify-center bg-cover relative"
+      style={{ backgroundImage: `url(${bg_img})` }}
+    >
       <div className="absolute inset-0 bg-black/60"></div>
       <div className="relative z-10 flex flex-col items-center w-full max-w-md bg-white/5 rounded-3xl border border-white/30 backdrop-blur-md p-10 shadow-lg">
         <img src={logo} alt="Logo" className="w-24 mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-white text-center">Reset Password</h2>
+        <h2 className="text-xl font-bold text-white text-center">
+          Reset Password
+        </h2>
         <form onSubmit={formik.handleSubmit} className="w-full mt-4">
           <input
             type="password"
@@ -78,7 +81,9 @@ const PasswordUpdateLayout: React.FC<PasswordUpdateProps> = ({ role }) => {
             onChange={formik.handleChange}
           />
           {formik.touched.password && formik.errors.password && (
-            <p className="text-red-500 text-sm mt-2">{formik.errors.password}</p>
+            <p className="text-red-500 text-sm mt-2">
+              {formik.errors.password}
+            </p>
           )}
 
           <input
@@ -90,7 +95,9 @@ const PasswordUpdateLayout: React.FC<PasswordUpdateProps> = ({ role }) => {
             onChange={formik.handleChange}
           />
           {formik.touched.confirmPassword && formik.errors.confirmPassword && (
-            <p className="text-red-500 text-sm mt-2">{formik.errors.confirmPassword}</p>
+            <p className="text-red-500 text-sm mt-2">
+              {formik.errors.confirmPassword}
+            </p>
           )}
 
           <button

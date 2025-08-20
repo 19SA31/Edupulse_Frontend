@@ -51,7 +51,6 @@ export const tutorSignUpService = async (
       phone,
       password,
     });
-    console.log("inside tutor signup service");
     return response.data;
   } catch (error: any) {
     if (error.response?.data) {
@@ -76,7 +75,6 @@ export const tutorVerifyOtpService = async (
       password,
       otp,
     });
-    console.log("inside tutor verify OTP service");
     return response.data;
   } catch (error: any) {
     if (error.response?.data) {
@@ -94,15 +92,8 @@ export const tutorLoginService = async (email: string, password: string) => {
     });
 
     const tutorData = response.data.data.tutor;
-    console.log(
-      "Verification status:",
-      tutorData,
-      tutorData.isVerified,
-      tutorData.verificationStatus
-    );
 
     if (response.data.success && response.data.data) {
-      console.log("inside tutorloginservice", response.data.data.tutor);
       localStorage.setItem("tutorAccessToken", response.data.data.accessToken);
       localStorage.setItem("tutor", JSON.stringify(response.data.data.tutor));
     }
@@ -117,7 +108,6 @@ export const tutorLoginService = async (email: string, password: string) => {
 export const logoutTutor = async () => {
   try {
     const response = await tutorAxiosInstance.post("/logout");
-    console.log("inside logout tutor service", response);
 
     if (response.data.success) {
       localStorage.removeItem("tutorAccessToken");
@@ -140,7 +130,6 @@ export const tutorForgotPasswordService = async (
       email,
       isForgot,
     });
-    console.log("inside tutor forgot password service");
     return response.data;
   } catch (error: any) {
     if (error.response?.data) {
@@ -161,7 +150,6 @@ export const tutorVerifyForgotOtpService = async (
       otp,
       isForgot,
     });
-    console.log("tutorVerifyForgotOtpService:", response.data);
     return response.data;
   } catch (error: any) {
     if (error.response?.data) {
@@ -180,7 +168,6 @@ export const tutorPasswordChangeService = async (
       email,
       password,
     });
-    console.log("inside tutor password change service");
     return response.data;
   } catch (error: any) {
     if (error.response?.data) {
@@ -195,7 +182,6 @@ export const tutorVerificationService = async (
 ) => {
   try {
     const formData = new FormData();
-    console.log("inside verifytutor front service", documents);
 
     formData.append("avatar", documents.avatar);
     formData.append("degree", documents.degree);
@@ -232,7 +218,6 @@ export const tutorVerificationService = async (
       }
     );
 
-    console.log("inside tutor verification service");
     return response.data;
   } catch (error: any) {
     console.error("Tutor verification error:", error);
@@ -246,7 +231,6 @@ export const tutorVerificationService = async (
 export const getTutorVerificationStatus = async () => {
   try {
     const response = await tutorAxiosInstance.get("/verification-status");
-    console.log("inside get tutor verification status service");
     return response.data;
   } catch (error: any) {
     console.error("Get verification status error:", error);
@@ -286,7 +270,6 @@ export const updateTutorProfile = async (
       }
     );
 
-    console.log("Profile update response:", response.data);
     if (!response.data.success) {
       return {
         success: false,
@@ -307,7 +290,6 @@ export const updateTutorProfile = async (
     };
 
     localStorage.setItem("tutor", JSON.stringify(updatedTutor));
-    console.log("Updated user data with S3 URL:", updatedTutor);
 
     return {
       success: true,
@@ -357,7 +339,6 @@ export const createCourse = async (
 ) => {
   try {
     const formData = new FormData();
-    console.log("Full courseData:", courseData);
 
     formData.append("title", courseData.title);
     formData.append("description", courseData.description);
@@ -367,7 +348,6 @@ export const createCourse = async (
     formData.append("price", courseData.price.toString());
 
     if (courseData.courseImage?.file) {
-      console.log("Thumbnail file found:", courseData.courseImage.file);
       formData.append("thumbnail", courseData.courseImage.file);
     } else {
       console.log("No thumbnail file found");
@@ -389,7 +369,6 @@ export const createCourse = async (
             const fieldName = `lesson_documents_${chapterIndex}_${lessonIndex}_${docIndex}`;
             formData.append(fieldName, doc.file);
             documentsAppended++;
-            console.log(`Appended document to field: ${fieldName}`);
           } else {
             console.log(`No valid file for document ${docIndex}`);
           }
@@ -402,7 +381,6 @@ export const createCourse = async (
             const fieldName = `lesson_videos_${chapterIndex}_${lessonIndex}_${videoIndex}`;
             formData.append(fieldName, video.file);
             videosAppended++;
-            console.log(`Appended video to field: ${fieldName}`);
           } else {
             console.log(`No valid file for video ${videoIndex}`);
           }

@@ -52,14 +52,7 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({
   const navigate = useNavigate();
 
   const processPayment = async (isRetry = false) => {
-    console.log("processPayment called with:", {
-      paymentParam,
-      sessionId,
-      isRetry,
-    });
-
     if (paymentParam === "cancelled") {
-      console.log("Payment was cancelled");
       setPaymentStatus("cancelled");
       return;
     }
@@ -71,17 +64,12 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({
         } else {
           setPaymentStatus("loading");
         }
-
-        console.log("Verifying payment with sessionId:", sessionId);
         const result = await verifyPayment(sessionId);
-        console.log("Payment verification result:", result);
 
         if (result && result.success) {
           setPaymentStatus("success");
           setEnrollmentData(result.data);
-          console.log(result.data);
           setError("");
-          console.log("Payment verified successfully:", result.data);
         } else {
           console.error("Payment verification failed:", result);
           setPaymentStatus("failed");
@@ -111,12 +99,6 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({
   };
 
   useEffect(() => {
-    console.log("PaymentSuccess useEffect triggered with:", {
-      courseId,
-      sessionId,
-      paymentParam,
-    });
-
     if (courseId) {
       processPayment();
     } else {
@@ -127,7 +109,6 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({
 
   const handleRetryVerification = async () => {
     if (retryCount < 3 && sessionId) {
-      console.log("Retrying payment verification, attempt:", retryCount + 1);
       setRetryCount((prev) => prev + 1);
       await processPayment(true);
     }

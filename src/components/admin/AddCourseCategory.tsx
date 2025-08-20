@@ -47,11 +47,6 @@ function AddCourseCategory() {
     }),
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
-        console.log(
-          isEditMode ? "inside editcategory" : "inside addcategory",
-          values
-        );
-
         let response;
         if (isEditMode && editingCategoryId) {
           response = await updateCategoryService(
@@ -78,13 +73,6 @@ function AddCourseCategory() {
           );
 
           await fetchCategories(currentPage, searchQuery);
-
-          console.log(
-            isEditMode
-              ? "Category updated successfully:"
-              : "Category added successfully:",
-            response.data
-          );
         }
       } catch (error: any) {
         if (error.response && error.response.status === 401) {
@@ -113,21 +101,15 @@ function AddCourseCategory() {
   const fetchCategories = async (page: number, search: string) => {
     try {
       setLoading(true);
-      console.log("Fetching categories, page:", page, "search:", search);
 
       const response = await getCategories(page, search);
-      console.log("Full response:", response);
 
       if (response.data && response.data.success && response.data.data) {
         const { categories, totalPages } = response.data.data;
 
         setCategories(categories || []);
         setTotalPages(totalPages || 1);
-
-        console.log("Categories set:", categories);
-        console.log("Total pages:", totalPages);
       } else {
-        console.log("Response unsuccessful or no data");
         setCategories([]);
         setTotalPages(1);
       }
@@ -152,8 +134,6 @@ function AddCourseCategory() {
 
   const toggleListState = async (id: string) => {
     try {
-      console.log("Toggling category state:", id);
-
       const result = await toggleCategoryStatus(id);
 
       if (result.success) {

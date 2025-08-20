@@ -6,7 +6,10 @@ import { AppDispatch } from "../../redux/store";
 import { logoutAdminAction } from "../../redux/actions/adminActions";
 import Table, { TableColumn, TableAction } from "../../components/common/Table";
 import { Course, CourseListing } from "../../interfaces/courseInterface";
-import { getPublishedCourses, listUnlistCourse } from "../../services/adminService";
+import {
+  getPublishedCourses,
+  listUnlistCourse,
+} from "../../services/adminService";
 
 const courseColumns: TableColumn<Course>[] = [
   { key: "title", title: "Course Name", align: "center" },
@@ -40,7 +43,6 @@ const courseColumns: TableColumn<Course>[] = [
   },
 ];
 
-
 function CourseManagement() {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -55,7 +57,6 @@ function CourseManagement() {
     setLoading(true);
     try {
       const response = await getPublishedCourses(page, search);
-      console.log("[[[", response);
       if (response.success && response.data) {
         setCourses(
           response.data.courses.map((c: CourseListing) => ({
@@ -89,8 +90,7 @@ function CourseManagement() {
 
   const toggleListState = async (courseId: string) => {
     try {
-      console.log("Toggling list state for course:", courseId);
-      const toggleResponse = await listUnlistCourse(courseId)
+      const toggleResponse = await listUnlistCourse(courseId);
       setCourses((prevCourses) =>
         prevCourses.map((course) =>
           course._id === courseId
@@ -101,10 +101,6 @@ function CourseManagement() {
     } catch (error) {
       console.error("Error toggling course list state:", error);
     }
-  };
-
-  const handleViewDetails = (course: Course) => {
-    console.log("Viewing course details:", course._id);
   };
 
   const actions: TableAction<Course>[] = [

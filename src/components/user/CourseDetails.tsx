@@ -50,21 +50,17 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
   const [isProcessingPayment, setIsProcessingPayment] =
     useState<boolean>(false);
   const [isEnrolled, setIsEnrolled] = useState<boolean>(false);
-  const [isCheckingEnrollment, setIsCheckingEnrollment] = useState<boolean>(true);
+  const [isCheckingEnrollment, setIsCheckingEnrollment] =
+    useState<boolean>(true);
 
   const [paymentStatus, setPaymentStatus] = useState<
     "success" | "cancelled" | null
   >(null);
 
-  console.log("inside component", courseData);
-  console.log("URL params:", params);
-  console.log("Search params:", Object.fromEntries(searchParams.entries()));
-
-  // Check enrollment status
   useEffect(() => {
     const checkEnrollment = async () => {
       if (!courseData?._id) return;
-      
+
       try {
         setIsCheckingEnrollment(true);
         const enrollmentResponse = await verifyEnrollment(courseData._id);
@@ -80,17 +76,19 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
     checkEnrollment();
   }, [courseData?._id]);
 
-  // Auto-select first video when course loads
   useEffect(() => {
-    if (courseData?.chapters && courseData.chapters.length > 0 && !selectedVideo) {
+    if (
+      courseData?.chapters &&
+      courseData.chapters.length > 0 &&
+      !selectedVideo
+    ) {
       const firstChapter = courseData.chapters[0];
       const firstLesson = firstChapter.lessons?.[0];
       const firstVideo = firstLesson?.videos?.[0];
-      
+
       if (firstVideo && firstLesson) {
         setSelectedVideo(firstVideo);
         setActiveLesson(firstLesson);
-        // Expand the first chapter by default
         setExpandedChapters({
           [firstChapter._id]: true,
         });
@@ -102,15 +100,10 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
     const paymentParam = searchParams.get("payment");
     const sessionId = searchParams.get("session_id");
 
-    console.log("Payment param:", paymentParam);
-    console.log("Session ID:", sessionId);
-
     if (paymentParam === "success" && sessionId) {
-      console.log("Processing successful payment...");
       setPaymentStatus("success");
       verifyPayment(sessionId)
         .then(() => {
-          // Re-check enrollment after successful payment
           setIsEnrolled(true);
         })
         .catch((error) => {
@@ -122,7 +115,6 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
       newSearchParams.delete("session_id");
       setSearchParams(newSearchParams);
     } else if (paymentParam === "cancelled") {
-      console.log("Processing cancelled payment...");
       setPaymentStatus("cancelled");
 
       const newSearchParams = new URLSearchParams(searchParams);
@@ -151,7 +143,7 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
       toast.error("Please enroll in the course to access documents.");
       return;
     }
-    
+
     if (documents && documents.length > 0) {
       setSelectedDocuments(documents);
       setShowDocuments(true);
@@ -178,12 +170,9 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
         price: courseData.price,
       };
 
-      console.log("Creating payment with data:", enrollmentData);
-
       const response = await createPayment(enrollmentData);
 
       if (response.success && response.data.sessionId) {
-        console.log("Payment created successfully, redirecting to Stripe...");
         await processStripePayment(response.data.sessionId);
       } else {
         throw new Error(response.message || "Failed to create payment session");
@@ -238,8 +227,12 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
     <div className="min-h-screen bg-gray-50">
       <div className="bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className={`grid grid-cols-1 ${isEnrolled ? 'lg:grid-cols-1' : 'lg:grid-cols-3'} gap-8`}>
-            <div className={isEnrolled ? 'col-span-1' : 'lg:col-span-2'}>
+          <div
+            className={`grid grid-cols-1 ${
+              isEnrolled ? "lg:grid-cols-1" : "lg:grid-cols-3"
+            } gap-8`}
+          >
+            <div className={isEnrolled ? "col-span-1" : "lg:col-span-2"}>
               <div className="mb-4">
                 <span className="inline-block bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-semibold">
                   {category?.name || "Course"}
@@ -336,7 +329,6 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
                           "/api/placeholder/400/225";
                       }}
                     />
-
                   </div>
 
                   <div className="p-6">
@@ -388,7 +380,6 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
         </div>
       </div>
 
-      {/* Course content sections */}
       <div className="bg-black max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-12">
@@ -537,10 +528,22 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
                                     {!isEnrolled && (
                                       <Lock className="w-4 h-4 text-red-600" />
                                     )}
-                                    <FileText className={`w-4 h-4 ${isEnrolled ? 'text-green-600' : 'text-gray-400'}`} />
-                                    <span className={`text-sm ${isEnrolled ? 'text-gray-200' : 'text-gray-400'}`}>
+                                    <FileText
+                                      className={`w-4 h-4 ${
+                                        isEnrolled
+                                          ? "text-green-600"
+                                          : "text-gray-400"
+                                      }`}
+                                    />
+                                    <span
+                                      className={`text-sm ${
+                                        isEnrolled
+                                          ? "text-gray-200"
+                                          : "text-gray-400"
+                                      }`}
+                                    >
                                       Documents ({lesson.documents.length})
-                                      {!isEnrolled && ' - Locked'}
+                                      {!isEnrolled && " - Locked"}
                                     </span>
                                   </button>
                                 )}

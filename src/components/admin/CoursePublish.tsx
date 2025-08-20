@@ -329,7 +329,6 @@ const CoursePublishingComponent: React.FC = () => {
     try {
       const response = await getUnpublishedCourses(page, itemsPerPage, search);
 
-      console.log("response", response);
       if (response.success) {
         setCourses(response.data.courses);
         setTotalPages(response.data.pagination.totalPages);
@@ -776,8 +775,7 @@ const CoursePublishingComponent: React.FC = () => {
       {isDocumentModalOpen && selectedDocument && (
         <div className="fixed inset-0 bg-black bg-opacity-90 z-[999]">
           <div className="absolute top-0 left-0 right-0 bg-black bg-opacity-50 flex justify-between items-center px-6 py-3 z-10">
-            <h3 className="text-white text-lg font-semibold truncate max-w-[85%]">
-            </h3>
+            <h3 className="text-white text-lg font-semibold truncate max-w-[85%]"></h3>
             <button
               onClick={closeDocumentModal}
               className="text-white hover:text-gray-300 text-2xl font-bold"
@@ -805,8 +803,7 @@ const CoursePublishingComponent: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4">
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[95vh] overflow-hidden flex flex-col">
             <div className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-gray-900">
-              </h3>
+              <h3 className="text-xl font-bold text-gray-900"></h3>
               <button
                 onClick={closeVideoModal}
                 className="text-gray-400 hover:text-gray-600 text-2xl font-bold"

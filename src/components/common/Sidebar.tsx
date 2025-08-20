@@ -12,7 +12,6 @@ function ReusableSidebar({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const safeSidebarItems = Array.isArray(sidebarItems) ? sidebarItems : [];
-  console.log("safeSidebarItems", safeSidebarItems);
 
   return (
     <>
