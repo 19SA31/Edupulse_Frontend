@@ -481,22 +481,27 @@ export const verifyPayment = async (sessionId: string) => {
   }
 };
 
-export const verifyEnrollment = async(courseId:string)=>{
+export const verifyEnrollment = async (courseId: string) => {
   try {
-      const response = await userAxiosInstance.get(`/verify-enrollment/${courseId}`)
-      return response.data
+    const response = await userAxiosInstance.get(
+      `/verify-enrollment/${courseId}`
+    );
+    return response.data;
   } catch (error) {
-    console.error("verifying enrollment failed:",error)
-    throw error
+    console.error("verifying enrollment failed:", error);
+    throw error;
   }
-}
+};
 
-export const getUserEnrollments = async()=>{
+export const getUserEnrollments = async (page: number, search: string = "") => {
   try {
-    const response = await userAxiosInstance.get("/user-payments")
-    return response.data
+    const response = await userAxiosInstance.get("/user-payments", {
+      params: { page, limit: 10, search },
+    });
+    console.log("getUserEnrollments", response.data);
+    return response.data;
   } catch (error) {
-    console.error("error in fetching user enrollments:",error)
-    throw error
+    console.error("error in fetching user enrollments:", error);
+    throw error;
   }
-}
+};

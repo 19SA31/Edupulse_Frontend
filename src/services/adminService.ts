@@ -1,4 +1,3 @@
-
 import { createAxiosInstance } from "../api/axiosInstance";
 
 const adminAxiosInstance = createAxiosInstance("admin");
@@ -119,25 +118,43 @@ export const getUnpublishedCourses = async (
   return response.data;
 };
 
-export const publishCourse = async (id:string)=>{
-  console.log(id)
-  const response = await adminAxiosInstance.put(`/publish-course/${id}`)
-  return response.data
-}
-export const rejectCourse = async (id:string, reason?: string)=>{
-  const response = await adminAxiosInstance.put(`/reject-course/${id}`,{
-    reason
-  })
-  return response.data
-}
-export const getPublishedCourses = async(page: number, search: string)=>{
+export const publishCourse = async (id: string) => {
+  console.log(id);
+  const response = await adminAxiosInstance.put(`/publish-course/${id}`);
+  return response.data;
+};
+export const rejectCourse = async (id: string, reason?: string) => {
+  const response = await adminAxiosInstance.put(`/reject-course/${id}`, {
+    reason,
+  });
+  return response.data;
+};
+export const getPublishedCourses = async (page: number, search: string) => {
   const response = await adminAxiosInstance.get(`/course-listing`, {
     params: { page, limit: 7, search },
   });
-  return response.data
+  return response.data;
 };
 
-export const listUnlistCourse = async (id:string)=>{
-  const response = await adminAxiosInstance.put(`/listunlist-course/${id}`)
-  return response.data
-}
+export const listUnlistCourse = async (id: string) => {
+  const response = await adminAxiosInstance.put(`/listunlist-course/${id}`);
+  return response.data;
+};
+
+export const getAdminRevenue = async (
+  page: number,
+  search: string = "",
+  status: string = "",
+  date: string = ""
+) => {
+  try {
+    const response = await adminAxiosInstance.get("/admin-revenue", {
+      params: { page, limit: 10, search, status, date },
+    });
+    console.log("getAdminRevenue", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("error in fetching admin revenue:", error);
+    throw error;
+  }
+};

@@ -158,7 +158,10 @@ function Banner() {
               learning experiences, and personalized education paths designed
               for the modern learner.
             </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
+            <div
+              className="flex flex-col sm:flex-row gap-6 justify-center mb-16"
+              onClick={() => (window.location.href = "/login")}
+            >
               <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 px-8 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl">
                 Start Learning Today
               </button>
