@@ -24,6 +24,7 @@ function AddCourseCategory() {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+  const [totalCount, setTotalCount] = useState<number>(0); // Add this state
 
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
@@ -105,13 +106,15 @@ function AddCourseCategory() {
       const response = await getCategories(page, search);
 
       if (response.data && response.data.success && response.data.data) {
-        const { categories, totalPages } = response.data.data;
+        const { categories, totalPages, totalCount } = response.data.data;
 
         setCategories(categories || []);
         setTotalPages(totalPages || 1);
+        setTotalCount(totalCount || 0);
       } else {
         setCategories([]);
         setTotalPages(1);
+        setTotalCount(0);
       }
     } catch (error: any) {
       if (error.response && error.response.status === 401) {
@@ -121,6 +124,7 @@ function AddCourseCategory() {
       } else {
         console.error("Error fetching categories:", error);
         setCategories([]);
+        setTotalCount(0);
         toast.error("Failed to fetch categories");
       }
     } finally {
@@ -165,12 +169,8 @@ function AddCourseCategory() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handlePagination = (direction: string) => {
-    if (direction === "next" && currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    } else if (direction === "previous" && currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
+  const handlePagination = (page: number) => {
+    setCurrentPage(page);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -368,6 +368,7 @@ function AddCourseCategory() {
                     searchPlaceholder="Search Categories"
                     currentPage={currentPage}
                     totalPages={totalPages}
+                    totalCount={totalCount}
                     onPageChange={handlePagination}
                     itemsPerPage={10}
                     emptyMessage="No categories found"

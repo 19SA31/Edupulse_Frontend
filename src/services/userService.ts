@@ -483,10 +483,30 @@ export const getUserEnrollments = async (page: number, search: string = "") => {
     const response = await userAxiosInstance.get("/user-payments", {
       params: { page, limit: 10, search },
     });
-    console.log(response.data)
+    console.log("$$",response.data)
     return response.data;
   } catch (error) {
     console.error("error in fetching user enrollments:", error);
     throw error;
   }
 };
+
+export const getEnrollmentCounts = async ()=>{
+  try {
+    const response = await userAxiosInstance.get("/enrollment-counts")
+    return response.data
+  } catch (error) {
+    console.error("Error in fetching enrollment counts:",error)
+    throw error
+  }
+}
+
+export const getEnrolledCourses = async ()=>{
+  try {
+    const response = await userAxiosInstance.get("/courses-enrolled")
+    return response.data
+  } catch (error) {
+    console.error("error in fetching enrolled courses:",error)
+    throw error
+  }
+}

@@ -18,6 +18,7 @@ function UserListing() {
   const [loading, setLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<UserDetails | null>(null);
+  const [totalCount, setTotalCount] = useState<number>(0);
 
   const fetchUsers = async (page: number, search: string) => {
     try {
@@ -25,19 +26,32 @@ function UserListing() {
       const response = await getUsers(page, search);
 
       if (response.data) {
+        console.log("response.data", response.data);
+        let usersData = [];
+        let totalPages = 1;
+        let totalCount = 0;
+
         if (response.data.response) {
-          setUsers(response.data.response.users || []);
-          setTotalPages(response.data.response.totalPages || 1);
+          usersData = response.data.response.users || [];
+          totalPages = response.data.response.totalPages || 1;
+          totalCount = response.data.response.users?.length || 0;
         } else if (response.data.success && response.data.data) {
-          setUsers(response.data.data.users || []);
-          setTotalPages(response.data.data.totalPages || 1);
+          usersData = response.data.data.users || [];
+          totalPages = response.data.data.totalPages || 1;
+          totalCount = response.data.data.users?.length || 0;
         } else {
-          setUsers([]);
-          setTotalPages(1);
+          usersData = [];
+          totalPages = 1;
+          totalCount = 0;
         }
+
+        setUsers(usersData);
+        setTotalPages(totalPages);
+        setTotalCount(totalCount);
       } else {
         setUsers([]);
         setTotalPages(1);
+        setTotalCount(0);
       }
     } catch (error: any) {
       if (error.response && error.response.status === 401) {
@@ -47,6 +61,7 @@ function UserListing() {
       } else {
         console.error("Error fetching user details:", error);
         setUsers([]);
+        setTotalCount(0);
       }
     } finally {
       setLoading(false);
@@ -70,14 +85,15 @@ function UserListing() {
     }
   };
 
-  const handlePagination = (direction: "next" | "previous") => {
+  const handlePagination = (direction: "next" | "previous" | number) => {
     if (direction === "next" && currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     } else if (direction === "previous" && currentPage > 1) {
       setCurrentPage(currentPage - 1);
+    } else if (typeof direction === "number") {
+      setCurrentPage(direction);
     }
   };
-
   const handleSearch = () => {
     setCurrentPage(1);
     fetchUsers(1, searchQuery);
@@ -144,6 +160,7 @@ function UserListing() {
         searchPlaceholder="Search Users"
         currentPage={currentPage}
         totalPages={totalPages}
+        totalCount={totalCount}
         onPageChange={handlePagination}
         itemsPerPage={7}
         emptyMessage="No users found."

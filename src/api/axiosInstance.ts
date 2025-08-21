@@ -1,6 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import { baseUrl } from "./baseUrl";
 import { toast } from "sonner";
+import { persistor } from "../redux/store";
 
 type Role = "admin" | "tutor" | "user";
 
@@ -78,6 +79,8 @@ async function handleLogout(
   localStorage.removeItem(role);
 
   sessionStorage.clear();
+
+  persistor.purge();
 
   try {
     await axios.post(

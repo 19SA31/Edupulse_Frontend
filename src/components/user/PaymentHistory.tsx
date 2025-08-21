@@ -34,10 +34,18 @@ interface Enrollment {
   dateOfEnrollment: string;
 }
 
-interface ApiResponse {
-  enrollments: Enrollment[];
+interface PaginationInfo {
+  currentPage: number;
   totalPages: number;
   totalCount: number;
+  limit: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+interface ApiResponse {
+  enrollments: Enrollment[];
+  pagination: PaginationInfo;
 }
 
 function PaymentHistory() {
@@ -54,12 +62,12 @@ function PaymentHistory() {
     let courseName = "Unknown Course";
     let tutorName = "Unknown Tutor";
 
-    if (enrollment.courseId && typeof enrollment.courseId === 'object') {
+    if (enrollment.courseId && typeof enrollment.courseId === "object") {
       courseName = enrollment.courseId.title || courseName;
     }
 
-    if (enrollment.tutorId && typeof enrollment.tutorId === 'object') {
-      console.log("$$$$",enrollment.tutorId.name)
+    if (enrollment.tutorId && typeof enrollment.tutorId === "object") {
+      console.log("$$$$", enrollment.tutorId.name);
       tutorName = enrollment.tutorId.name || tutorName;
     }
 
@@ -91,33 +99,50 @@ function PaymentHistory() {
       setError(null);
 
       const response = await getUserEnrollments(currentPage, debouncedSearch);
-      
-      const apiData: ApiResponse = response.data || {
+
+      const apiData = response.data || {
         enrollments: [],
-        totalPages: 1,
-        totalCount: 0,
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          totalCount: 0,
+          limit: 10,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
       };
 
-
-      const transformedPayments = apiData.enrollments.map((enrollment) => {
+      const transformedPayments = apiData.enrollments.map((enrollment:Enrollment) => {
         try {
           return transformEnrollmentToPayment(enrollment);
         } catch (transformError) {
-          console.error("Error transforming enrollment:", transformError, enrollment);
+          console.error(
+            "Error transforming enrollment:",
+            transformError,
+            enrollment
+          );
           return {
-            id: enrollment._id || 'unknown',
+            id: enrollment._id || "unknown",
             courseName: "Error loading course",
-            tutorName: "Error loading tutor", 
+            tutorName: "Error loading tutor",
             price: enrollment.price || 0,
-            paymentDate: enrollment.dateOfEnrollment || new Date().toISOString(),
+            paymentDate:
+              enrollment.dateOfEnrollment || new Date().toISOString(),
             status: "pending" as const,
           };
         }
       });
 
       setPayments(transformedPayments);
-      setTotalPages(apiData.totalPages);
-      setTotalCount(apiData.totalCount);
+
+
+      if (apiData.pagination) {
+        setTotalPages(apiData.pagination.totalPages);
+        setTotalCount(apiData.pagination.totalCount);
+      } else {
+        setTotalPages(apiData.totalPages || 1);
+        setTotalCount(apiData.totalCount || 0);
+      }
     } catch (err) {
       console.error("Failed to fetch payment history:", err);
       setError("Failed to load payment history. Please try again.");
@@ -256,6 +281,7 @@ function PaymentHistory() {
         searchPlaceholder="Search by course..."
         currentPage={currentPage}
         totalPages={totalPages}
+        totalCount={totalCount}
         onPageChange={handlePageChange}
         itemsPerPage={10}
         emptyMessage="No payment history found"

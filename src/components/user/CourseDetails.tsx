@@ -65,6 +65,13 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
         setIsCheckingEnrollment(true);
         const enrollmentResponse = await verifyEnrollment(courseData._id);
         setIsEnrolled(enrollmentResponse.success);
+        
+        // If enrolled, expand the first chapter automatically
+        if (enrollmentResponse.success && courseData.chapters && courseData.chapters.length > 0) {
+          setExpandedChapters({
+            [courseData.chapters[0]._id]: true,
+          });
+        }
       } catch (error) {
         console.error("Failed to verify enrollment:", error);
         setIsEnrolled(false);
@@ -89,9 +96,6 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
       if (firstVideo && firstLesson) {
         setSelectedVideo(firstVideo);
         setActiveLesson(firstLesson);
-        setExpandedChapters({
-          [firstChapter._id]: true,
-        });
       }
     }
   }, [courseData, selectedVideo]);
@@ -105,6 +109,12 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
       verifyPayment(sessionId)
         .then(() => {
           setIsEnrolled(true);
+          // Expand the first chapter after successful enrollment
+          if (courseData?.chapters && courseData.chapters.length > 0) {
+            setExpandedChapters({
+              [courseData.chapters[0]._id]: true,
+            });
+          }
         })
         .catch((error) => {
           console.error("Payment verification error:", error);
@@ -121,9 +131,15 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
       newSearchParams.delete("payment");
       setSearchParams(newSearchParams);
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, courseData]);
 
   const toggleChapter = (chapterId: string): void => {
+    // Only allow expanding chapters if user is enrolled
+    if (!isEnrolled && !expandedChapters[chapterId]) {
+      toast.error("Please enroll in the course to access all content.");
+      return;
+    }
+    
     setExpandedChapters((prev) => ({
       ...prev,
       [chapterId]: !prev[chapterId],
@@ -134,6 +150,7 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
     video: CourseVideo,
     lesson: CourseLesson
   ): void => {
+    // Allow video selection even if not enrolled (for preview)
     setSelectedVideo(video);
     setActiveLesson(lesson);
   };
@@ -414,25 +431,27 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
                     <span className="font-medium text-white">
                       {chapters?.length || 0} chapters • {totalLessons} lessons
                     </span>
-                    <button
-                      className="text-yellow-400 hover:text-yellow-700 font-medium text-sm"
-                      onClick={() => {
-                        const allExpanded =
-                          Object.keys(expandedChapters).length ===
-                          chapters.length;
-                        const newState: Record<string, boolean> = {};
-                        if (!allExpanded) {
-                          chapters.forEach((chapter) => {
-                            newState[chapter._id] = true;
-                          });
-                        }
-                        setExpandedChapters(newState);
-                      }}
-                    >
-                      {Object.keys(expandedChapters).length === chapters.length
-                        ? "Collapse all"
-                        : "Expand all"}
-                    </button>
+                    {isEnrolled && (
+                      <button
+                        className="text-yellow-400 hover:text-yellow-700 font-medium text-sm"
+                        onClick={() => {
+                          const allExpanded =
+                            Object.keys(expandedChapters).length ===
+                            chapters.length;
+                          const newState: Record<string, boolean> = {};
+                          if (!allExpanded) {
+                            chapters.forEach((chapter) => {
+                              newState[chapter._id] = true;
+                            });
+                          }
+                          setExpandedChapters(newState);
+                        }}
+                      >
+                        {Object.keys(expandedChapters).length === chapters.length
+                          ? "Collapse all"
+                          : "Expand all"}
+                      </button>
+                    )}
                   </div>
                 </div>
 

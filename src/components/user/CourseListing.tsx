@@ -1,10 +1,19 @@
-import React, { useState, useEffect } from "react";
-import { Search, Clock, Users, Star, Loader2, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Search,
+  Users,
+  Star,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
 import {
   getAllListedTutors,
   getAllListedCourses,
   getAllListedCategories,
   fetchCourseDetails,
+  getEnrollmentCounts,
+  getEnrolledCourses,
 } from "../../services/userService";
 import {
   TutorListingUser,
@@ -13,8 +22,24 @@ import {
 } from "../../interfaces/userInterface";
 import { Link, useNavigate } from "react-router-dom";
 
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+interface Enrollment {
+  courseId: string;
+  count: number;
+}
+
+interface EnrollmentResponse {
+  enrollments: Enrollment[];
+}
+
 const CourseListing = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>("All classes");
+  const [selectedCategory, setSelectedCategory] =
+    useState<string>("All classes");
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [courses, setCourses] = useState<CourseListingUser[]>([]);
@@ -22,9 +47,25 @@ const CourseListing = () => {
   const [tutors, setTutors] = useState<TutorListingUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [minPrice, setMinPrice] = useState<number | ''>('');
-  const [maxPrice, setMaxPrice] = useState<number | ''>('');
-  const [sortBy, setSortBy] = useState<string>('');
+  const [minPrice, setMinPrice] = useState<number | "">("");
+  const [maxPrice, setMaxPrice] = useState<number | "">("");
+  type SortOption =
+    | "title_asc"
+    | "title_desc"
+    | "price_asc"
+    | "price_desc"
+    | "category_asc"
+    | "category_desc"
+    | "enrollment_desc"
+    | "";
+
+  const [sortBy, setSortBy] = useState<SortOption>("");
+  const [enrollmentCounts, setEnrollmentCounts] = useState<
+    Record<string, number>
+  >({});
+  const [enrolledCourseIds, setEnrolledCourseIds] = useState<Set<string>>(
+    new Set()
+  );
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -38,10 +79,13 @@ const CourseListing = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [tutorsRes, categoriesRes] = await Promise.all([
-          getAllListedTutors(),
-          getAllListedCategories(),
-        ]);
+        const [tutorsRes, categoriesRes, enrollmentsRes, enrolledCoursesRes] =
+          await Promise.all([
+            getAllListedTutors(),
+            getAllListedCategories(),
+            getEnrollmentCounts(),
+            getEnrolledCourses(),
+          ]);
 
         if (categoriesRes.success) {
           setCategories([
@@ -52,6 +96,23 @@ const CourseListing = () => {
         if (tutorsRes.success) {
           setTutors(tutorsRes.data);
         }
+        if (enrollmentsRes.success) {
+          const countsMap: Record<string, number> = {};
+          enrollmentsRes.data.enrollments.forEach(
+            (enrollment: { courseId: string; count: number }) => {
+              countsMap[enrollment.courseId] = enrollment.count;
+            }
+          );
+          setEnrollmentCounts(countsMap);
+        }
+        if (enrolledCoursesRes.success) {
+          const enrolledIds = new Set<string>(
+            enrolledCoursesRes.data.map(
+              (enrollment: { courseId: string }) => enrollment.courseId
+            )
+          );
+          setEnrolledCourseIds(enrolledIds);
+        }
       } catch (err) {
         setError("Failed to fetch initial data. Please try again later.");
         console.error("Error fetching initial data:", err);
@@ -60,7 +121,6 @@ const CourseListing = () => {
 
     fetchInitialData();
   }, []);
-
 
   const fetchCourses = async () => {
     try {
@@ -74,7 +134,15 @@ const CourseListing = () => {
       });
 
       if (coursesRes.success) {
-        setCourses(coursesRes.data);
+        const coursesWithEnrollmentCounts = coursesRes.data.map(
+          (course: CourseListingUser) => ({
+            ...course,
+            enrollmentCount: enrollmentCounts[course.courseId] || 0,
+            isEnrolled: enrolledCourseIds.has(course.courseId),
+          })
+        );
+
+        setCourses(coursesWithEnrollmentCounts);
       }
     } catch (err) {
       setError("Failed to fetch courses. Please try again later.");
@@ -86,7 +154,29 @@ const CourseListing = () => {
 
   useEffect(() => {
     fetchCourses();
-  }, [selectedCategory, debouncedSearchTerm, minPrice, maxPrice, sortBy]);
+  }, [
+    selectedCategory,
+    debouncedSearchTerm,
+    minPrice,
+    maxPrice,
+    sortBy,
+    enrollmentCounts,
+    enrolledCourseIds,
+  ]);
+
+  useEffect(() => {
+    if (
+      courses.length > 0 &&
+      (Object.keys(enrollmentCounts).length > 0 || enrolledCourseIds.size > 0)
+    ) {
+      const updatedCourses = courses.map((course) => ({
+        ...course,
+        enrollmentCount: enrollmentCounts[course.courseId] || 0,
+        isEnrolled: enrolledCourseIds.has(course.courseId),
+      }));
+      setCourses(updatedCourses);
+    }
+  }, [enrollmentCounts, enrolledCourseIds]);
 
   const getTutorInfo = (tutorName: string): TutorListingUser | undefined => {
     return tutors.find((tutor) => tutor.name === tutorName);
@@ -121,12 +211,16 @@ const CourseListing = () => {
   const clearAllFilters = () => {
     setSearchTerm("");
     setSelectedCategory("All classes");
-    setMinPrice('');
-    setMaxPrice('');
-    setSortBy('');
+    setMinPrice("");
+    setMaxPrice("");
+    setSortBy("");
   };
 
-  const CourseCard = ({ course }: { course: CourseListingUser }) => {
+  const CourseCard = ({
+    course,
+  }: {
+    course: CourseListingUser & { isEnrolled?: boolean };
+  }) => {
     const tutor = getTutorInfo(course.tutorName);
 
     return (
@@ -145,7 +239,14 @@ const CourseListing = () => {
             }}
           />
           <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs font-medium">
-            {formatPrice(course.price)}
+            {course.isEnrolled ? (
+              <span className="flex items-center gap-1">
+                <CheckCircle size={12} className="text-yellow-400" />
+                Paid
+              </span>
+            ) : (
+              formatPrice(course.price)
+            )}
           </div>
           {course.categoryName && (
             <div className="absolute bottom-2 left-2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-medium">
@@ -162,7 +263,7 @@ const CourseListing = () => {
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1">
                 <Users size={14} />
-                {course.enrollmentCount} enrolled
+                {course.enrollmentCount || 0} enrolled
               </span>
             </div>
             <div className="flex items-center gap-1">
@@ -274,7 +375,6 @@ const CourseListing = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-
           <div className="lg:w-64 flex-shrink-0">
             <div className="bg-black rounded-lg p-6 shadow-sm sticky top-4">
               <h3 className="font-semibold text-white mb-4">Categories</h3>
@@ -303,7 +403,11 @@ const CourseListing = () => {
                       type="number"
                       placeholder="Min Price (₹)"
                       value={minPrice}
-                      onChange={(e) => setMinPrice(e.target.value ? Number(e.target.value) : '')}
+                      onChange={(e) =>
+                        setMinPrice(
+                          e.target.value ? Number(e.target.value) : ""
+                        )
+                      }
                       className="w-full px-3 py-2 bg-gray-700 text-white rounded text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                       min="0"
                     />
@@ -313,13 +417,20 @@ const CourseListing = () => {
                       type="number"
                       placeholder="Max Price (₹)"
                       value={maxPrice}
-                      onChange={(e) => setMaxPrice(e.target.value ? Number(e.target.value) : '')}
+                      onChange={(e) =>
+                        setMaxPrice(
+                          e.target.value ? Number(e.target.value) : ""
+                        )
+                      }
                       className="w-full px-3 py-2 bg-gray-700 text-white rounded text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                       min="0"
                     />
                   </div>
                   <button
-                    onClick={() => { setMinPrice(''); setMaxPrice(''); }}
+                    onClick={() => {
+                      setMinPrice("");
+                      setMaxPrice("");
+                    }}
                     className="text-yellow-400 text-sm hover:text-yellow-300 transition-colors"
                   >
                     Clear Price Filter
@@ -367,9 +478,10 @@ const CourseListing = () => {
                   <option value="title_desc">Title Z-A</option>
                   <option value="price_asc">Price Low to High</option>
                   <option value="price_desc">Price High to Low</option>
+                  <option value="enrollment_desc">Most Popular</option>
                 </select>
               </div>
-              
+
               <div className="flex items-center gap-2 text-gray-400 text-sm">
                 {loading && courses.length > 0 && (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -396,8 +508,10 @@ const CourseListing = () => {
                   {searchTerm
                     ? `No courses match "${searchTerm}"`
                     : `No courses available`}
-                  {selectedCategory !== "All classes" && ` in ${selectedCategory}`}
-                  {(minPrice || maxPrice) && ` within the specified price range`}
+                  {selectedCategory !== "All classes" &&
+                    ` in ${selectedCategory}`}
+                  {(minPrice || maxPrice) &&
+                    ` within the specified price range`}
                 </p>
                 <button
                   onClick={clearAllFilters}
