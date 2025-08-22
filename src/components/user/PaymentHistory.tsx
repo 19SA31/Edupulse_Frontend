@@ -67,7 +67,6 @@ function PaymentHistory() {
     }
 
     if (enrollment.tutorId && typeof enrollment.tutorId === "object") {
-      console.log("$$$$", enrollment.tutorId.name);
       tutorName = enrollment.tutorId.name || tutorName;
     }
 

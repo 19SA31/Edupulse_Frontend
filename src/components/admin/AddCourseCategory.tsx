@@ -14,6 +14,7 @@ import {
 } from "../../services/adminService";
 import { Category } from "../../interfaces/adminInterface";
 import Table, { TableColumn, TableAction } from "../../components/common/Table";
+import { Messages } from "../../enums/messages";
 
 function AddCourseCategory() {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ function AddCourseCategory() {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
-  const [totalCount, setTotalCount] = useState<number>(0); // Add this state
+  const [totalCount, setTotalCount] = useState<number>(0); 
 
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
@@ -69,8 +70,8 @@ function AddCourseCategory() {
 
           toast.success(
             isEditMode
-              ? "Category updated successfully!"
-              : "Category added successfully!"
+              ? Messages.CATEGORY_UPDATED
+              : Messages.CATEGORY_ADDED
           );
 
           await fetchCategories(currentPage, searchQuery);

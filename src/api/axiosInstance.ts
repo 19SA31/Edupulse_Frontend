@@ -2,6 +2,7 @@ import axios, { AxiosInstance } from "axios";
 import { baseUrl } from "./baseUrl";
 import { toast } from "sonner";
 import { persistor } from "../redux/store";
+import {Messages} from "../enums/messages"
 
 type Role = "admin" | "tutor" | "user";
 
@@ -55,8 +56,8 @@ export function createAxiosInstance(role: Role): AxiosInstance {
       }
 
       if (status === 401) {
-        console.warn("Unauthorized - Redirecting to login");
-        handleLogout(role, "Session expired. Please login again.");
+        console.error("Unauthorized - Redirecting to login");
+        handleLogout(role, Messages.SESSION_EXPIRED);
         return Promise.reject(error);
       }
 
@@ -89,15 +90,14 @@ async function handleLogout(
       { withCredentials: true }
     );
   } catch (err) {
-    console.warn("Failed to clear cookies on server", err);
+    console.error("Failed to clear cookies on server", err);
   }
 
   let alertMessage = message;
   if (reason === "blocked") {
-    alertMessage =
-      "Your account has been blocked by an administrator. Please contact support for assistance.";
+    alertMessage = Messages.ACCOUNT_BLOCKED
   } else if (reason === "not_found") {
-    alertMessage = "Your account was not found. It may have been deleted.";
+    alertMessage = Messages.ACCOUNT_NOTFOUND;
   }
 
   if (!alertShownForSession.has(alertKey)) {
