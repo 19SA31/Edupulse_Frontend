@@ -489,16 +489,6 @@ export const getUserEnrollments = async (page: number, search: string = "") => {
   }
 };
 
-export const getEnrollmentCounts = async ()=>{
-  try {
-    const response = await userAxiosInstance.get("/enrollment-counts")
-    return response.data
-  } catch (error) {
-    console.error("Error in fetching enrollment counts:",error)
-    throw error
-  }
-}
-
 export const getEnrolledCourses = async ()=>{
   try {
     const response = await userAxiosInstance.get("/courses-enrolled")

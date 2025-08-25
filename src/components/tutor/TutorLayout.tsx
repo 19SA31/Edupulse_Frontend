@@ -21,6 +21,11 @@ function TutorLayout() {
       label: "Add Course",
       icon: <MdLibraryAdd className="w-5 h-5" />,
     },
+    {
+      path: "/tutor/dashboard/course-management",
+      label: "Course Management",
+      icon: <MdLibraryAdd className="w-5 h-5" />,
+    },
   ];
 
   return (

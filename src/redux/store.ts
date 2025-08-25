@@ -1,22 +1,30 @@
 // store.ts
-import { configureStore, combineReducers } from '@reduxjs/toolkit';
-import { persistStore, persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
-import adminReducer from './slices/adminSlice';
-import userReducer from './slices/userSlice';       
-import tutorReducer from './slices/tutorSlice';
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
+import {
+  persistStore,
+  persistReducer,
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+} from "redux-persist";
+import storage from "redux-persist/lib/storage";
+import adminReducer from "./slices/adminSlice";
+import userReducer from "./slices/userSlice";
+import tutorReducer from "./slices/tutorSlice";
 
 const persistConfig = {
-  key: 'root',
+  key: "root",
   storage,
-  whitelist: ['admin','user','tutor'], 
+  whitelist: ["admin", "user", "tutor"],
 };
 
 const rootReducer = combineReducers({
   admin: adminReducer,
-  user: userReducer,     
-  tutor: tutorReducer, 
-  
+  user: userReducer,
+  tutor: tutorReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -26,7 +34,15 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+        ignoredActions: [
+          FLUSH,
+          REHYDRATE,
+          PAUSE,
+          PERSIST,
+          PURGE,
+          REGISTER,
+          'persist/MMRE', 
+        ],
       },
     }),
 });

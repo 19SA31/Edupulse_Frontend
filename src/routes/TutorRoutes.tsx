@@ -13,7 +13,8 @@ import TutorLayoutPage from "../pages/tutor/TutorLayoutPage";
 import ProfilePage from "../pages/tutor/ProfilePage";
 import VerifyTutorPage from "../pages/tutor/VerifyTutorPage";
 import AddCoursePage from "../pages/tutor/AddCoursePage";
-import DashboardPage from "../pages/tutor/DashboardPage"; 
+import DashboardPage from "../pages/tutor/DashboardPage";
+import CourseManagementPage from "../pages/tutor/CourseManagementPage";
 
 function TutorRoutes() {
   return (
@@ -21,10 +22,8 @@ function TutorRoutes() {
       <Toaster richColors position="top-center" />
 
       <Routes>
-        
         <Route path="" element={<HomePage />} />
 
-        
         <Route
           path="login"
           element={
@@ -50,7 +49,6 @@ function TutorRoutes() {
           }
         />
 
-        
         <Route
           path="verify-tutor"
           element={
@@ -60,7 +58,6 @@ function TutorRoutes() {
           }
         />
 
-        
         <Route
           path="dashboard"
           element={
@@ -69,10 +66,10 @@ function TutorRoutes() {
             </TutorProtectRoute>
           }
         >
-          
           <Route index element={<DashboardPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="add-course" element={<AddCoursePage />} />
+          <Route path="course-management" element={<CourseManagementPage />} />
         </Route>
 
         <Route path="forgot-password" element={<ForgotPassword />} />

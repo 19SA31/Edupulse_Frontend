@@ -3,12 +3,8 @@ import { createAxiosInstance } from "../api/axiosInstance";
 const tutorAxiosInstance = createAxiosInstance("tutor");
 
 import {
-  Category,
   FormData as CourseFormData,
   Chapter,
-  Lesson,
-  UploadedFile,
-  CourseImage,
 } from "../interfaces/courseInterface";
 
 interface CropData {
@@ -259,16 +255,12 @@ export const updateTutorProfile = async (
       formData.append("designation", profileData.designation);
     if (profileData.about) formData.append("about", profileData.about);
 
-    const response = await tutorAxiosInstance.put(
-      "/profile/update-profile",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        timeout: 60000,
-      }
-    );
+    const response = await tutorAxiosInstance.put("/update-profile", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      timeout: 60000,
+    });
 
     if (!response.data.success) {
       return {
@@ -331,7 +323,7 @@ export const clearUserData = (): void => {
 };
 
 export const getCourseCategories = () => {
-  return tutorAxiosInstance.get("/course/get-category");
+  return tutorAxiosInstance.get("/get-category");
 };
 
 export const createCourse = async (
@@ -388,7 +380,7 @@ export const createCourse = async (
       });
     });
 
-    const response = await tutorAxiosInstance.post("/course/create", formData, {
+    const response = await tutorAxiosInstance.post("/create-course", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -401,6 +393,22 @@ export const createCourse = async (
     if (error.response?.data) {
       return error.response.data;
     }
+    throw error;
+  }
+};
+
+export const getAllCoursesTutor = async (
+  page: number = 1,
+  limit: number = 10,
+  search: string = ""
+) => {
+  try {
+    const response = await tutorAxiosInstance.get("/tutor-courses", {
+      params: { page, limit, search },
+    });
+    return response.data;
+  } catch (error) {
+    console.log("error in fetching tutor courses", error);
     throw error;
   }
 };

@@ -12,7 +12,6 @@ import {
   getAllListedCourses,
   getAllListedCategories,
   fetchCourseDetails,
-  getEnrollmentCounts,
   getEnrolledCourses,
 } from "../../services/userService";
 import {
@@ -79,11 +78,10 @@ const CourseListing = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [tutorsRes, categoriesRes, enrollmentsRes, enrolledCoursesRes] =
+        const [tutorsRes, categoriesRes,  enrolledCoursesRes] =
           await Promise.all([
             getAllListedTutors(),
             getAllListedCategories(),
-            getEnrollmentCounts(),
             getEnrolledCourses(),
           ]);
 
@@ -96,15 +94,7 @@ const CourseListing = () => {
         if (tutorsRes.success) {
           setTutors(tutorsRes.data);
         }
-        if (enrollmentsRes.success) {
-          const countsMap: Record<string, number> = {};
-          enrollmentsRes.data.enrollments.forEach(
-            (enrollment: { courseId: string; count: number }) => {
-              countsMap[enrollment.courseId] = enrollment.count;
-            }
-          );
-          setEnrollmentCounts(countsMap);
-        }
+
         if (enrolledCoursesRes.success) {
           const enrolledIds = new Set<string>(
             enrolledCoursesRes.data.map(
@@ -137,7 +127,6 @@ const CourseListing = () => {
         const coursesWithEnrollmentCounts = coursesRes.data.map(
           (course: CourseListingUser) => ({
             ...course,
-            enrollmentCount: enrollmentCounts[course.courseId] || 0,
             isEnrolled: enrolledCourseIds.has(course.courseId),
           })
         );
@@ -171,7 +160,6 @@ const CourseListing = () => {
     ) {
       const updatedCourses = courses.map((course) => ({
         ...course,
-        enrollmentCount: enrollmentCounts[course.courseId] || 0,
         isEnrolled: enrolledCourseIds.has(course.courseId),
       }));
       setCourses(updatedCourses);
