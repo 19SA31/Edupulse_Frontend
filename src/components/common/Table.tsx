@@ -1,4 +1,5 @@
 import React from "react";
+import { Search } from "lucide-react";
 
 export interface TableColumn<T> {
   key: keyof T | string;
@@ -122,6 +123,7 @@ function Table<T>({
       {showSearch && (
         <div className="bg-gray-600 px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex space-x-4 items-center w-full sm:w-auto ml-auto">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-white" />
             <input
               type="text"
               placeholder={searchPlaceholder}
