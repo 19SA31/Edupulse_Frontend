@@ -4,82 +4,25 @@ import { Users } from "lucide-react";
 import { getAllCoursesTutor } from "../../services/tutorService";
 import CourseDetailsModal from "../common/CourseDetailsModal";
 import Table, { TableColumn, TableAction } from "../common/Table";
+import { TutorDetailsList } from "../../interfaces/tutorInterface";
+import {
+  ChapterDetailsList,
+  CourseDetailsList
+} from "../../interfaces/courseInterface";
 
-interface TutorDetailsDto {
-  _id: string;
-  name: string;
-  email: string;
-  designation: string;
-  about: string;
-  avatar?: string;
-}
 
-interface CategoryDetailsDto {
-  _id: string;
-  name: string;
-  description: string;
-}
 
-interface DocumentFileDto {
-  _id: string;
-  fileName: string;
-  signedUrl: string;
-  originalName: string;
-}
-
-interface VideoFileDto {
-  _id: string;
-  fileName: string;
-  signedUrl: string;
-  originalName: string;
-}
-
-interface LessonDetailsDto {
-  _id: string;
-  title: string;
-  description: string;
-  documents: DocumentFileDto[];
-  videos: VideoFileDto[];
-  order: number;
-}
-
-interface ChapterDetailsDto {
-  _id: string;
-  title: string;
-  description: string;
-  lessons: LessonDetailsDto[];
-  order: number;
-}
-
-interface CourseDetailsDto {
-  _id: string;
-  title: string;
-  description: string;
-  benefits: string;
-  requirements: string;
-  category: CategoryDetailsDto;
-  tutor: TutorDetailsDto;
-  price: number;
-  thumbnailImage: string;
-  chapters: ChapterDetailsDto[];
-  isPublished: boolean;
-  isListed: boolean;
-  enrollmentCount: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 const CourseManagement: React.FC = () => {
-  const [courses, setCourses] = useState<CourseDetailsDto[]>([]);
+  const [courses, setCourses] = useState<CourseDetailsList[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCourses, setTotalCourses] = useState(0);
 
-  const [selectedCourse, setSelectedCourse] = useState<CourseDetailsDto | null>(
-    null
-  );
+  const [selectedCourse, setSelectedCourse] =
+    useState<CourseDetailsList | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchCourses = async (page: number = 1, search: string = "") => {
@@ -117,7 +60,7 @@ const CourseManagement: React.FC = () => {
     fetchCourses(page, searchQuery);
   };
 
-  const handleViewCourse = (course: CourseDetailsDto) => {
+  const handleViewCourse = (course: CourseDetailsList) => {
     setSelectedCourse(course);
     setIsModalOpen(true);
   };
@@ -127,7 +70,7 @@ const CourseManagement: React.FC = () => {
     setSelectedCourse(null);
   };
 
-  const handleEditCourse = (course: CourseDetailsDto) => {
+  const handleEditCourse = (course: CourseDetailsList) => {
     console.log("Editing course:", course);
     toast.info(`Redirecting to edit: ${course.title}`);
   };
@@ -154,7 +97,7 @@ const CourseManagement: React.FC = () => {
     }
   };
 
-  const getTotalLessons = (chapters: ChapterDetailsDto[]): number => {
+  const getTotalLessons = (chapters: ChapterDetailsList[]): number => {
     return chapters.reduce(
       (total, chapter) => total + chapter.lessons.length,
       0
@@ -162,9 +105,9 @@ const CourseManagement: React.FC = () => {
   };
 
   const getActionsForCourse = (
-    course: CourseDetailsDto
-  ): TableAction<CourseDetailsDto>[] => {
-    const baseActions: TableAction<CourseDetailsDto>[] = [
+    course: CourseDetailsList
+  ): TableAction<CourseDetailsList>[] => {
+    const baseActions: TableAction<CourseDetailsList>[] = [
       {
         label: "View",
         onClick: handleViewCourse,
@@ -183,7 +126,7 @@ const CourseManagement: React.FC = () => {
     return baseActions;
   };
 
-  const columns: TableColumn<CourseDetailsDto>[] = [
+  const columns: TableColumn<CourseDetailsList>[] = [
     {
       key: "title",
       title: "Course Details",
