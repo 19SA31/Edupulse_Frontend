@@ -1,4 +1,5 @@
 import { createAxiosInstance } from "../api/axiosInstance";
+import { CourseDetails } from "../interfaces/courseInterface";
 
 const tutorAxiosInstance = createAxiosInstance("tutor");
 
@@ -339,8 +340,8 @@ export const createCourse = async (
     formData.append("category", courseData.category);
     formData.append("price", courseData.price.toString());
 
-    if (courseData.courseImage?.file) {
-      formData.append("thumbnail", courseData.courseImage.file);
+    if (courseData.thumbnailImage?.file) {
+      formData.append("thumbnail", courseData.thumbnailImage.file);
     } else {
       console.log("No thumbnail file found");
     }
@@ -409,6 +410,105 @@ export const getAllCoursesTutor = async (
     return response.data;
   } catch (error) {
     console.log("error in fetching tutor courses", error);
+    throw error;
+  }
+};
+
+export async function fetchCourseDetails(
+  courseId: string
+): Promise<CourseDetails> {
+  const response = await tutorAxiosInstance.get(`/course-details/${courseId}`);
+  return response.data;
+}
+
+export const editCourse = async (
+  courseId: string,
+  courseData: CourseFormData & { chapters: Chapter[] }
+) => {
+  try {
+    console.log("courseData", courseData);
+    const formData = new FormData();
+    formData.append("title", courseData.title);
+    formData.append("description", courseData.description);
+    formData.append("benefits", courseData.benefits);
+    formData.append("requirements", courseData.requirements);
+    formData.append("category", courseData.category);
+    formData.append("price", courseData.price.toString());
+
+    if (courseData.thumbnailImage) {
+      if (
+        courseData.thumbnailImage.file &&
+        !courseData.thumbnailImage.isExisting
+      ) {
+        formData.append("thumbnail", courseData.thumbnailImage.file);
+      } else if (courseData.thumbnailImage.isExisting) {
+        formData.append(
+          "thumbnailUrl",
+          courseData.thumbnailImage.preview || ""
+        );
+      }
+    }
+    formData.append("chapters", JSON.stringify(courseData.chapters));
+
+    let totalDocuments = 0;
+    let totalVideos = 0;
+    let documentsAppended = 0;
+    let videosAppended = 0;
+
+    courseData.chapters.forEach((chapter, chapterIndex) => {
+      chapter.lessons.forEach((lesson, lessonIndex) => {
+        lesson.documents.forEach((doc, docIndex) => {
+          totalDocuments++;
+
+          if (doc.file && doc.file instanceof File && !doc.isExisting) {
+            const fieldName = `lesson_documents_${chapterIndex}_${lessonIndex}_${docIndex}`;
+            formData.append(fieldName, doc.file);
+            documentsAppended++;
+          } else if (doc.isExisting) {
+            const fieldName = `existing_document_${chapterIndex}_${lessonIndex}_${docIndex}`;
+            formData.append(fieldName, doc.url || "");
+          }
+        });
+
+        lesson.videos.forEach((video, videoIndex) => {
+          totalVideos++;
+
+          if (video.file && video.file instanceof File && !video.isExisting) {
+            const fieldName = `lesson_videos_${chapterIndex}_${lessonIndex}_${videoIndex}`;
+            formData.append(fieldName, video.file);
+            videosAppended++;
+          } else if (video.isExisting) {
+            const fieldName = `existing_video_${chapterIndex}_${lessonIndex}_${videoIndex}`;
+            formData.append(fieldName, video.url || "");
+          }
+        });
+      });
+    });
+
+    console.log(
+      "Total documents:",
+      totalDocuments,
+      "Appended:",
+      documentsAppended
+    );
+
+    const response = await tutorAxiosInstance.put(
+      `/edit-course/${courseId}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        timeout: 120000,
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error editing course:", error);
+    if (error.response?.data) {
+      return error.response.data;
+    }
     throw error;
   }
 };

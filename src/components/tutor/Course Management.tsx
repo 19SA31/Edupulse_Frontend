@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { getAllCoursesTutor } from "../../services/tutorService";
 import CourseDetailsModal from "../common/CourseDetailsModal";
 import Table, { TableColumn, TableAction } from "../common/Table";
 import { TutorDetailsList } from "../../interfaces/tutorInterface";
 import {
   ChapterDetailsList,
-  CourseDetailsList
+  CourseDetailsList,
 } from "../../interfaces/courseInterface";
 
-
-
-
 const CourseManagement: React.FC = () => {
+  const navigate = useNavigate(); 
   const [courses, setCourses] = useState<CourseDetailsList[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,8 +70,7 @@ const CourseManagement: React.FC = () => {
   };
 
   const handleEditCourse = (course: CourseDetailsList) => {
-    console.log("Editing course:", course);
-    toast.info(`Redirecting to edit: ${course.title}`);
+    navigate(`/tutor/dashboard/add-course?edit=${course._id}`);
   };
 
   const getStatusBadge = (isPublished: boolean, isListed: boolean) => {
@@ -84,13 +82,13 @@ const CourseManagement: React.FC = () => {
       );
     } else if (isPublished && !isListed) {
       return (
-        <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+        <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-yellow-800">
           Unlisted
         </span>
       );
     } else {
       return (
-        <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+        <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-gray-800">
           Draft
         </span>
       );

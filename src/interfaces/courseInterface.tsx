@@ -104,7 +104,7 @@ export interface FormData {
   requirements: string;
   category: string;
   price: string;
-  courseImage: CourseImage | null;
+  thumbnailImage: CourseImage | null;
 }
 
 export interface UploadedFile {

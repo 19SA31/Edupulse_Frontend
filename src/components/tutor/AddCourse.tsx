@@ -1,5 +1,6 @@
 import React, { useState, ChangeEvent, useEffect } from "react";
 import { toast } from "sonner";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Formik,
   Form,
@@ -21,16 +22,19 @@ import {
   Check,
   AlertCircle,
 } from "lucide-react";
-import { getCourseCategories } from "../../services/tutorService";
+import {
+  getCourseCategories,
+  fetchCourseDetails,
+  createCourse,
+  editCourse,
+} from "../../services/tutorService";
 import {
   Category,
-  CourseImage,
   FormData,
   UploadedFile,
   Lesson,
   Chapter,
 } from "../../interfaces/courseInterface";
-import { createCourse } from "../../services/tutorService";
 
 const step1ValidationSchema = Yup.object({
   title: Yup.string()
@@ -50,6 +54,25 @@ const step1ValidationSchema = Yup.object({
   price: Yup.number()
     .min(0, "Price cannot be negative")
     .required("Price is required"),
+  thumbnailImage: Yup.mixed()
+    .nullable()
+    .test("required", "Course thumbnail image is required", function (value) {
+      return value !== null && value !== undefined;
+    })
+    .test("fileType", "Please upload a valid image file", function (value) {
+      if (!value) return false;
+      if (value.preview && value.isExisting) return true;
+      if (value.file) {
+        const validTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/jpg",
+          "image/webp",
+        ];
+        return validTypes.includes(value.file.type);
+      }
+      return false;
+    }),
 });
 
 const step2ValidationSchema = Yup.object({
@@ -73,18 +96,12 @@ const step2ValidationSchema = Yup.object({
     .min(1, "Course must have at least one chapter"),
 });
 
-const step3ValidationSchema = Yup.object({
-  courseImage: Yup.mixed().required("Course thumbnail image is required"),
-});
-
 const getValidationSchema = (step: number) => {
   switch (step) {
     case 1:
       return step1ValidationSchema;
     case 2:
       return step2ValidationSchema;
-    case 3:
-      return step3ValidationSchema;
     default:
       return step1ValidationSchema;
   }
@@ -102,15 +119,128 @@ const isLessonErrorArray = (error: any): error is FormikErrors<Lesson>[] => {
   return Array.isArray(error) && error.length > 0;
 };
 
+const StepIndicator: React.FC<{ currentStep: number; isEditMode: boolean }> = ({
+  currentStep,
+  isEditMode,
+}) => (
+  <div className="flex items-center mb-8">
+    {[1, 2].map((step) => (
+      <React.Fragment key={step}>
+        <div
+          className={`flex items-center ${
+            currentStep >= step ? "text-black" : "text-gray-400"
+          }`}
+        >
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+              currentStep >= step ? "bg-black text-yellow-400" : "bg-gray-200"
+            }`}
+          >
+            {step}
+          </div>
+          <span className="ml-2 font-medium">
+            {step === 1 ? "Course Details" : "Chapters & Lessons"}
+          </span>
+        </div>
+        {step < 2 && (
+          <div
+            className={`h-1 w-20 mx-4 ${
+              currentStep > step ? "bg-black" : "bg-gray-200"
+            }`}
+          ></div>
+        )}
+      </React.Fragment>
+    ))}
+  </div>
+);
+
+const FileUploadSection: React.FC<{
+  title: string;
+  icon: React.ReactNode;
+  accept: string;
+  files: UploadedFile[];
+  onUpload: (files: FileList | null) => void;
+  onRemove: (fileId: number) => void;
+}> = ({ title, icon, accept, files, onUpload, onRemove }) => {
+  const id = `file-upload-${title.replace(/\s+/g, "-").toLowerCase()}`;
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        {icon}
+        {title} ({files.length})
+      </label>
+      <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center bg-gray-50">
+        <input
+          type="file"
+          multiple
+          accept={accept}
+          onChange={(e) => onUpload(e.target.files)}
+          className="hidden"
+          id={id}
+        />
+        <label
+          htmlFor={id}
+          className="cursor-pointer text-blue-600 hover:text-blue-700 text-sm"
+        >
+          Upload {title}
+        </label>
+      </div>
+
+      {files.map((file) => (
+        <FileItem
+          key={file.id}
+          file={file}
+          onRemove={() => onRemove(file.id)}
+        />
+      ))}
+    </div>
+  );
+};
+
+const FileItem: React.FC<{ file: UploadedFile; onRemove: () => void }> = ({
+  file,
+  onRemove,
+}) => (
+  <div className="flex items-center justify-between bg-white p-2 rounded border mt-2">
+    <div className="flex-1 min-w-0">
+      <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
+      <p className="text-xs text-gray-500">
+        {file.isExisting ? (
+          <a
+            href={file.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-700"
+          >
+            {file.originalName} - View File
+          </a>
+        ) : (
+          file.name
+        )}
+      </p>
+    </div>
+    <button
+      type="button"
+      onClick={onRemove}
+      className="ml-2 text-red-500 hover:text-red-700"
+    >
+      <X className="w-4 h-4" />
+    </button>
+  </div>
+);
+
 const AddCourse: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [expandedChapter, setExpandedChapter] = useState<number | null>(null);
-  const [expandedVerifyChapter, setExpandedVerifyChapter] = useState<
-    number | null
-  >(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [courseId, setCourseId] = useState<string | null>(null);
+  const [loadingCourseData, setLoadingCourseData] = useState<boolean>(false);
 
   const initialValues: FormValues = {
     title: "",
@@ -119,8 +249,101 @@ const AddCourse: React.FC = () => {
     requirements: "",
     category: "",
     price: "",
-    courseImage: null,
+    thumbnailImage: null,
     chapters: [],
+  };
+
+  const [formValues, setFormValues] = useState<FormValues>(initialValues);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const editCourseId = urlParams.get("edit");
+
+    if (editCourseId) {
+      setIsEditMode(true);
+      setCourseId(editCourseId);
+      fetchCourseForEdit(editCourseId);
+    }
+  }, [location.search]);
+
+  const fetchCourseForEdit = async (courseId: string) => {
+    setLoadingCourseData(true);
+    try {
+      const response = await fetchCourseDetails(courseId);
+      if (response.success) {
+        const courseData = response.data;
+
+        const transformedData: FormValues = {
+          title: courseData.title || "",
+          description: courseData.description || "",
+          benefits: courseData.benefits || "",
+          requirements: courseData.requirements || "",
+          category: courseData.category
+            ? courseData.category._id || courseData.category.id || ""
+            : "",
+          price: courseData.price?.toString() || "0",
+          thumbnailImage: courseData.thumbnailImage
+            ? {
+                file: null,
+                preview: courseData.thumbnailImage,
+                name: "existing-image",
+                isExisting: true,
+              }
+            : null,
+          chapters:
+            courseData.chapters?.map((chapter: any, chapterIndex: number) => ({
+              id: chapter._id || Date.now() + Math.random(),
+              title: chapter.title || "",
+              description: chapter.description || "",
+              lessons:
+                chapter.lessons?.map((lesson: any, lessonIndex: number) => ({
+                  id: lesson._id || Date.now() + Math.random(),
+                  title: lesson.title || "",
+                  description: lesson.description || "",
+                  documents:
+                    lesson.documents?.map((doc: any, docIndex: number) => ({
+                      id: doc._id || Date.now() + Math.random(),
+                      file: null,
+                      name: `Lesson ${lessonIndex + 1} Doc ${docIndex + 1}`,
+                      size: 0,
+                      type: "application/octet-stream",
+                      preview: null,
+                      isExisting: true,
+                      url: doc.signedUrl || doc.fileName,
+                      originalName: doc.originalName || "document",
+                    })) || [],
+                  videos:
+                    lesson.videos?.map((video: any, videoIndex: number) => ({
+                      id: video._id || Date.now() + Math.random(),
+                      file: null,
+                      name: `Lesson ${lessonIndex + 1} Video ${videoIndex + 1}`,
+                      size: 0,
+                      type: "video/mp4",
+                      preview: null,
+                      isExisting: true,
+                      url: video.signedUrl || video.fileName,
+                      originalName: video.originalName || "video",
+                    })) || [],
+                })) || [],
+            })) || [],
+        };
+
+        setFormValues(transformedData);
+        toast.success("Course data loaded for editing");
+      }
+    } catch (error) {
+      console.error("Error fetching course:", error);
+      toast.error("Failed to load course data");
+    } finally {
+      setLoadingCourseData(false);
+    }
+  };
+
+  const confirmDelete = (message: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const confirmed = window.confirm(message);
+      resolve(confirmed);
+    });
   };
 
   useEffect(() => {
@@ -143,54 +366,64 @@ const AddCourse: React.FC = () => {
     fetchCategories();
   }, []);
 
-  const resetFormData = (resetFormik: () => void) => {
-    setCurrentStep(1);
-    setExpandedChapter(null);
-    setExpandedVerifyChapter(null);
-    setIsSubmitting(false);
-    resetFormik();
-  };
-
   const getCategoryName = (categoryId: string): string => {
     const category = categories.find((cat) => cat.id.toString() === categoryId);
     return category ? category.name : "Unknown Category";
   };
 
-  const handleCourseImageUpload = (
+  const handleThumbnailUpload = (
     e: ChangeEvent<HTMLInputElement>,
     setFieldValue: FormikProps<FormValues>["setFieldValue"]
   ): void => {
     const file = e.target.files?.[0];
     if (file) {
       const validTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxSize = 5 * 1024 * 1024;
 
       if (!validTypes.includes(file.type)) {
-        alert("Please upload a valid image file (JPEG, PNG, JPG, WEBP)");
+        toast.error("Please upload a valid image file (JPEG, PNG, JPG, WEBP)");
+        e.target.value = "";
         return;
       }
 
       if (file.size > maxSize) {
-        alert("Image file size must be less than 5MB");
+        toast.error("Image file size must be less than 5MB");
+        e.target.value = "";
         return;
       }
 
-      setFieldValue("courseImage", {
+      const previewUrl = URL.createObjectURL(file);
+
+      const thumbnailData = {
         file,
-        preview: URL.createObjectURL(file),
+        preview: previewUrl,
         name: file.name,
-      });
+        isExisting: false,
+      };
+
+      console.log("Setting thumbnail data:", thumbnailData);
+
+      setFieldValue("thumbnailImage", thumbnailData, true);
+
+      setTimeout(() => {
+        setFieldValue("thumbnailImage", thumbnailData, true);
+      }, 0);
     }
   };
 
-  const removeCourseImage = (
+  const removeThumbnail = async (
     setFieldValue: FormikProps<FormValues>["setFieldValue"],
-    currentImage: CourseImage | null
-  ): void => {
-    if (currentImage?.preview) {
+    currentImage: any
+  ): Promise<void> => {
+    const confirmed = await confirmDelete(
+      "Are you sure you want to remove the course thumbnail? This action cannot be undone."
+    );
+    if (!confirmed) return;
+
+    if (currentImage?.preview && !currentImage.isExisting) {
       URL.revokeObjectURL(currentImage.preview);
     }
-    setFieldValue("courseImage", null);
+    setFieldValue("thumbnailImage", null);
   };
 
   const addChapter = (
@@ -221,11 +454,16 @@ const AddCourse: React.FC = () => {
     setFieldValue("chapters", updatedChapters);
   };
 
-  const deleteChapter = (
+  const deleteChapter = async (
     chapters: Chapter[],
     setFieldValue: FormikProps<FormValues>["setFieldValue"],
     chapterId: number
-  ): void => {
+  ): Promise<void> => {
+    const confirmed = await confirmDelete(
+      "Are you sure you want to delete this chapter? This action cannot be undone."
+    );
+    if (!confirmed) return;
+
     const updatedChapters = chapters.filter(
       (chapter) => chapter.id !== chapterId
     );
@@ -241,7 +479,7 @@ const AddCourse: React.FC = () => {
     chapterId: number
   ): void => {
     const newLesson: Lesson = {
-      id: Date.now(),
+      id: Date.now() + Math.random(),
       title: "",
       description: "",
       documents: [],
@@ -277,12 +515,17 @@ const AddCourse: React.FC = () => {
     setFieldValue("chapters", updatedChapters);
   };
 
-  const deleteLesson = (
+  const deleteLesson = async (
     chapters: Chapter[],
     setFieldValue: FormikProps<FormValues>["setFieldValue"],
     chapterId: number,
     lessonId: number
-  ): void => {
+  ): Promise<void> => {
+    const confirmed = await confirmDelete(
+      "Are you sure you want to delete this lesson? This action cannot be undone."
+    );
+    if (!confirmed) return;
+
     const updatedChapters = chapters.map((chapter) =>
       chapter.id === chapterId
         ? {
@@ -328,14 +571,14 @@ const AddCourse: React.FC = () => {
       const validTypes =
         fileType === "documents" ? validDocTypes : validVideoTypes;
       if (!validTypes.includes(file.type)) {
-        alert(
+        toast.error(
           `Invalid file type: ${file.name}. Please upload valid ${fileType}.`
         );
         continue;
       }
 
       if (file.size > maxFileSize) {
-        alert(`File too large: ${file.name}. Maximum size is 100MB.`);
+        toast.error(`File too large: ${file.name}. Maximum size is 100MB.`);
         continue;
       }
 
@@ -348,6 +591,7 @@ const AddCourse: React.FC = () => {
         preview: file.type.startsWith("image/")
           ? URL.createObjectURL(file)
           : null,
+        isExisting: false,
       });
     }
 
@@ -371,14 +615,19 @@ const AddCourse: React.FC = () => {
     setFieldValue("chapters", updatedChapters);
   };
 
-  const removeFile = (
+  const removeFile = async (
     chapters: Chapter[],
     setFieldValue: FormikProps<FormValues>["setFieldValue"],
     chapterId: number,
     lessonId: number,
     fileType: "documents" | "videos",
     fileId: number
-  ): void => {
+  ): Promise<void> => {
+    const confirmed = await confirmDelete(
+      "Are you sure you want to delete this file? This action cannot be undone."
+    );
+    if (!confirmed) return;
+
     const updatedChapters = chapters.map((chapter) =>
       chapter.id === chapterId
         ? {
@@ -399,48 +648,10 @@ const AddCourse: React.FC = () => {
     setFieldValue("chapters", updatedChapters);
   };
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
-
-  const getTotalLessonsCount = (chapters: Chapter[]): number => {
-    return chapters.reduce(
-      (total, chapter) => total + chapter.lessons.length,
-      0
-    );
-  };
-
-  const getTotalFilesCount = (
-    chapters: Chapter[]
-  ): { documents: number; videos: number } => {
-    return chapters.reduce(
-      (totals, chapter) => {
-        const chapterTotals = chapter.lessons.reduce(
-          (lessonTotals, lesson) => ({
-            documents: lessonTotals.documents + lesson.documents.length,
-            videos: lessonTotals.videos + lesson.videos.length,
-          }),
-          { documents: 0, videos: 0 }
-        );
-
-        return {
-          documents: totals.documents + chapterTotals.documents,
-          videos: totals.videos + chapterTotals.videos,
-        };
-      },
-      { documents: 0, videos: 0 }
-    );
-  };
-
   const handleNext = async (
     validateForm: FormikProps<FormValues>["validateForm"],
     values: FormValues,
-    setTouched: FormikProps<FormValues>["setTouched"],
-    resetFormik: () => void
+    setTouched: FormikProps<FormValues>["setTouched"]
   ): Promise<void> => {
     const errors = await validateForm();
 
@@ -462,23 +673,34 @@ const AddCourse: React.FC = () => {
 
     if (currentStep === 1) {
       setCurrentStep(2);
-    } else if (currentStep === 2) {
-      setCurrentStep(3);
     } else {
       setIsSubmitting(true);
       try {
-        const courseResponse = await createCourse(values);
-        if (courseResponse.success) {
-          toast.success(
-            "Course has been applied for verification successfully!"
-          );
-          setTimeout(() => {
-            resetFormData(resetFormik);
-          }, 1000);
+        let courseResponse;
+        if (isEditMode && courseId) {
+          courseResponse = await editCourse(courseId, values);
+          if (courseResponse.success) {
+            toast.success("Course updated successfully!");
+          }
+        } else {
+          courseResponse = await createCourse(values);
+          if (courseResponse.success) {
+            toast.success(
+              "Course has been applied for verification successfully!"
+            );
+          }
         }
+
+        setTimeout(() => {
+          navigate("/tutor/dashboard/course-management");
+        }, 1000);
       } catch (error) {
         console.log(error);
-        toast.error("Failed to create course. Please try again.");
+        toast.error(
+          `Failed to ${
+            isEditMode ? "update" : "create"
+          } course. Please try again.`
+        );
       } finally {
         setIsSubmitting(false);
       }
@@ -486,25 +708,30 @@ const AddCourse: React.FC = () => {
   };
 
   const handleBack = (): void => {
-    if (currentStep === 3) {
-      setCurrentStep(2);
-    } else if (currentStep === 2) {
+    if (currentStep === 2) {
       setCurrentStep(1);
+    } else {
+      navigate("/tutor/dashboard/course-management");
     }
   };
 
-  const goToStep = (step: 1 | 2 | 3): void => {
-    setCurrentStep(step);
-  };
+  if (loadingCourseData) {
+    return (
+      <div className="max-w-6xl mx-auto p-6 bg-white">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading course data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white">
       <Formik
-        initialValues={initialValues}
+        initialValues={formValues}
         validationSchema={getValidationSchema(currentStep)}
-        onSubmit={(values) => {
-          console.log("Final submission:", values);
-        }}
+        onSubmit={() => {}}
         enableReinitialize
       >
         {({
@@ -514,78 +741,22 @@ const AddCourse: React.FC = () => {
           setFieldValue,
           setTouched,
           validateForm,
-          isValid,
-          resetForm,
         }) => (
           <Form>
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-4">
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Course Management
+                  {isEditMode ? "Edit Course" : "Create Course"}
                 </h1>
+                {isEditMode && (
+                  <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                    Editing Mode
+                  </span>
+                )}
               </div>
             </div>
 
-            <div className="flex items-center mb-8">
-              <div
-                className={`flex items-center ${
-                  currentStep >= 1 ? "text-black" : "text-gray-400"
-                }`}
-              >
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                    currentStep >= 1
-                      ? "bg-black text-yellow-400"
-                      : "bg-gray-200"
-                  }`}
-                >
-                  1
-                </div>
-                <span className="ml-2 font-medium">Course Details</span>
-              </div>
-              <div
-                className={`h-1 w-20 mx-4 ${
-                  currentStep >= 2 ? "bg-black" : "bg-gray-200"
-                }`}
-              ></div>
-              <div
-                className={`flex items-center ${
-                  currentStep >= 2 ? "text-black" : "text-gray-400"
-                }`}
-              >
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                    currentStep >= 2
-                      ? "bg-black text-yellow-400"
-                      : "bg-gray-200"
-                  }`}
-                >
-                  2
-                </div>
-                <span className="ml-2 font-medium">Chapters & Lessons</span>
-              </div>
-              <div
-                className={`h-1 w-20 mx-4 ${
-                  currentStep >= 3 ? "bg-black" : "bg-gray-200"
-                }`}
-              ></div>
-              <div
-                className={`flex items-center ${
-                  currentStep >= 3 ? "text-black" : "text-gray-400"
-                }`}
-              >
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                    currentStep >= 3
-                      ? "bg-black text-yellow-400"
-                      : "bg-gray-200"
-                  }`}
-                >
-                  3
-                </div>
-                <span className="ml-2 font-medium">Review & Create</span>
-              </div>
-            </div>
+            <StepIndicator currentStep={currentStep} isEditMode={isEditMode} />
 
             {currentStep === 1 && (
               <div className="border-2 border-gray-300 rounded-lg p-6">
@@ -608,13 +779,13 @@ const AddCourse: React.FC = () => {
                           type="file"
                           accept="image/*"
                           onChange={(e) =>
-                            handleCourseImageUpload(e, setFieldValue)
+                            handleThumbnailUpload(e, setFieldValue)
                           }
                           className="hidden"
-                          id="course-image-upload"
+                          id="thumbnail-upload"
                         />
                         <label
-                          htmlFor="course-image-upload"
+                          htmlFor="thumbnail-upload"
                           className="text-blue-600 hover:text-blue-700 cursor-pointer text-sm"
                         >
                           Choose Image
@@ -622,17 +793,20 @@ const AddCourse: React.FC = () => {
                       </div>
                     </div>
 
-                    {values.courseImage && (
+                    {values.thumbnailImage && (
                       <div className="relative">
                         <img
-                          src={values.courseImage.preview}
+                          src={values.thumbnailImage.preview}
                           alt="Course thumbnail"
                           className="w-32 h-24 object-cover rounded-lg"
                         />
                         <button
                           type="button"
                           onClick={() =>
-                            removeCourseImage(setFieldValue, values.courseImage)
+                            removeThumbnail(
+                              setFieldValue,
+                              values.thumbnailImage
+                            )
                           }
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                         >
@@ -641,7 +815,7 @@ const AddCourse: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  <ErrorMessage name="courseImage">
+                  <ErrorMessage name="thumbnailImage">
                     {(msg) => (
                       <div className="text-red-500 text-sm mt-1 flex items-center">
                         <AlertCircle className="w-4 h-4 mr-1" />
@@ -1127,133 +1301,63 @@ const AddCourse: React.FC = () => {
                                       )}
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                      <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      <FileUploadSection
+                                        title="Documents"
+                                        icon={
                                           <FileText className="w-4 h-4 inline mr-1" />
-                                          Documents
-                                        </label>
-                                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center bg-gray-50">
-                                          <input
-                                            type="file"
-                                            multiple
-                                            accept=".pdf,.doc,.docx,.txt,.ppt,.pptx"
-                                            onChange={(e) =>
-                                              handleFileUpload(
-                                                values.chapters,
-                                                setFieldValue,
-                                                chapter.id,
-                                                lesson.id,
-                                                "documents",
-                                                e.target.files
-                                              )
-                                            }
-                                            className="hidden"
-                                            id={`docs-${chapter.id}-${lesson.id}`}
-                                          />
-                                          <label
-                                            htmlFor={`docs-${chapter.id}-${lesson.id}`}
-                                            className="cursor-pointer text-blue-600 hover:text-blue-700 text-sm"
-                                          >
-                                            Upload Documents
-                                          </label>
-                                        </div>
+                                        }
+                                        accept=".pdf,.doc,.docx,.txt,.ppt,.pptx"
+                                        files={lesson.documents}
+                                        onUpload={(files) =>
+                                          handleFileUpload(
+                                            values.chapters,
+                                            setFieldValue,
+                                            chapter.id,
+                                            lesson.id,
+                                            "documents",
+                                            files
+                                          )
+                                        }
+                                        onRemove={(fileId) =>
+                                          removeFile(
+                                            values.chapters,
+                                            setFieldValue,
+                                            chapter.id,
+                                            lesson.id,
+                                            "documents",
+                                            fileId
+                                          )
+                                        }
+                                      />
 
-                                        {lesson.documents.map((file) => (
-                                          <div
-                                            key={file.id}
-                                            className="flex items-center justify-between bg-white p-2 rounded border mt-2"
-                                          >
-                                            <div className="flex-1 min-w-0">
-                                              <p className="text-sm font-medium text-gray-900 truncate">
-                                                {file.name}
-                                              </p>
-                                              <p className="text-xs text-gray-500">
-                                                {formatFileSize(file.size)}
-                                              </p>
-                                            </div>
-                                            <button
-                                              type="button"
-                                              onClick={() =>
-                                                removeFile(
-                                                  values.chapters,
-                                                  setFieldValue,
-                                                  chapter.id,
-                                                  lesson.id,
-                                                  "documents",
-                                                  file.id
-                                                )
-                                              }
-                                              className="ml-2 text-red-500 hover:text-red-700"
-                                            >
-                                              <X className="w-4 h-4" />
-                                            </button>
-                                          </div>
-                                        ))}
-                                      </div>
-
-                                      <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      <FileUploadSection
+                                        title="Videos"
+                                        icon={
                                           <Video className="w-4 h-4 inline mr-1" />
-                                          Videos
-                                        </label>
-                                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center bg-gray-50">
-                                          <input
-                                            type="file"
-                                            multiple
-                                            accept="video/*"
-                                            onChange={(e) =>
-                                              handleFileUpload(
-                                                values.chapters,
-                                                setFieldValue,
-                                                chapter.id,
-                                                lesson.id,
-                                                "videos",
-                                                e.target.files
-                                              )
-                                            }
-                                            className="hidden"
-                                            id={`videos-${chapter.id}-${lesson.id}`}
-                                          />
-                                          <label
-                                            htmlFor={`videos-${chapter.id}-${lesson.id}`}
-                                            className="cursor-pointer text-blue-600 hover:text-blue-700 text-sm"
-                                          >
-                                            Upload Videos
-                                          </label>
-                                        </div>
-
-                                        {lesson.videos.map((file) => (
-                                          <div
-                                            key={file.id}
-                                            className="flex items-center justify-between bg-white p-2 rounded border mt-2"
-                                          >
-                                            <div className="flex-1 min-w-0">
-                                              <p className="text-sm font-medium text-gray-900 truncate">
-                                                {file.name}
-                                              </p>
-                                              <p className="text-xs text-gray-500">
-                                                {formatFileSize(file.size)}
-                                              </p>
-                                            </div>
-                                            <button
-                                              type="button"
-                                              onClick={() =>
-                                                removeFile(
-                                                  values.chapters,
-                                                  setFieldValue,
-                                                  chapter.id,
-                                                  lesson.id,
-                                                  "videos",
-                                                  file.id
-                                                )
-                                              }
-                                              className="ml-2 text-red-500 hover:text-red-700"
-                                            >
-                                              <X className="w-4 h-4" />
-                                            </button>
-                                          </div>
-                                        ))}
-                                      </div>
+                                        }
+                                        accept="video/*"
+                                        files={lesson.videos}
+                                        onUpload={(files) =>
+                                          handleFileUpload(
+                                            values.chapters,
+                                            setFieldValue,
+                                            chapter.id,
+                                            lesson.id,
+                                            "videos",
+                                            files
+                                          )
+                                        }
+                                        onRemove={(fileId) =>
+                                          removeFile(
+                                            values.chapters,
+                                            setFieldValue,
+                                            chapter.id,
+                                            lesson.id,
+                                            "videos",
+                                            fileId
+                                          )
+                                        }
+                                      />
                                     </div>
                                   </div>
                                 ))}
@@ -1268,349 +1372,6 @@ const AddCourse: React.FC = () => {
               </div>
             )}
 
-            {currentStep === 3 && (
-              <div className="border-2 border-gray-300 rounded-lg p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-green-700">
-                    Review Course Details
-                  </h2>
-                  <div className="flex items-center space-x-2 text-green-600">
-                    <Check className="w-5 h-5" />
-                    <span className="text-sm">Ready to create</span>
-                  </div>
-                </div>
-
-                {errors.courseImage && touched.courseImage && (
-                  <div className="text-red-500 text-sm mb-4 flex items-center">
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    {errors.courseImage}
-                  </div>
-                )}
-
-                <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      Course Overview
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => goToStep(1)}
-                      className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                      <span>Edit Details</span>
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-medium text-gray-700 mb-1">
-                          Course Title
-                        </h4>
-                        <p className="text-gray-900">
-                          {values.title || "No title provided"}
-                        </p>
-                      </div>
-
-                      <div>
-                        <h4 className="font-medium text-gray-700 mb-1">
-                          Category
-                        </h4>
-                        <p className="text-gray-900">
-                          {values.category
-                            ? getCategoryName(values.category)
-                            : "No category selected"}
-                        </p>
-                      </div>
-
-                      <div>
-                        <h4 className="font-medium text-gray-700 mb-1">
-                          Price
-                        </h4>
-                        <p className="text-gray-900">
-                          {values.price === "0" || values.price === ""
-                            ? "Free"
-                            : `₹${values.price}`}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      {values.courseImage && (
-                        <div>
-                          <h4 className="font-medium text-gray-700 mb-2">
-                            Course Thumbnail
-                          </h4>
-                          <img
-                            src={values.courseImage.preview}
-                            alt="Course thumbnail"
-                            className="w-32 h-24 object-cover rounded-lg border"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="mt-4 space-y-4">
-                    <div>
-                      <h4 className="font-medium text-gray-700 mb-2">
-                        Description
-                      </h4>
-                      <p className="text-gray-900 text-sm leading-relaxed">
-                        {values.description || "No description provided"}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div>
-                        <h4 className="font-medium text-gray-700 mb-2">
-                          Benefits
-                        </h4>
-                        <p className="text-gray-900 text-sm leading-relaxed">
-                          {values.benefits || "No benefits listed"}
-                        </p>
-                      </div>
-
-                      <div>
-                        <h4 className="font-medium text-gray-700 mb-2">
-                          Requirements
-                        </h4>
-                        <p className="text-gray-900 text-sm leading-relaxed">
-                          {values.requirements || "No requirements specified"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 mb-6">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                    Course Statistics
-                  </h3>
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">
-                        {values.chapters.length}
-                      </div>
-                      <div className="text-sm text-gray-600">Chapters</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">
-                        {getTotalLessonsCount(values.chapters)}
-                      </div>
-                      <div className="text-sm text-gray-600">Lessons</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-600">
-                        {getTotalFilesCount(values.chapters).documents}
-                      </div>
-                      <div className="text-sm text-gray-600">Documents</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-red-600">
-                        {getTotalFilesCount(values.chapters).videos}
-                      </div>
-                      <div className="text-sm text-gray-600">Videos</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      Course Content Structure
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => goToStep(2)}
-                      className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                      <span>Edit Content</span>
-                    </button>
-                  </div>
-
-                  {values.chapters.length === 0 ? (
-                    <div className="text-center py-8 bg-gray-50 rounded-lg">
-                      <p className="text-gray-500">No chapters added yet</p>
-                      <button
-                        type="button"
-                        onClick={() => goToStep(2)}
-                        className="mt-2 text-blue-600 hover:text-blue-700 text-sm"
-                      >
-                        Add chapters and lessons
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {values.chapters.map((chapter, chapterIndex) => (
-                        <div
-                          key={chapter.id}
-                          className="border border-gray-200 rounded-lg"
-                        >
-                          <div className="bg-gray-50 p-4 border-b border-gray-200">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-4">
-                                <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                                  Chapter {chapterIndex + 1}
-                                </span>
-                                <div>
-                                  <h4 className="font-medium text-gray-900">
-                                    {chapter.title ||
-                                      `Chapter ${chapterIndex + 1}`}
-                                  </h4>
-                                  {chapter.description && (
-                                    <p className="text-sm text-gray-600 mt-1">
-                                      {chapter.description}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-4">
-                                <span className="text-sm text-gray-500">
-                                  {chapter.lessons.length} lessons
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setExpandedVerifyChapter(
-                                      expandedVerifyChapter === chapter.id
-                                        ? null
-                                        : chapter.id
-                                    )
-                                  }
-                                  className="p-1 hover:bg-gray-200 rounded"
-                                >
-                                  {expandedVerifyChapter === chapter.id ? (
-                                    <ChevronUp className="w-5 h-5" />
-                                  ) : (
-                                    <ChevronDown className="w-5 h-5" />
-                                  )}
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-
-                          {expandedVerifyChapter === chapter.id && (
-                            <div className="p-4">
-                              {chapter.lessons.length === 0 ? (
-                                <p className="text-gray-500 text-center py-4">
-                                  No lessons in this chapter
-                                </p>
-                              ) : (
-                                <div className="space-y-3">
-                                  {chapter.lessons.map(
-                                    (lesson, lessonIndex) => (
-                                      <div
-                                        key={lesson.id}
-                                        className="bg-gray-50 rounded-lg p-4"
-                                      >
-                                        <div className="flex items-start justify-between">
-                                          <div className="flex-1">
-                                            <div className="flex items-center space-x-3 mb-2">
-                                              <span className="bg-green-600 text-white px-2 py-1 rounded text-xs font-medium">
-                                                Lesson {lessonIndex + 1}
-                                              </span>
-                                              <h5 className="font-medium text-gray-900">
-                                                {lesson.title ||
-                                                  `Lesson ${lessonIndex + 1}`}
-                                              </h5>
-                                            </div>
-                                            {lesson.description && (
-                                              <p className="text-sm text-gray-600 mb-3 ml-12">
-                                                {lesson.description}
-                                              </p>
-                                            )}
-
-                                            <div className="ml-12 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                              <div>
-                                                <div className="flex items-center space-x-1 mb-2">
-                                                  <FileText className="w-4 h-4 text-gray-500" />
-                                                  <span className="text-sm font-medium text-gray-700">
-                                                    Documents (
-                                                    {lesson.documents.length})
-                                                  </span>
-                                                </div>
-                                                {lesson.documents.length > 0 ? (
-                                                  <div className="space-y-1">
-                                                    {lesson.documents.map(
-                                                      (file) => (
-                                                        <div
-                                                          key={file.id}
-                                                          className="text-xs text-gray-600 bg-white p-2 rounded border"
-                                                        >
-                                                          <div className="font-medium truncate">
-                                                            {file.name}
-                                                          </div>
-                                                          <div className="text-gray-500">
-                                                            {formatFileSize(
-                                                              file.size
-                                                            )}
-                                                          </div>
-                                                        </div>
-                                                      )
-                                                    )}
-                                                  </div>
-                                                ) : (
-                                                  <p className="text-xs text-gray-500">
-                                                    No documents
-                                                  </p>
-                                                )}
-                                              </div>
-
-                                              <div>
-                                                <div className="flex items-center space-x-1 mb-2">
-                                                  <Video className="w-4 h-4 text-gray-500" />
-                                                  <span className="text-sm font-medium text-gray-700">
-                                                    Videos (
-                                                    {lesson.videos.length})
-                                                  </span>
-                                                </div>
-                                                {lesson.videos.length > 0 ? (
-                                                  <div className="space-y-1">
-                                                    {lesson.videos.map(
-                                                      (file) => (
-                                                        <div
-                                                          key={file.id}
-                                                          className="text-xs text-gray-600 bg-white p-2 rounded border"
-                                                        >
-                                                          <div className="font-medium truncate">
-                                                            {file.name}
-                                                          </div>
-                                                          <div className="text-gray-500">
-                                                            {formatFileSize(
-                                                              file.size
-                                                            )}
-                                                          </div>
-                                                        </div>
-                                                      )
-                                                    )}
-                                                  </div>
-                                                ) : (
-                                                  <p className="text-xs text-gray-500">
-                                                    No videos
-                                                  </p>
-                                                )}
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
             <div className="flex justify-between mt-8">
               <button
                 type="button"
@@ -1621,18 +1382,18 @@ const AddCourse: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={() =>
-                  handleNext(validateForm, values, setTouched, resetForm)
-                }
+                onClick={() => handleNext(validateForm, values, setTouched)}
                 disabled={isSubmitting}
                 className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {currentStep === 1
                   ? "Next: Add Content"
-                  : currentStep === 2
-                  ? "Next: Review Course"
                   : isSubmitting
-                  ? "Creating Course..."
+                  ? isEditMode
+                    ? "Updating Course..."
+                    : "Creating Course..."
+                  : isEditMode
+                  ? "Update Course"
                   : "Create Course"}
               </button>
             </div>

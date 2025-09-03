@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import Header from "../../components/common/Header";
 import ReusableSidebar from "../../components/common/Sidebar";
 import { SidebarItem } from "../../interfaces/userInterface";
-import { MdLibraryAdd, MdDashboard, MdPerson } from "react-icons/md";
+import { MdLibraryAdd, MdDashboard, MdPerson, MdMenuBook } from "react-icons/md";
 
 function TutorLayout() {
   const tutorSidebarItems: SidebarItem[] = [
@@ -24,7 +24,7 @@ function TutorLayout() {
     {
       path: "/tutor/dashboard/course-management",
       label: "Course Management",
-      icon: <MdLibraryAdd className="w-5 h-5" />,
+      icon: <MdMenuBook className="w-5 h-5" />,
     },
   ];
 
