@@ -36,6 +36,10 @@ import {
   Chapter,
 } from "../../interfaces/courseInterface";
 
+// Generate unique string IDs to avoid conflicts between DB IDs and new IDs
+const generateUniqueId = () =>
+  `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
 const step1ValidationSchema = Yup.object({
   title: Yup.string()
     .min(5, "Course title must be at least 5 characters")
@@ -160,9 +164,23 @@ const FileUploadSection: React.FC<{
   accept: string;
   files: UploadedFile[];
   onUpload: (files: FileList | null) => void;
-  onRemove: (fileId: number) => void;
-}> = ({ title, icon, accept, files, onUpload, onRemove }) => {
-  const id = `file-upload-${title.replace(/\s+/g, "-").toLowerCase()}`;
+  onRemove: (fileId: string | number) => void;
+  chapterId: string | number;
+  lessonId: string | number;
+}> = ({
+  title,
+  icon,
+  accept,
+  files,
+  onUpload,
+  onRemove,
+  chapterId,
+  lessonId,
+}) => {
+  // Create unique ID for each file input to avoid conflicts
+  const id = `file-upload-${title
+    .replace(/\s+/g, "-")
+    .toLowerCase()}-${chapterId}-${lessonId}`;
 
   return (
     <div>
@@ -234,7 +252,9 @@ const AddCourse: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
-  const [expandedChapter, setExpandedChapter] = useState<number | null>(null);
+  const [expandedChapter, setExpandedChapter] = useState<
+    string | number | null
+  >(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -292,17 +312,17 @@ const AddCourse: React.FC = () => {
             : null,
           chapters:
             courseData.chapters?.map((chapter: any, chapterIndex: number) => ({
-              id: chapter._id || Date.now() + Math.random(),
+              id: chapter._id || generateUniqueId(),
               title: chapter.title || "",
               description: chapter.description || "",
               lessons:
                 chapter.lessons?.map((lesson: any, lessonIndex: number) => ({
-                  id: lesson._id || Date.now() + Math.random(),
+                  id: lesson._id || generateUniqueId(),
                   title: lesson.title || "",
                   description: lesson.description || "",
                   documents:
                     lesson.documents?.map((doc: any, docIndex: number) => ({
-                      id: doc._id || Date.now() + Math.random(),
+                      id: doc._id || generateUniqueId(),
                       file: null,
                       name: `Lesson ${lessonIndex + 1} Doc ${docIndex + 1}`,
                       size: 0,
@@ -314,7 +334,7 @@ const AddCourse: React.FC = () => {
                     })) || [],
                   videos:
                     lesson.videos?.map((video: any, videoIndex: number) => ({
-                      id: video._id || Date.now() + Math.random(),
+                      id: video._id || generateUniqueId(),
                       file: null,
                       name: `Lesson ${lessonIndex + 1} Video ${videoIndex + 1}`,
                       size: 0,
@@ -431,7 +451,7 @@ const AddCourse: React.FC = () => {
     setFieldValue: FormikProps<FormValues>["setFieldValue"]
   ): void => {
     const newChapter: Chapter = {
-      id: Date.now(),
+      id: generateUniqueId(),
       title: "",
       description: "",
       lessons: [],
@@ -444,7 +464,7 @@ const AddCourse: React.FC = () => {
   const updateChapter = (
     chapters: Chapter[],
     setFieldValue: FormikProps<FormValues>["setFieldValue"],
-    chapterId: number,
+    chapterId: string | number,
     field: keyof Omit<Chapter, "id" | "lessons">,
     value: string
   ): void => {
@@ -457,7 +477,7 @@ const AddCourse: React.FC = () => {
   const deleteChapter = async (
     chapters: Chapter[],
     setFieldValue: FormikProps<FormValues>["setFieldValue"],
-    chapterId: number
+    chapterId: string | number
   ): Promise<void> => {
     const confirmed = await confirmDelete(
       "Are you sure you want to delete this chapter? This action cannot be undone."
@@ -476,10 +496,10 @@ const AddCourse: React.FC = () => {
   const addLesson = (
     chapters: Chapter[],
     setFieldValue: FormikProps<FormValues>["setFieldValue"],
-    chapterId: number
+    chapterId: string | number
   ): void => {
     const newLesson: Lesson = {
-      id: Date.now() + Math.random(),
+      id: generateUniqueId(),
       title: "",
       description: "",
       documents: [],
@@ -497,8 +517,8 @@ const AddCourse: React.FC = () => {
   const updateLesson = (
     chapters: Chapter[],
     setFieldValue: FormikProps<FormValues>["setFieldValue"],
-    chapterId: number,
-    lessonId: number,
+    chapterId: string | number,
+    lessonId: string | number,
     field: keyof Omit<Lesson, "id" | "documents" | "videos">,
     value: string
   ): void => {
@@ -518,8 +538,8 @@ const AddCourse: React.FC = () => {
   const deleteLesson = async (
     chapters: Chapter[],
     setFieldValue: FormikProps<FormValues>["setFieldValue"],
-    chapterId: number,
-    lessonId: number
+    chapterId: string | number,
+    lessonId: string | number
   ): Promise<void> => {
     const confirmed = await confirmDelete(
       "Are you sure you want to delete this lesson? This action cannot be undone."
@@ -540,11 +560,15 @@ const AddCourse: React.FC = () => {
   const handleFileUpload = (
     chapters: Chapter[],
     setFieldValue: FormikProps<FormValues>["setFieldValue"],
-    chapterId: number,
-    lessonId: number,
+    chapterId: string | number,
+    lessonId: string | number,
     fileType: "documents" | "videos",
     files: FileList | null
   ): void => {
+    console.log(
+      `Uploading files for Chapter ${chapterId}, Lesson ${lessonId}, Type: ${fileType}`
+    );
+
     if (!files) return;
 
     const validDocTypes = [
@@ -583,7 +607,7 @@ const AddCourse: React.FC = () => {
       }
 
       newFiles.push({
-        id: Date.now() + Math.random(),
+        id: generateUniqueId(),
         file,
         name: file.name,
         size: file.size,
@@ -612,16 +636,18 @@ const AddCourse: React.FC = () => {
           }
         : chapter
     );
+
+    console.log("Updated chapters:", updatedChapters);
     setFieldValue("chapters", updatedChapters);
   };
 
   const removeFile = async (
     chapters: Chapter[],
     setFieldValue: FormikProps<FormValues>["setFieldValue"],
-    chapterId: number,
-    lessonId: number,
+    chapterId: string | number,
+    lessonId: string | number,
     fileType: "documents" | "videos",
-    fileId: number
+    fileId: string | number
   ): Promise<void> => {
     const confirmed = await confirmDelete(
       "Are you sure you want to delete this file? This action cannot be undone."
@@ -1308,6 +1334,8 @@ const AddCourse: React.FC = () => {
                                         }
                                         accept=".pdf,.doc,.docx,.txt,.ppt,.pptx"
                                         files={lesson.documents}
+                                        chapterId={chapter.id}
+                                        lessonId={lesson.id}
                                         onUpload={(files) =>
                                           handleFileUpload(
                                             values.chapters,
@@ -1337,6 +1365,8 @@ const AddCourse: React.FC = () => {
                                         }
                                         accept="video/*"
                                         files={lesson.videos}
+                                        chapterId={chapter.id}
+                                        lessonId={lesson.id}
                                         onUpload={(files) =>
                                           handleFileUpload(
                                             values.chapters,
