@@ -370,6 +370,7 @@ export const getAllListedCourses = async (
       data: CourseListingUser[];
       message?: string;
     }> = await userAxiosInstance.get(url);
+    console.log("YYYY",response.data)
     return response.data;
   } catch (error: any) {
     console.error("Error fetching courses:", error);
@@ -492,6 +493,7 @@ export const getUserEnrollments = async (page: number, search: string = "") => {
 export const getEnrolledCourses = async ()=>{
   try {
     const response = await userAxiosInstance.get("/courses-enrolled")
+    console.log("ZZZ",response.data)
     return response.data
   } catch (error) {
     console.error("error in fetching enrolled courses:",error)

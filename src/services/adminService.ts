@@ -147,7 +147,7 @@ export const getAdminRevenue = async (
   date: string = ""
 ) => {
   try {
-    const response = await adminAxiosInstance.get("/admin-revenue", {
+    const response = await adminAxiosInstance.get("/enrollments", {
       params: { page, limit: 10, search, status, date },
     });
     return response.data;
