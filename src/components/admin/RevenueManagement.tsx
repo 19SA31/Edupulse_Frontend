@@ -1,315 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Table, { TableColumn } from "../common/Table";
 import { getAdminRevenue } from "../../services/adminService";
-
-interface RevenueRecord {
-  id: string;
-  userName: string;
-  userEmail: string;
-  courseName: string;
-  tutorName: string;
-  categoryName: string;
-  price: number;
-  adminCommission: number;
-  tutorEarnings: number;
-  paymentDate: string;
-  paymentMethod: string;
-  paymentId: string;
-  status: "completed" | "pending" | "failed" | "refunded";
-  userPhone?: string;
-  courseId: string;
-  tutorId: string;
-  userId: string;
-}
-
-interface AdminRevenueData {
-  _id: string;
-  userId: {
-    _id: string;
-    name: string;
-    email: string;
-    phone?: string;
-  };
-  courseId: {
-    _id: string;
-    title: string;
-    price: number;
-    thumbnailImage: string;
-  };
-  tutorId: {
-    _id: string;
-    name: string;
-    email: string;
-  };
-  categoryId: {
-    _id: string;
-    name: string;
-  };
-  price: number;
-  adminCommission: number;
-  tutorEarnings: number;
-  paymentId: string;
-  paymentMethod: string;
-  status: string;
-  dateOfEnrollment: string;
-}
-
-interface ApiResponse {
-  enrollments: AdminRevenueData[];
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    totalCount: number;
-    limit: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-  };
-  message: string;
-  success: boolean;
-}
-
-interface PurchaseDetailsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  revenueRecord: RevenueRecord | null;
-}
-
-function PurchaseDetailsModal({
-  isOpen,
-  onClose,
-  revenueRecord,
-}: PurchaseDetailsModalProps) {
-  if (!isOpen || !revenueRecord) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/80 bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Purchase Details
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <div className="p-6 space-y-6">
-          <div className="bg-blue-50 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
-              <svg
-                className="w-5 h-5 mr-2 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-              User Information
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-500">
-                  Name
-                </label>
-                <p className="text-gray-900">{revenueRecord.userName}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">
-                  Email
-                </label>
-                <p className="text-gray-900">{revenueRecord.userEmail}</p>
-              </div>
-              {revenueRecord.userPhone && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    Phone
-                  </label>
-                  <p className="text-gray-900">{revenueRecord.userPhone}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-green-50 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
-              <svg
-                className="w-5 h-5 mr-2 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg>
-              Course Information
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-500">
-                  Course Name
-                </label>
-                <p className="text-gray-900">{revenueRecord.courseName}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">
-                  Category
-                </label>
-                <p className="text-gray-900">{revenueRecord.categoryName}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">
-                  Tutor Name
-                </label>
-                <p className="text-gray-900">{revenueRecord.tutorName}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-purple-50 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
-              <svg
-                className="w-5 h-5 mr-2 text-purple-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                />
-              </svg>
-              Payment Information
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-500">
-                  Payment Method
-                </label>
-                <p className="text-gray-900">{revenueRecord.paymentMethod}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">
-                  Payment Date
-                </label>
-                <p className="text-gray-900">
-                  {new Date(revenueRecord.paymentDate).toLocaleDateString(
-                    "en-US",
-                    {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }
-                  )}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">
-                  Status
-                </label>
-                <span
-                  className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                    revenueRecord.status === "completed"
-                      ? "bg-green-100 text-green-800"
-                      : revenueRecord.status === "pending"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : revenueRecord.status === "refunded"
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  {revenueRecord.status.charAt(0).toUpperCase() +
-                    revenueRecord.status.slice(1)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-yellow-50 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
-              <svg
-                className="w-5 h-5 mr-2 text-yellow-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                />
-              </svg>
-              Financial Breakdown
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <label className="text-sm font-medium text-gray-500">
-                  Total Price
-                </label>
-                <p className="text-2xl font-bold text-gray-900">
-                  ₹{revenueRecord.price.toFixed(2)}
-                </p>
-              </div>
-              <div className="text-center">
-                <label className="text-sm font-medium text-gray-500">
-                  Admin Commission
-                </label>
-                <p className="text-2xl font-bold text-green-600">
-                  ₹{revenueRecord.adminCommission.toFixed(2)}
-                </p>
-              </div>
-              <div className="text-center">
-                <label className="text-sm font-medium text-gray-500">
-                  Tutor Earnings
-                </label>
-                <p className="text-2xl font-bold text-blue-600">
-                  ₹{revenueRecord.tutorEarnings.toFixed(2)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-end p-6 border-t bg-gray-50">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+import PurchaseDetailsModal from "../common/PurchaseDetailsModal";
+import { RevenueRecord } from "../../interfaces/revenueInterface";
 
 function RevenueManagement() {
   const [revenues, setRevenues] = useState<RevenueRecord[]>([]);
@@ -326,8 +19,12 @@ function RevenueManagement() {
     null
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
+
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [dateFilter, setDateFilter] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("");
+  const [showFilters, setShowFilters] = useState(false);
 
   const transformRevenueData = (enrollmentData: any): RevenueRecord => {
     return {
@@ -351,11 +48,7 @@ function RevenueManagement() {
       paymentMethod: enrollmentData.paymentMethod || "N/A",
       paymentId: enrollmentData.paymentId || "N/A",
       status:
-        (enrollmentData.status as
-          | "completed"
-          | "pending"
-          | "failed"
-          | "refunded") || "pending",
+        (enrollmentData.status as "paid" | "pending" | "failed") || "pending",
     };
   };
 
@@ -368,7 +61,69 @@ function RevenueManagement() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, statusFilter, dateFilter]);
+  }, [
+    debouncedSearch,
+    statusFilter,
+    startDate,
+    endDate,
+    sortBy,
+  ]);
+
+  const applyClientSideFiltersAndSort = (
+    data: RevenueRecord[]
+  ): RevenueRecord[] => {
+    let filteredData = [...data];
+
+    if (startDate || endDate) {
+      filteredData = filteredData.filter((item) => {
+        const itemDate = new Date(item.paymentDate);
+        const start = startDate ? new Date(startDate) : null;
+        const end = endDate ? new Date(endDate) : null;
+
+        if (start && end) {
+          return itemDate >= start && itemDate <= end;
+        } else if (start) {
+          return itemDate >= start;
+        } else if (end) {
+          return itemDate <= end;
+        }
+        return true;
+      });
+    }
+
+    if (sortBy) {
+      filteredData.sort((a, b) => {
+        switch (sortBy) {
+          case "name-asc":
+            return a.userName.localeCompare(b.userName);
+          case "name-desc":
+            return b.userName.localeCompare(a.userName);
+          case "course-asc":
+            return a.courseName.localeCompare(b.courseName);
+          case "course-desc":
+            return b.courseName.localeCompare(a.courseName);
+          case "price-asc":
+            return a.price - b.price;
+          case "price-desc":
+            return b.price - a.price;
+          case "date-asc":
+            return (
+              new Date(a.paymentDate).getTime() -
+              new Date(b.paymentDate).getTime()
+            );
+          case "date-desc":
+            return (
+              new Date(b.paymentDate).getTime() -
+              new Date(a.paymentDate).getTime()
+            );
+          default:
+            return 0;
+        }
+      });
+    }
+
+    return filteredData;
+  };
 
   const fetchRevenues = useCallback(async () => {
     try {
@@ -379,7 +134,7 @@ function RevenueManagement() {
         currentPage,
         debouncedSearch,
         statusFilter,
-        dateFilter
+        ""
       );
 
       const responseData = response.data || response;
@@ -387,31 +142,34 @@ function RevenueManagement() {
       if (responseData.enrollments) {
         const transformedRevenues =
           responseData.enrollments.map(transformRevenueData);
-        setRevenues(transformedRevenues);
+
+        const filteredRevenues =
+          applyClientSideFiltersAndSort(transformedRevenues);
+        setRevenues(filteredRevenues);
 
         const pagination = responseData.pagination || {};
         setTotalPages(pagination.totalPages || 1);
-        setTotalCount(pagination.totalCount || responseData.enrollments.length);
+        setTotalCount(filteredRevenues.length);
 
-        const calculatedTotalRevenue = responseData.enrollments.reduce(
-          (sum: number, item: any) => sum + (item.price || 0),
+        const calculatedTotalRevenue = filteredRevenues.reduce(
+          (sum: number, item: RevenueRecord) => sum + item.price,
           0
         );
-        const calculatedTotalCommission = responseData.enrollments.reduce(
-          (sum: number, item: any) => sum + (item.adminCommission || 0),
+        const calculatedTotalCommission = filteredRevenues.reduce(
+          (sum: number, item: RevenueRecord) => sum + item.adminCommission,
           0
         );
 
-        setTotalRevenue(responseData.totalRevenue || calculatedTotalRevenue);
-        setTotalCommission(
-          responseData.totalCommission || calculatedTotalCommission
-        );
+        setTotalRevenue(calculatedTotalRevenue);
+        setTotalCommission(calculatedTotalCommission);
       } else if (responseData.revenues) {
         const transformedRevenues =
           responseData.revenues.map(transformRevenueData);
-        setRevenues(transformedRevenues);
+        const filteredRevenues =
+          applyClientSideFiltersAndSort(transformedRevenues);
+        setRevenues(filteredRevenues);
         setTotalPages(responseData.totalPages || 1);
-        setTotalCount(responseData.totalCount || 0);
+        setTotalCount(filteredRevenues.length);
         setTotalRevenue(responseData.totalRevenue || 0);
         setTotalCommission(responseData.totalCommission || 0);
       } else {
@@ -432,7 +190,15 @@ function RevenueManagement() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, debouncedSearch, statusFilter, dateFilter]);
+  }, [
+    currentPage,
+    debouncedSearch,
+    statusFilter,
+    startDate,
+    endDate,
+    sortBy,
+  ]);
+
   useEffect(() => {
     fetchRevenues();
   }, [fetchRevenues]);
@@ -440,6 +206,14 @@ function RevenueManagement() {
   const handleViewDetails = (revenue: RevenueRecord) => {
     setSelectedRevenue(revenue);
     setIsModalOpen(true);
+  };
+
+  const handleClearFilters = () => {
+    setStatusFilter("");
+    setStartDate("");
+    setEndDate("");
+    setSortBy("");
+    setSearchQuery("");
   };
 
   const columns: TableColumn<RevenueRecord>[] = [
@@ -508,11 +282,11 @@ function RevenueManagement() {
       render: (revenue: RevenueRecord) => (
         <span
           className={`px-2 py-1 rounded-full text-xs font-medium ${
-            revenue.status === "completed"
+            revenue.status === "paid"
               ? "bg-green-100 text-green-800"
               : revenue.status === "pending"
               ? "bg-yellow-100 text-yellow-800"
-              : revenue.status === "refunded"
+              : revenue.status === "failed"
               ? "bg-blue-100 text-blue-800"
               : "bg-red-100 text-red-800"
           }`}
@@ -589,7 +363,7 @@ function RevenueManagement() {
           Revenue Management
         </h1>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="bg-white p-4 rounded-lg shadow ">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <span className="text-blue-600 text-lg font-semibold">₹</span>
@@ -605,7 +379,7 @@ function RevenueManagement() {
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="bg-white p-4 rounded-lg shadow ">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
                 <svg
@@ -633,7 +407,7 @@ function RevenueManagement() {
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="bg-white p-4 rounded-lg shadow ">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <svg
@@ -662,25 +436,136 @@ function RevenueManagement() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-4 mb-4">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Status</option>
-            <option value="completed">Completed</option>
-            <option value="pending">Pending</option>
-            <option value="failed">Failed</option>
-            <option value="refunded">Refunded</option>
-          </select>
+        <div className="bg-white p-4 rounded-lg shadow  mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">
+              Filters & Sorting
+            </h3>
+            <button
+              onClick={handleClearFilters}
+              className="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              Clear
+            </button>
+          </div>
 
-          <input
-            type="date"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Status</option>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="failed">Failed</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sort By
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Default</option>
+                <option value="name-asc">Name (A-Z)</option>
+                <option value="name-desc">Name (Z-A)</option>
+                <option value="course-asc">Course (A-Z)</option>
+                <option value="course-desc">Course (Z-A)</option>
+                <option value="price-asc">Price (Low to High)</option>
+                <option value="price-desc">Price (High to Low)</option>
+                <option value="date-asc">Date (Oldest First)</option>
+                <option value="date-desc">Date (Newest First)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Start Date
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                End Date
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          {(statusFilter || startDate || endDate || sortBy) && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="flex flex-wrap gap-2">
+                <span className="text-sm text-gray-600">Active filters:</span>
+                {statusFilter && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    Status: {statusFilter}
+                    <button
+                      onClick={() => setStatusFilter("")}
+                      className="ml-1 text-blue-600 hover:text-blue-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+                {sortBy && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    Sort:{" "}
+                    {sortBy
+                      .replace("-", " ")
+                      .replace(/\b\w/g, (l) => l.toUpperCase())}
+                    <button
+                      onClick={() => setSortBy("")}
+                      className="ml-1 text-purple-600 hover:text-purple-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+                {startDate && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    From: {new Date(startDate).toLocaleDateString()}
+                    <button
+                      onClick={() => setStartDate("")}
+                      className="ml-1 text-green-600 hover:text-green-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+                {endDate && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    To: {new Date(endDate).toLocaleDateString()}
+                    <button
+                      onClick={() => setEndDate("")}
+                      className="ml-1 text-green-600 hover:text-green-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
