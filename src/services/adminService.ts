@@ -144,11 +144,13 @@ export const getAdminRevenue = async (
   page: number,
   search: string = "",
   status: string = "",
-  date: string = ""
+  startDate: string = "",
+  endDate: string = "",
+  sortBy: string = ""
 ) => {
   try {
     const response = await adminAxiosInstance.get("/enrollments", {
-      params: { page, limit: 10, search, status, date },
+      params: { page, limit: 10, search, status, startDate, endDate, sortBy },
     });
     return response.data;
   } catch (error) {

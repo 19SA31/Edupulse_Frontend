@@ -24,20 +24,19 @@ function RevenueManagement() {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("");
-  const [showFilters, setShowFilters] = useState(false);
 
   const transformRevenueData = (enrollmentData: any): RevenueRecord => {
     return {
       id: enrollmentData._id,
       userName: enrollmentData.userId?.name || "N/A",
       userEmail: enrollmentData.userId?.email || "N/A",
-      userPhone: enrollmentData.userId?.phone,
+      userPhone: enrollmentData.userId?.phone || "N/A",
       userId: enrollmentData.userId?._id || "N/A",
       courseName: enrollmentData.courseId?.title || "N/A",
       courseId: enrollmentData.courseId?._id || "N/A",
-      tutorName: enrollmentData.tutorId?.name || "N/A",
+      tutorName: enrollmentData.tutorId?.name || "Unknown Tutor",
       tutorId: enrollmentData.tutorId?._id || "N/A",
-      categoryName: enrollmentData.categoryId?.name || "N/A",
+      categoryName: enrollmentData.categoryId?.name || "Unknown Category",
       price: enrollmentData.price || 0,
       adminCommission: enrollmentData.adminCommission || 0,
       tutorEarnings: enrollmentData.tutorEarnings || 0,
@@ -61,69 +60,7 @@ function RevenueManagement() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [
-    debouncedSearch,
-    statusFilter,
-    startDate,
-    endDate,
-    sortBy,
-  ]);
-
-  const applyClientSideFiltersAndSort = (
-    data: RevenueRecord[]
-  ): RevenueRecord[] => {
-    let filteredData = [...data];
-
-    if (startDate || endDate) {
-      filteredData = filteredData.filter((item) => {
-        const itemDate = new Date(item.paymentDate);
-        const start = startDate ? new Date(startDate) : null;
-        const end = endDate ? new Date(endDate) : null;
-
-        if (start && end) {
-          return itemDate >= start && itemDate <= end;
-        } else if (start) {
-          return itemDate >= start;
-        } else if (end) {
-          return itemDate <= end;
-        }
-        return true;
-      });
-    }
-
-    if (sortBy) {
-      filteredData.sort((a, b) => {
-        switch (sortBy) {
-          case "name-asc":
-            return a.userName.localeCompare(b.userName);
-          case "name-desc":
-            return b.userName.localeCompare(a.userName);
-          case "course-asc":
-            return a.courseName.localeCompare(b.courseName);
-          case "course-desc":
-            return b.courseName.localeCompare(a.courseName);
-          case "price-asc":
-            return a.price - b.price;
-          case "price-desc":
-            return b.price - a.price;
-          case "date-asc":
-            return (
-              new Date(a.paymentDate).getTime() -
-              new Date(b.paymentDate).getTime()
-            );
-          case "date-desc":
-            return (
-              new Date(b.paymentDate).getTime() -
-              new Date(a.paymentDate).getTime()
-            );
-          default:
-            return 0;
-        }
-      });
-    }
-
-    return filteredData;
-  };
+  }, [debouncedSearch, statusFilter, startDate, endDate, sortBy]);
 
   const fetchRevenues = useCallback(async () => {
     try {
@@ -134,28 +71,29 @@ function RevenueManagement() {
         currentPage,
         debouncedSearch,
         statusFilter,
-        ""
+        startDate,
+        endDate,
+        sortBy
       );
 
+      console.log("$$$$", response.data);
       const responseData = response.data || response;
 
       if (responseData.enrollments) {
         const transformedRevenues =
           responseData.enrollments.map(transformRevenueData);
 
-        const filteredRevenues =
-          applyClientSideFiltersAndSort(transformedRevenues);
-        setRevenues(filteredRevenues);
+        setRevenues(transformedRevenues);
 
         const pagination = responseData.pagination || {};
         setTotalPages(pagination.totalPages || 1);
-        setTotalCount(filteredRevenues.length);
+        setTotalCount(pagination.totalCount || 0);
 
-        const calculatedTotalRevenue = filteredRevenues.reduce(
+        const calculatedTotalRevenue = transformedRevenues.reduce(
           (sum: number, item: RevenueRecord) => sum + item.price,
           0
         );
-        const calculatedTotalCommission = filteredRevenues.reduce(
+        const calculatedTotalCommission = transformedRevenues.reduce(
           (sum: number, item: RevenueRecord) => sum + item.adminCommission,
           0
         );
@@ -165,11 +103,9 @@ function RevenueManagement() {
       } else if (responseData.revenues) {
         const transformedRevenues =
           responseData.revenues.map(transformRevenueData);
-        const filteredRevenues =
-          applyClientSideFiltersAndSort(transformedRevenues);
-        setRevenues(filteredRevenues);
+        setRevenues(transformedRevenues);
         setTotalPages(responseData.totalPages || 1);
-        setTotalCount(filteredRevenues.length);
+        setTotalCount(responseData.totalCount || 0);
         setTotalRevenue(responseData.totalRevenue || 0);
         setTotalCommission(responseData.totalCommission || 0);
       } else {
@@ -190,14 +126,7 @@ function RevenueManagement() {
     } finally {
       setLoading(false);
     }
-  }, [
-    currentPage,
-    debouncedSearch,
-    statusFilter,
-    startDate,
-    endDate,
-    sortBy,
-  ]);
+  }, [currentPage, debouncedSearch, statusFilter, startDate, endDate, sortBy]);
 
   useEffect(() => {
     fetchRevenues();
@@ -215,6 +144,19 @@ function RevenueManagement() {
     setSortBy("");
     setSearchQuery("");
   };
+
+  const validateDateRange = (): string | null => {
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (start > end) {
+        return "Start date must be before end date";
+      }
+    }
+    return null;
+  };
+
+  const dateError = validateDateRange();
 
   const columns: TableColumn<RevenueRecord>[] = [
     {
@@ -373,7 +315,7 @@ function RevenueManagement() {
                   Total Revenue
                 </p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {totalRevenue.toFixed(2)}
+                  ₹{totalRevenue.toFixed(2)}
                 </p>
               </div>
             </div>
@@ -436,7 +378,7 @@ function RevenueManagement() {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg shadow  mb-6">
+        <div className="bg-white p-4 rounded-lg shadow mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-gray-900">
               Filters & Sorting
@@ -475,7 +417,7 @@ function RevenueManagement() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Default</option>
+                <option value="">Default (Newest First)</option>
                 <option value="name-asc">Name (A-Z)</option>
                 <option value="name-desc">Name (Z-A)</option>
                 <option value="course-asc">Course (A-Z)</option>
@@ -495,7 +437,9 @@ function RevenueManagement() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  dateError ? "border-red-300" : "border-gray-300"
+                }`}
               />
             </div>
 
@@ -507,10 +451,18 @@ function RevenueManagement() {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  dateError ? "border-red-300" : "border-gray-300"
+                }`}
               />
             </div>
           </div>
+
+          {dateError && (
+            <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{dateError}</p>
+            </div>
+          )}
 
           {(statusFilter || startDate || endDate || sortBy) && (
             <div className="mt-4 pt-4 border-t border-gray-200">
