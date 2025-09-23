@@ -1,30 +1,40 @@
 import React, { useState } from "react";
-import { Calendar, Clock, Plus, X } from "lucide-react";
+import { Calendar, Clock, Plus, X, IndianRupee  } from "lucide-react";
+
+enum SlotDuration {
+  HALF_HOUR = 30,
+  ONE_HOUR = 60,
+}
 
 interface TimeSlot {
   id: string;
   time: string;
-}
-
-interface SlotForm {
-  date: string;
-  timeSlots: TimeSlot[];
+  duration: SlotDuration;
+  price: number;
 }
 
 const AddSlot: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
-  const [newTimeSlot, setNewTimeSlot] = useState<string>("09:00");
+  const [newTimeSlot, setNewTimeSlot] = useState<string>("09:00 AM");
+  const [selectedDuration, setSelectedDuration] = useState<SlotDuration>(SlotDuration.ONE_HOUR);
+  const [halfHourPrice, setHalfHourPrice] = useState<number>(500);
+  const [oneHourPrice, setOneHourPrice] = useState<number>(900);
   const [loading, setLoading] = useState<boolean>(false);
 
   const predefinedTimes = [
-    "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
-    "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM",
-    "05:00 PM", "06:00 PM", "07:00 PM", "08:00 PM"
+    "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", 
+    "12:00 PM", "12:30 PM", "01:00 PM", "01:30 PM", "02:00 PM", "02:30 PM",
+    "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM", "05:00 PM", "05:30 PM",
+    "06:00 PM", "06:30 PM", "07:00 PM", "07:30 PM", "08:00 PM", "08:30 PM"
   ];
 
   const generateId = (): string => {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+  };
+
+  const getPrice = (duration: SlotDuration): number => {
+    return duration === SlotDuration.HALF_HOUR ? halfHourPrice : oneHourPrice;
   };
 
   const handleAddSlot = (): void => {
@@ -32,9 +42,13 @@ const AddSlot: React.FC = () => {
       const newSlot: TimeSlot = {
         id: generateId(),
         time: newTimeSlot,
+        duration: selectedDuration,
+        price: getPrice(selectedDuration),
       };
        
-      const exists = availableSlots.some(slot => slot.time === newTimeSlot);
+      const exists = availableSlots.some(slot => 
+        slot.time === newTimeSlot && slot.duration === selectedDuration
+      );
       if (!exists) {
         setAvailableSlots(prev => [...prev, newSlot]);
       }
@@ -45,12 +59,16 @@ const AddSlot: React.FC = () => {
     setAvailableSlots(prev => prev.filter(slot => slot.id !== slotId));
   };
 
-  const handleQuickAddSlot = (time: string): void => {
-    const exists = availableSlots.some(slot => slot.time === time);
+  const handleQuickAddSlot = (time: string, duration: SlotDuration): void => {
+    const exists = availableSlots.some(slot => 
+      slot.time === time && slot.duration === duration
+    );
     if (!exists) {
       const newSlot: TimeSlot = {
         id: generateId(),
         time: time,
+        duration: duration,
+        price: getPrice(duration),
       };
       setAvailableSlots(prev => [...prev, newSlot]);
     }
@@ -66,7 +84,15 @@ const AddSlot: React.FC = () => {
     setTimeout(() => {
       console.log("Saving slots:", {
         date: selectedDate,
-        slots: availableSlots
+        halfHourPrice,
+        oneHourPrice,
+        slots: availableSlots.map(slot => ({
+          time: slot.time,
+          duration: slot.duration,
+          price: slot.price,
+          availability: true,
+          bookedBy: null
+        }))
       });
       
       setSelectedDate("");
@@ -82,13 +108,17 @@ const AddSlot: React.FC = () => {
     return today.toISOString().split('T')[0];
   };
 
+  const getDurationText = (duration: SlotDuration): string => {
+    return duration === SlotDuration.HALF_HOUR ? "30 min" : "1 hour";
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-6 bg-white">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Add Available Slots</h1>
           <p className="text-gray-600 mt-2">
-            Create time slots for students to book sessions with you
+            Create time slots with duration and pricing for students to book sessions
           </p>
         </div>
         <div className="flex items-center space-x-4">
@@ -100,18 +130,49 @@ const AddSlot: React.FC = () => {
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="p-6">
-          <div className="mb-8">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              <Calendar className="w-4 h-4 inline mr-2" />
-              Select Date
-            </label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              min={getTodayDate()}
-              className="block w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                <Calendar className="w-4 h-4 inline mr-2" />
+                Select Date
+              </label>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                min={getTodayDate()}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                <IndianRupee  className="w-4 h-4 inline mr-2" />
+                Session Pricing
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">30 Minutes</label>
+                  <input
+                    type="number"
+                    value={halfHourPrice}
+                    onChange={(e) => setHalfHourPrice(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">1 Hour</label>
+                  <input
+                    type="number"
+                    value={oneHourPrice}
+                    onChange={(e) => setOneHourPrice(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    min="0"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="mb-8">
@@ -120,7 +181,7 @@ const AddSlot: React.FC = () => {
               Add Time Slots
             </label>
 
-            <div className="flex items-center space-x-3 mb-4">
+            <div className="flex flex-wrap items-center gap-3 mb-4">
               <select
                 value={newTimeSlot}
                 onChange={(e) => setNewTimeSlot(e.target.value)}
@@ -130,6 +191,16 @@ const AddSlot: React.FC = () => {
                   <option key={time} value={time}>{time}</option>
                 ))}
               </select>
+              
+              <select
+                value={selectedDuration}
+                onChange={(e) => setSelectedDuration(Number(e.target.value) as SlotDuration)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value={SlotDuration.HALF_HOUR}>30 minutes (₹{halfHourPrice})</option>
+                <option value={SlotDuration.ONE_HOUR}>1 hour (₹{oneHourPrice})</option>
+              </select>
+              
               <button
                 onClick={handleAddSlot}
                 disabled={!selectedDate}
@@ -140,19 +211,44 @@ const AddSlot: React.FC = () => {
               </button>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <h4 className="text-sm font-medium text-gray-700">Quick Add:</h4>
-              <div className="flex flex-wrap gap-2">
-                {predefinedTimes.map(time => (
-                  <button
-                    key={time}
-                    onClick={() => handleQuickAddSlot(time)}
-                    disabled={!selectedDate || availableSlots.some(slot => slot.time === time)}
-                    className="px-3 py-1 text-xs font-medium border border-gray-300 rounded-full hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {time}
-                  </button>
-                ))}
+              <div className="space-y-2">
+                <div>
+                  <p className="text-xs text-gray-600 mb-2">30 Minutes (₹{halfHourPrice})</p>
+                  <div className="flex flex-wrap gap-2">
+                    {predefinedTimes.slice(0, 12).map(time => (
+                      <button
+                        key={`${time}-30`}
+                        onClick={() => handleQuickAddSlot(time, SlotDuration.HALF_HOUR)}
+                        disabled={!selectedDate || availableSlots.some(slot => 
+                          slot.time === time && slot.duration === SlotDuration.HALF_HOUR
+                        )}
+                        className="px-2 py-1 text-xs font-medium border border-green-300 text-green-700 rounded-full hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {time}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-xs text-gray-600 mb-2">1 Hour (₹{oneHourPrice})</p>
+                  <div className="flex flex-wrap gap-2">
+                    {predefinedTimes.filter((_, index) => index % 2 === 0).map(time => (
+                      <button
+                        key={`${time}-60`}
+                        onClick={() => handleQuickAddSlot(time, SlotDuration.ONE_HOUR)}
+                        disabled={!selectedDate || availableSlots.some(slot => 
+                          slot.time === time && slot.duration === SlotDuration.ONE_HOUR
+                        )}
+                        className="px-2 py-1 text-xs font-medium border border-blue-300 text-blue-700 rounded-full hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {time}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -162,15 +258,28 @@ const AddSlot: React.FC = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Selected Time Slots for {selectedDate}
               </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                {availableSlots.map(slot => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {availableSlots.sort((a, b) => a.time.localeCompare(b.time)).map(slot => (
                   <div
                     key={slot.id}
-                    className="flex items-center justify-between px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg"
+                    className={`flex items-center justify-between px-3 py-3 border rounded-lg ${
+                      slot.duration === SlotDuration.HALF_HOUR 
+                        ? 'bg-green-50 border-green-200' 
+                        : 'bg-blue-50 border-blue-200'
+                    }`}
                   >
-                    <span className="text-sm font-medium text-blue-800">
-                      {slot.time}
-                    </span>
+                    <div>
+                      <span className={`text-sm font-medium ${
+                        slot.duration === SlotDuration.HALF_HOUR ? 'text-green-800' : 'text-blue-800'
+                      }`}>
+                        {slot.time}
+                      </span>
+                      <div className={`text-xs ${
+                        slot.duration === SlotDuration.HALF_HOUR ? 'text-green-600' : 'text-blue-600'
+                      }`}>
+                        {getDurationText(slot.duration)} • ₹{slot.price}
+                      </div>
+                    </div>
                     <button
                       onClick={() => handleRemoveSlot(slot.id)}
                       className="ml-2 text-red-500 hover:text-red-700 focus:outline-none"
@@ -179,6 +288,10 @@ const AddSlot: React.FC = () => {
                     </button>
                   </div>
                 ))}
+              </div>
+              <div className="mt-4 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                Total Slots: {availableSlots.length} • 
+                Revenue Potential: ₹{availableSlots.reduce((sum, slot) => sum + slot.price, 0)}
               </div>
             </div>
           )}
@@ -217,9 +330,10 @@ const AddSlot: React.FC = () => {
       <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h4 className="text-sm font-medium text-blue-900 mb-2">Instructions:</h4>
         <ul className="text-sm text-blue-800 space-y-1">
-          <li>• Select a date for which you want to create available time slots</li>
-          <li>• Add time slots either by using the dropdown or clicking quick add buttons</li>
-          <li>• You can remove any slot by clicking the X button</li>
+          <li>• Set your base pricing for 30-minute and 1-hour sessions</li>
+          <li>• Select a date and add time slots with preferred duration</li>
+          <li>• Use quick add buttons: Green for 30-min slots, Blue for 1-hour slots</li>
+          <li>• Price is automatically calculated based on session duration</li>
           <li>• Click "Save Slots" to make these times available for student bookings</li>
         </ul>
       </div>
