@@ -1,5 +1,6 @@
 import { createAxiosInstance } from "../api/axiosInstance";
 import { CourseDetails } from "../interfaces/courseInterface";
+import { AxiosError } from "axios";
 
 const tutorAxiosInstance = createAxiosInstance("tutor");
 
@@ -7,33 +8,12 @@ import {
   FormData as CourseFormData,
   Chapter,
 } from "../interfaces/courseInterface";
-
-interface CropData {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-export interface UpdateProfileData {
-  id?: string;
-  name?: string;
-  phone?: string;
-  DOB?: string;
-  designation?: string;
-  about?: string;
-  gender?: string;
-  avatar?: File;
-  cropData?: CropData;
-}
-
-interface VerificationDocuments {
-  avatar: File;
-  degree: File;
-  aadharFront: File;
-  aadharBack: File;
-  email?: string;
-  phone?: string;
-}
+import { slotRequest } from "../interfaces/slotBookingInterface";
+import {
+  CropData,
+  UpdateProfileData,
+  VerificationDocuments,
+} from "../interfaces/tutorInterface";
 
 export const tutorSignUpService = async (
   name: string,
@@ -508,6 +488,19 @@ export const editCourse = async (
     console.error("Error editing course:", error);
     if (error.response?.data) {
       return error.response.data;
+    }
+    throw error;
+  }
+};
+
+export const createTutorSlots = async (slotData: slotRequest) => {
+  try {
+    const response = await tutorAxiosInstance.post("/create-slots", slotData);
+    return response.data;
+  } catch (error: unknown) {
+    console.error("Error in creating slots:", error);
+    if (error instanceof AxiosError) {
+      return error.response?.data;
     }
     throw error;
   }

@@ -11,7 +11,7 @@ import { AxiosResponse } from "axios";
 import { CourseSearchParams } from "../interfaces/courseInterface";
 import { EnrollmentData } from "../interfaces/enrollmentInterface";
 import { loadStripe, Stripe } from "@stripe/stripe-js";
-
+                                                          
 const userAxiosInstance = createAxiosInstance("user");
 
 let stripePromise: Promise<Stripe | null> | null = null;
@@ -493,7 +493,7 @@ export const getUserEnrollments = async (page: number, search: string = "") => {
 export const getEnrolledCourses = async ()=>{
   try {
     const response = await userAxiosInstance.get("/courses-enrolled")
-    console.log("ZZZ",response.data)
+    console.log(response.data)
     return response.data
   } catch (error) {
     console.error("error in fetching enrolled courses:",error)

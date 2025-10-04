@@ -59,20 +59,6 @@ const AddSlot: React.FC = () => {
     setAvailableSlots(prev => prev.filter(slot => slot.id !== slotId));
   };
 
-  const handleQuickAddSlot = (time: string, duration: SlotDuration): void => {
-    const exists = availableSlots.some(slot => 
-      slot.time === time && slot.duration === duration
-    );
-    if (!exists) {
-      const newSlot: TimeSlot = {
-        id: generateId(),
-        time: time,
-        duration: duration,
-        price: getPrice(duration),
-      };
-      setAvailableSlots(prev => [...prev, newSlot]);
-    }
-  };
 
   const handleSaveSlots = async (): Promise<void> => {
     if (!selectedDate || availableSlots.length === 0) {
@@ -211,46 +197,7 @@ const AddSlot: React.FC = () => {
               </button>
             </div>
 
-            <div className="space-y-3">
-              <h4 className="text-sm font-medium text-gray-700">Quick Add:</h4>
-              <div className="space-y-2">
-                <div>
-                  <p className="text-xs text-gray-600 mb-2">30 Minutes (₹{halfHourPrice})</p>
-                  <div className="flex flex-wrap gap-2">
-                    {predefinedTimes.slice(0, 12).map(time => (
-                      <button
-                        key={`${time}-30`}
-                        onClick={() => handleQuickAddSlot(time, SlotDuration.HALF_HOUR)}
-                        disabled={!selectedDate || availableSlots.some(slot => 
-                          slot.time === time && slot.duration === SlotDuration.HALF_HOUR
-                        )}
-                        className="px-2 py-1 text-xs font-medium border border-green-300 text-green-700 rounded-full hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {time}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <p className="text-xs text-gray-600 mb-2">1 Hour (₹{oneHourPrice})</p>
-                  <div className="flex flex-wrap gap-2">
-                    {predefinedTimes.filter((_, index) => index % 2 === 0).map(time => (
-                      <button
-                        key={`${time}-60`}
-                        onClick={() => handleQuickAddSlot(time, SlotDuration.ONE_HOUR)}
-                        disabled={!selectedDate || availableSlots.some(slot => 
-                          slot.time === time && slot.duration === SlotDuration.ONE_HOUR
-                        )}
-                        className="px-2 py-1 text-xs font-medium border border-blue-300 text-blue-700 rounded-full hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {time}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+            
           </div>
 
           {availableSlots.length > 0 && (

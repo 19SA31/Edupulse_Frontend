@@ -48,3 +48,30 @@ export interface TutorDetailsList {
   about: string;
   avatar?: string;
 }
+
+export interface CropData {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+export interface UpdateProfileData {
+  id?: string;
+  name?: string;
+  phone?: string;
+  DOB?: string;
+  designation?: string;
+  about?: string;
+  gender?: string;
+  avatar?: File;
+  cropData?: CropData;
+}
+
+export interface VerificationDocuments {
+  avatar: File;
+  degree: File;
+  aadharFront: File;
+  aadharBack: File;
+  email?: string;
+  phone?: string;
+}
