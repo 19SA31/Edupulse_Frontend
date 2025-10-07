@@ -465,13 +465,6 @@ export const editCourse = async (
       });
     });
 
-    console.log(
-      "Total documents:",
-      totalDocuments,
-      "Appended:",
-      documentsAppended
-    );
-
     const response = await tutorAxiosInstance.put(
       `/edit-course/${courseId}`,
       formData,

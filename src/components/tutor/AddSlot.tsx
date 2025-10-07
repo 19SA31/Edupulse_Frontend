@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { Calendar, Clock, Plus, X, IndianRupee  } from "lucide-react";
+import { Calendar, Clock, Plus, X, IndianRupee } from "lucide-react";
+import { createTutorSlots } from "../../services/tutorService";
+import {toast} from "sonner";
 
 enum SlotDuration {
   HALF_HOUR = 30,
@@ -13,6 +15,19 @@ interface TimeSlot {
   price: number;
 }
 
+interface SlotRequest {
+  date: string;
+  halfHourPrice: number;
+  oneHourPrice: number;
+  slots: {
+    time: string;
+    duration: number;
+    price: number;
+    availability: boolean;
+    bookedBy: null | string;
+  }[];
+}
+
 const AddSlot: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
@@ -21,6 +36,7 @@ const AddSlot: React.FC = () => {
   const [halfHourPrice, setHalfHourPrice] = useState<number>(500);
   const [oneHourPrice, setOneHourPrice] = useState<number>(900);
   const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const predefinedTimes = [
     "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", 
@@ -59,16 +75,17 @@ const AddSlot: React.FC = () => {
     setAvailableSlots(prev => prev.filter(slot => slot.id !== slotId));
   };
 
-
   const handleSaveSlots = async (): Promise<void> => {
     if (!selectedDate || availableSlots.length === 0) {
+      setError("Please select a date and add at least one slot");
       return;
     }
 
     setLoading(true);
+    setError(null);
 
-    setTimeout(() => {
-      console.log("Saving slots:", {
+    try {
+      const slotData: SlotRequest = {
         date: selectedDate,
         halfHourPrice,
         oneHourPrice,
@@ -79,14 +96,23 @@ const AddSlot: React.FC = () => {
           availability: true,
           bookedBy: null
         }))
-      });
+      };
+
+      const response = await createTutorSlots(slotData);
       
-      setSelectedDate("");
-      setAvailableSlots([]);
+      if (response.success) {
+        setSelectedDate("");
+        setAvailableSlots([]);
+        toast.success("Slots added successfully!");
+      } else {
+        setError(response.message || "Failed to add slots");
+      }
+    } catch (err) {
+      console.error("Error saving slots:", err);
+      setError("An error occurred while saving slots. Please try again.");
+    } finally {
       setLoading(false);
-      
-      alert("Slots added successfully!");
-    }, 1000);
+    }
   };
 
   const getTodayDate = (): string => {
@@ -114,6 +140,12 @@ const AddSlot: React.FC = () => {
         </div>
       </div>
 
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+          {error}
+        </div>
+      )}
+
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -133,7 +165,7 @@ const AddSlot: React.FC = () => {
 
             <div className="space-y-4">
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                <IndianRupee  className="w-4 h-4 inline mr-2" />
+                <IndianRupee className="w-4 h-4 inline mr-2" />
                 Session Pricing
               </label>
               <div className="grid grid-cols-2 gap-4">
@@ -196,8 +228,6 @@ const AddSlot: React.FC = () => {
                 Add Slot
               </button>
             </div>
-
-            
           </div>
 
           {availableSlots.length > 0 && (
@@ -248,6 +278,7 @@ const AddSlot: React.FC = () => {
               onClick={() => {
                 setSelectedDate("");
                 setAvailableSlots([]);
+                setError(null);
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
             >
