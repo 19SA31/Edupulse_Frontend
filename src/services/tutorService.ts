@@ -498,3 +498,17 @@ export const createTutorSlots = async (slotData: slotRequest) => {
     throw error;
   }
 };
+
+export const getTutorSlots = async () => {
+  try {
+    console.log("inside get tutor slots")
+    const response = await tutorAxiosInstance.get("/get-slots");
+    return response.data;
+  } catch (error: unknown) {
+    console.error("error in fetching courses:", error);
+    if (error instanceof AxiosError) {
+      return error.response?.data;
+    }
+    throw error;
+  }
+};

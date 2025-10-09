@@ -36,7 +36,6 @@ import {
   Chapter,
 } from "../../interfaces/courseInterface";
 
-// Generate unique string IDs to avoid conflicts between DB IDs and new IDs
 const generateUniqueId = () =>
   `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -177,7 +176,7 @@ const FileUploadSection: React.FC<{
   chapterId,
   lessonId,
 }) => {
-  // Create unique ID for each file input to avoid conflicts
+
   const id = `file-upload-${title
     .replace(/\s+/g, "-")
     .toLowerCase()}-${chapterId}-${lessonId}`;

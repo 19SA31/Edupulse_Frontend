@@ -65,8 +65,7 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
         setIsCheckingEnrollment(true);
         const enrollmentResponse = await verifyEnrollment(courseData._id);
         setIsEnrolled(enrollmentResponse.success);
-        
-        // If enrolled, expand the first chapter automatically
+
         if (enrollmentResponse.success && courseData.chapters && courseData.chapters.length > 0) {
           setExpandedChapters({
             [courseData.chapters[0]._id]: true,
@@ -109,7 +108,7 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
       verifyPayment(sessionId)
         .then(() => {
           setIsEnrolled(true);
-          // Expand the first chapter after successful enrollment
+
           if (courseData?.chapters && courseData.chapters.length > 0) {
             setExpandedChapters({
               [courseData.chapters[0]._id]: true,
@@ -134,7 +133,7 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
   }, [searchParams, setSearchParams, courseData]);
 
   const toggleChapter = (chapterId: string): void => {
-    // Only allow expanding chapters if user is enrolled
+
     if (!isEnrolled && !expandedChapters[chapterId]) {
       toast.error("Please enroll in the course to access all content.");
       return;
@@ -150,7 +149,7 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
     video: CourseVideo,
     lesson: CourseLesson
   ): void => {
-    // Allow video selection even if not enrolled (for preview)
+
     setSelectedVideo(video);
     setActiveLesson(lesson);
   };

@@ -1,49 +1,78 @@
-import React, { useState } from "react";
-import { Calendar, Clock, Plus, X, IndianRupee } from "lucide-react";
-import { createTutorSlots } from "../../services/tutorService";
-import {toast} from "sonner";
-
-enum SlotDuration {
-  HALF_HOUR = 30,
-  ONE_HOUR = 60,
-}
-
-interface TimeSlot {
-  id: string;
-  time: string;
-  duration: SlotDuration;
-  price: number;
-}
-
-interface SlotRequest {
-  date: string;
-  halfHourPrice: number;
-  oneHourPrice: number;
-  slots: {
-    time: string;
-    duration: number;
-    price: number;
-    availability: boolean;
-    bookedBy: null | string;
-  }[];
-}
+import React, { useState, useEffect } from "react";
+import { Calendar, Clock, Plus, X, IndianRupee, Eye } from "lucide-react";
+import { createTutorSlots, getTutorSlots } from "../../services/tutorService";
+import {
+  TimeSlot,
+  SlotDuration,
+  SavedSlotDate,
+  SlotRequest,
+} from "../../interfaces/slotBookingInterface";
+import { toast } from "sonner";
 
 const AddSlot: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
   const [newTimeSlot, setNewTimeSlot] = useState<string>("09:00 AM");
-  const [selectedDuration, setSelectedDuration] = useState<SlotDuration>(SlotDuration.ONE_HOUR);
+  const [selectedDuration, setSelectedDuration] = useState<SlotDuration>(
+    SlotDuration.ONE_HOUR
+  );
   const [halfHourPrice, setHalfHourPrice] = useState<number>(500);
   const [oneHourPrice, setOneHourPrice] = useState<number>(900);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [savedSlots, setSavedSlots] = useState<SavedSlotDate[]>([]);
+  const [loadingSavedSlots, setLoadingSavedSlots] = useState<boolean>(false);
+  const [expandedDate, setExpandedDate] = useState<string | null>(null);
 
   const predefinedTimes = [
-    "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", 
-    "12:00 PM", "12:30 PM", "01:00 PM", "01:30 PM", "02:00 PM", "02:30 PM",
-    "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM", "05:00 PM", "05:30 PM",
-    "06:00 PM", "06:30 PM", "07:00 PM", "07:30 PM", "08:00 PM", "08:30 PM"
+    "09:00 AM",
+    "09:30 AM",
+    "10:00 AM",
+    "10:30 AM",
+    "11:00 AM",
+    "11:30 AM",
+    "12:00 PM",
+    "12:30 PM",
+    "01:00 PM",
+    "01:30 PM",
+    "02:00 PM",
+    "02:30 PM",
+    "03:00 PM",
+    "03:30 PM",
+    "04:00 PM",
+    "04:30 PM",
+    "05:00 PM",
+    "05:30 PM",
+    "06:00 PM",
+    "06:30 PM",
+    "07:00 PM",
+    "07:30 PM",
+    "08:00 PM",
+    "08:30 PM",
   ];
+
+  useEffect(() => {
+    fetchSavedSlots();
+  }, []);
+
+  const fetchSavedSlots = async (): Promise<void> => {
+    setLoadingSavedSlots(true);
+    try {
+      const response = await getTutorSlots();
+      if (response.success && response.data) {
+        const today = getTodayDate();
+        const filteredSlots = response.data.filter(
+          (slotGroup: SavedSlotDate) => slotGroup.date >= today
+        );
+        setSavedSlots(filteredSlots);
+      }
+    } catch (err) {
+      console.error("Error fetching saved slots:", err);
+      toast.error("Failed to load saved slots");
+    } finally {
+      setLoadingSavedSlots(false);
+    }
+  };
 
   const generateId = (): string => {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
@@ -61,18 +90,19 @@ const AddSlot: React.FC = () => {
         duration: selectedDuration,
         price: getPrice(selectedDuration),
       };
-       
-      const exists = availableSlots.some(slot => 
-        slot.time === newTimeSlot && slot.duration === selectedDuration
+
+      const exists = availableSlots.some(
+        (slot) =>
+          slot.time === newTimeSlot && slot.duration === selectedDuration
       );
       if (!exists) {
-        setAvailableSlots(prev => [...prev, newSlot]);
+        setAvailableSlots((prev) => [...prev, newSlot]);
       }
     }
   };
 
   const handleRemoveSlot = (slotId: string): void => {
-    setAvailableSlots(prev => prev.filter(slot => slot.id !== slotId));
+    setAvailableSlots((prev) => prev.filter((slot) => slot.id !== slotId));
   };
 
   const handleSaveSlots = async (): Promise<void> => {
@@ -89,21 +119,22 @@ const AddSlot: React.FC = () => {
         date: selectedDate,
         halfHourPrice,
         oneHourPrice,
-        slots: availableSlots.map(slot => ({
+        slots: availableSlots.map((slot) => ({
           time: slot.time,
           duration: slot.duration,
           price: slot.price,
           availability: true,
-          bookedBy: null
-        }))
+          bookedBy: null,
+        })),
       };
 
       const response = await createTutorSlots(slotData);
-      
+
       if (response.success) {
         setSelectedDate("");
         setAvailableSlots([]);
         toast.success("Slots added successfully!");
+        fetchSavedSlots();
       } else {
         setError(response.message || "Failed to add slots");
       }
@@ -117,25 +148,43 @@ const AddSlot: React.FC = () => {
 
   const getTodayDate = (): string => {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    return today.toISOString().split("T")[0];
   };
 
-  const getDurationText = (duration: SlotDuration): string => {
-    return duration === SlotDuration.HALF_HOUR ? "30 min" : "1 hour";
+  const getDurationText = (duration: number): string => {
+    return duration === 30 ? "30 min" : "1 hour";
+  };
+
+  const formatDate = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-IN", {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getTotalSlots = (slotGroup: SavedSlotDate): number => {
+    return slotGroup.slots.length;
   };
 
   return (
     <div className="max-w-7xl mx-auto p-6 bg-white">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Add Available Slots</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Add Available Slots
+          </h1>
           <p className="text-gray-600 mt-2">
-            Create time slots with duration and pricing for students to book sessions
+            Create time slots with duration and pricing for students to book
+            sessions
           </p>
         </div>
         <div className="flex items-center space-x-4">
           <div className="text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-lg">
-            Selected Slots: <span className="font-medium">{availableSlots.length}</span>
+            Selected Slots:{" "}
+            <span className="font-medium">{availableSlots.length}</span>
           </div>
         </div>
       </div>
@@ -146,7 +195,7 @@ const AddSlot: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
         <div className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <div>
@@ -170,7 +219,9 @@ const AddSlot: React.FC = () => {
               </label>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">30 Minutes</label>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    30 Minutes
+                  </label>
                   <input
                     type="number"
                     value={halfHourPrice}
@@ -180,7 +231,9 @@ const AddSlot: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">1 Hour</label>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    1 Hour
+                  </label>
                   <input
                     type="number"
                     value={oneHourPrice}
@@ -205,20 +258,28 @@ const AddSlot: React.FC = () => {
                 onChange={(e) => setNewTimeSlot(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                {predefinedTimes.map(time => (
-                  <option key={time} value={time}>{time}</option>
+                {predefinedTimes.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
                 ))}
               </select>
-              
+
               <select
                 value={selectedDuration}
-                onChange={(e) => setSelectedDuration(Number(e.target.value) as SlotDuration)}
+                onChange={(e) =>
+                  setSelectedDuration(Number(e.target.value) as SlotDuration)
+                }
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value={SlotDuration.HALF_HOUR}>30 minutes (₹{halfHourPrice})</option>
-                <option value={SlotDuration.ONE_HOUR}>1 hour (₹{oneHourPrice})</option>
+                <option value={SlotDuration.HALF_HOUR}>
+                  30 minutes (₹{halfHourPrice})
+                </option>
+                <option value={SlotDuration.ONE_HOUR}>
+                  1 hour (₹{oneHourPrice})
+                </option>
               </select>
-              
+
               <button
                 onClick={handleAddSlot}
                 disabled={!selectedDate}
@@ -236,39 +297,49 @@ const AddSlot: React.FC = () => {
                 Selected Time Slots for {selectedDate}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {availableSlots.sort((a, b) => a.time.localeCompare(b.time)).map(slot => (
-                  <div
-                    key={slot.id}
-                    className={`flex items-center justify-between px-3 py-3 border rounded-lg ${
-                      slot.duration === SlotDuration.HALF_HOUR 
-                        ? 'bg-green-50 border-green-200' 
-                        : 'bg-blue-50 border-blue-200'
-                    }`}
-                  >
-                    <div>
-                      <span className={`text-sm font-medium ${
-                        slot.duration === SlotDuration.HALF_HOUR ? 'text-green-800' : 'text-blue-800'
-                      }`}>
-                        {slot.time}
-                      </span>
-                      <div className={`text-xs ${
-                        slot.duration === SlotDuration.HALF_HOUR ? 'text-green-600' : 'text-blue-600'
-                      }`}>
-                        {getDurationText(slot.duration)} • ₹{slot.price}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleRemoveSlot(slot.id)}
-                      className="ml-2 text-red-500 hover:text-red-700 focus:outline-none"
+                {availableSlots
+                  .sort((a, b) => a.time.localeCompare(b.time))
+                  .map((slot) => (
+                    <div
+                      key={slot.id}
+                      className={`flex items-center justify-between px-3 py-3 border rounded-lg ${
+                        slot.duration === SlotDuration.HALF_HOUR
+                          ? "bg-green-50 border-green-200"
+                          : "bg-blue-50 border-blue-200"
+                      }`}
                     >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
+                      <div>
+                        <span
+                          className={`text-sm font-medium ${
+                            slot.duration === SlotDuration.HALF_HOUR
+                              ? "text-green-800"
+                              : "text-blue-800"
+                          }`}
+                        >
+                          {slot.time}
+                        </span>
+                        <div
+                          className={`text-xs ${
+                            slot.duration === SlotDuration.HALF_HOUR
+                              ? "text-green-600"
+                              : "text-blue-600"
+                          }`}
+                        >
+                          {getDurationText(slot.duration)} • ₹{slot.price}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveSlot(slot.id)}
+                        className="ml-2 text-red-500 hover:text-red-700 focus:outline-none"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
               </div>
               <div className="mt-4 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                Total Slots: {availableSlots.length} • 
-                Revenue Potential: ₹{availableSlots.reduce((sum, slot) => sum + slot.price, 0)}
+                Total Slots: {availableSlots.length} • Revenue : ₹
+                {availableSlots.reduce((sum, slot) => sum + slot.price, 0)}
               </div>
             </div>
           )}
@@ -305,14 +376,164 @@ const AddSlot: React.FC = () => {
         </div>
       </div>
 
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Your Saved Slots
+            </h2>
+            <button
+              onClick={fetchSavedSlots}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Refresh
+            </button>
+          </div>
+
+          {loadingSavedSlots ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            </div>
+          ) : savedSlots.length === 0 ? (
+            <div className="text-center py-12">
+              <Eye className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 text-lg">No slots added yet</p>
+              <p className="text-gray-400 text-sm mt-1">
+                Create your first time slot above to get started
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {savedSlots.map((slotGroup) => (
+                <div
+                  key={slotGroup._id}
+                  className="border border-gray-200 rounded-lg overflow-hidden"
+                >
+                  <button
+                    onClick={() =>
+                      setExpandedDate(
+                        expandedDate === slotGroup.date ? null : slotGroup.date
+                      )
+                    }
+                    className="w-full px-4 py-4 bg-gray-50 hover:bg-gray-100 flex items-center justify-between transition-colors"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <Calendar className="w-5 h-5 text-blue-600" />
+                      <div className="text-left">
+                        <p className="font-medium text-gray-900">
+                          {formatDate(slotGroup.date)}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {getTotalSlots(slotGroup)} slots
+                        </p>
+                      </div>
+                    </div>
+                    <div
+                      className={`transform transition-transform ${
+                        expandedDate === slotGroup.date ? "rotate-180" : ""
+                      }`}
+                    >
+                      <svg
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                        />
+                      </svg>
+                    </div>
+                  </button>
+
+                  {expandedDate === slotGroup.date && (
+                    <div className="border-t border-gray-200 p-4 bg-white">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {slotGroup.slots
+                          .sort((a, b) => a.time.localeCompare(b.time))
+                          .map((slot) => (
+                            <div
+                              key={slot._id}
+                              className={`p-3 rounded-lg border ${
+                                slot.availability
+                                  ? slot.duration === 30
+                                    ? "bg-green-50 border-green-200"
+                                    : "bg-blue-50 border-blue-200"
+                                  : "bg-gray-50 border-gray-300"
+                              }`}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p
+                                    className={`font-medium ${
+                                      slot.availability
+                                        ? slot.duration === 30
+                                          ? "text-green-800"
+                                          : "text-blue-800"
+                                        : "text-gray-600"
+                                    }`}
+                                  >
+                                    {slot.time}
+                                  </p>
+                                  <p
+                                    className={`text-xs mt-1 ${
+                                      slot.availability
+                                        ? slot.duration === 30
+                                          ? "text-green-600"
+                                          : "text-blue-600"
+                                        : "text-gray-500"
+                                    }`}
+                                  >
+                                    {getDurationText(slot.duration)} • ₹
+                                    {slot.price}
+                                  </p>
+                                  <p
+                                    className={`text-xs mt-1 font-medium ${
+                                      slot.availability
+                                        ? "text-green-600"
+                                        : "text-red-600"
+                                    }`}
+                                  >
+                                    {slot.availability
+                                      ? "Available"
+                                      : `Booked by ${slot.bookedBy}`}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-blue-900 mb-2">Instructions:</h4>
+        <h4 className="text-sm font-medium text-blue-900 mb-2">
+          Instructions:
+        </h4>
         <ul className="text-sm text-blue-800 space-y-1">
           <li>• Set your base pricing for 30-minute and 1-hour sessions</li>
           <li>• Select a date and add time slots with preferred duration</li>
-          <li>• Use quick add buttons: Green for 30-min slots, Blue for 1-hour slots</li>
+          <li>
+            • Use quick add buttons: Green for 30-min slots, Blue for 1-hour
+            slots
+          </li>
           <li>• Price is automatically calculated based on session duration</li>
-          <li>• Click "Save Slots" to make these times available for student bookings</li>
+          <li>
+            • Click "Save Slots" to make these times available for student
+            bookings
+          </li>
+          <li>
+            • View all saved slots below and expand to see details for each date
+          </li>
         </ul>
       </div>
     </div>

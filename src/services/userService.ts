@@ -370,7 +370,7 @@ export const getAllListedCourses = async (
       data: CourseListingUser[];
       message?: string;
     }> = await userAxiosInstance.get(url);
-    console.log("YYYY",response.data)
+    console.log("",response.data)
     return response.data;
   } catch (error: any) {
     console.error("Error fetching courses:", error);
