@@ -283,7 +283,7 @@ function TutorVerification() {
     try {
       setLoading(true);
       const response = await getTutorsForVerification(page, search);
-
+       console.log("@@@@",response)
       if (response && response.success) {
         const rawTutors = response.data.tutorDocs || [];
         const transformedTutors = transformTutorData(rawTutors);
@@ -364,15 +364,13 @@ function TutorVerification() {
     }
   };
 
-  const handlePagination = (direction: "next" | "previous") => {
-    if (direction === "next" && currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    } else if (direction === "previous" && currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
+  const handlePagination = (page:number) => {
+    setCurrentPage(page);
+    fetchTutorsForVerification(page, searchQuery);
   };
 
   const handleSearch = () => {
+
     setCurrentPage(1);
     fetchTutorsForVerification(1, searchQuery);
   };

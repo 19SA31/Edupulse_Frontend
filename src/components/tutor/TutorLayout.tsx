@@ -53,7 +53,7 @@ function TutorLayout() {
           hoverColor="hover:bg-gray-800"
           textColor="text-gray-300"
         />
-        <main className="flex-1 ml-0 sm:ml-64 p-4 overflow-y-auto overflow-x-hidden h-screen">
+        <main className="flex-1 ml-0 sm:ml-64 overflow-y-auto">
           <Outlet />
         </main>
       </div>

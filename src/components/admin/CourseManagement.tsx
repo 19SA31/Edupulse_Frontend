@@ -111,12 +111,9 @@ function CourseManagement() {
     },
   ];
 
-  const handlePageChange = (direction: "next" | "previous") => {
-    if (direction === "next" && currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    } else if (direction === "previous" && currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
+  const handlePageChange = (page:number) => {
+    setCurrentPage(page)
+    fetchCourses(page,searchQuery)
   };
 
   const handleSearchChange = (query: string) => {

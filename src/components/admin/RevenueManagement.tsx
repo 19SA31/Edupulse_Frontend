@@ -76,7 +76,6 @@ function RevenueManagement() {
         sortBy
       );
 
-      console.log("$$$$", response.data);
       const responseData = response.data || response;
 
       if (responseData.enrollments) {
