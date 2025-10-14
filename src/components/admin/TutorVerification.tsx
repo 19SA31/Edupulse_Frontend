@@ -283,7 +283,7 @@ function TutorVerification() {
     try {
       setLoading(true);
       const response = await getTutorsForVerification(page, search);
-       console.log("@@@@",response)
+      console.log("@@@@", response);
       if (response && response.success) {
         const rawTutors = response.data.tutorDocs || [];
         const transformedTutors = transformTutorData(rawTutors);
@@ -364,13 +364,12 @@ function TutorVerification() {
     }
   };
 
-  const handlePagination = (page:number) => {
+  const handlePagination = (page: number) => {
     setCurrentPage(page);
     fetchTutorsForVerification(page, searchQuery);
   };
 
   const handleSearch = () => {
-
     setCurrentPage(1);
     fetchTutorsForVerification(1, searchQuery);
   };
@@ -481,34 +480,24 @@ function TutorVerification() {
           variant: () => "danger",
         },
       ];
+    } else if (tutor.verificationStatus === "verified") {
+      return [
+        {
+          label: () => "Approved",
+          onClick: () => {},
+          variant: () => "success",
+        },
+      ];
     } else {
       return [
         {
-          label: () =>
-            tutor.verificationStatus === "verified" ? "Approved" : "Rejected",
+          label: () => "Rejected",
           onClick: () => {},
-          variant: () => "secondary",
+          variant: () => "danger",
         },
       ];
     }
   };
-
-  const actions: TableAction<TutorWithDocuments>[] = [
-    {
-      label: (tutor: TutorWithDocuments) =>
-        tutor.verificationStatus === "pending" ? "Approve" : "",
-      onClick: (tutor: TutorWithDocuments) => handleVerifyTutor(tutor.id),
-      variant: (tutor: TutorWithDocuments) =>
-        tutor.verificationStatus === "pending" ? "success" : "primary",
-    },
-    {
-      label: (tutor: TutorWithDocuments) =>
-        tutor.verificationStatus === "pending" ? "Reject" : "",
-      onClick: (tutor: TutorWithDocuments) => handleOpenRejectionModal(tutor),
-      variant: (tutor: TutorWithDocuments) =>
-        tutor.verificationStatus === "pending" ? "danger" : "primary",
-    },
-  ];
 
   return (
     <div className="p-6 mt-4">
