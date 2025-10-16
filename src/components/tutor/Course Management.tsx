@@ -12,7 +12,7 @@ import {
 } from "../../interfaces/courseInterface";
 
 const CourseManagement: React.FC = () => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [courses, setCourses] = useState<CourseDetailsList[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,7 +28,6 @@ const CourseManagement: React.FC = () => {
     try {
       setLoading(true);
       const response = await getAllCoursesTutor(page, 10, search);
-
       if (response.success) {
         setCourses(response.data.courses || []);
         setTotalPages(response.data.totalPages || 1);
@@ -73,26 +72,33 @@ const CourseManagement: React.FC = () => {
     navigate(`/tutor/dashboard/add-course?edit=${course._id}`);
   };
 
-  const getStatusBadge = (isPublished: boolean, isListed: boolean) => {
-    if (isPublished && isListed) {
+  const getStatusBadge = (isPublished: string, isListed: boolean) => {
+    if (isPublished === "rejected") {
+      return (
+        <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-gray-800">
+          Rejected
+        </span>
+      );
+    } else if (isListed) {
       return (
         <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
           Active
         </span>
       );
-    } else if (isPublished && !isListed) {
+    } else if (isPublished === "published" && !isListed) {
       return (
         <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-yellow-800">
           Unlisted
         </span>
       );
-    } else {
+    } else if (isPublished === "draft" && !isListed) {
       return (
         <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-gray-800">
           Draft
         </span>
       );
     }
+    return null;
   };
 
   const getTotalLessons = (chapters: ChapterDetailsList[]): number => {
@@ -113,7 +119,7 @@ const CourseManagement: React.FC = () => {
       },
     ];
 
-    if (!course.isPublished) {
+    if (course.isPublished === "draft" || course.isPublished==="rejected") {
       baseActions.push({
         label: "Edit",
         onClick: handleEditCourse,

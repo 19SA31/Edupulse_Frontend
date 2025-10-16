@@ -420,8 +420,6 @@ const AddCourse: React.FC = () => {
         isExisting: false,
       };
 
-      console.log("Setting thumbnail data:", thumbnailData);
-
       setFieldValue("thumbnailImage", thumbnailData, true);
 
       setTimeout(() => {
@@ -564,9 +562,6 @@ const AddCourse: React.FC = () => {
     fileType: "documents" | "videos",
     files: FileList | null
   ): void => {
-    console.log(
-      `Uploading files for Chapter ${chapterId}, Lesson ${lessonId}, Type: ${fileType}`
-    );
 
     if (!files) return;
 
@@ -635,8 +630,6 @@ const AddCourse: React.FC = () => {
           }
         : chapter
     );
-
-    console.log("Updated chapters:", updatedChapters);
     setFieldValue("chapters", updatedChapters);
   };
 

@@ -370,7 +370,6 @@ export const getAllListedCourses = async (
       data: CourseListingUser[];
       message?: string;
     }> = await userAxiosInstance.get(url);
-    console.log("",response.data)
     return response.data;
   } catch (error: any) {
     console.error("Error fetching courses:", error);
@@ -479,7 +478,6 @@ export const verifyEnrollment = async (courseId: string) => {
 
 export const getUserEnrollments = async (page: number, search: string = "") => {
   try {
-    console.log(search)
     const response = await userAxiosInstance.get("/user-payments", {
       params: { page, limit: 10, search },
     });
@@ -493,7 +491,6 @@ export const getUserEnrollments = async (page: number, search: string = "") => {
 export const getEnrolledCourses = async ()=>{
   try {
     const response = await userAxiosInstance.get("/courses-enrolled")
-    console.log(response.data)
     return response.data
   } catch (error) {
     console.error("error in fetching enrolled courses:",error)

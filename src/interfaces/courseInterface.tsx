@@ -95,6 +95,7 @@ export interface CourseImage {
   file: File;
   preview: string;
   name: string;
+  isExisting?: boolean;
 }
 
 export interface FormData {
@@ -114,6 +115,8 @@ export interface UploadedFile {
   size: number;
   type: string;
   preview: string | null;
+  isExisting?: boolean;  
+  url?: string; 
 }
 
 export interface Lesson {
@@ -257,7 +260,7 @@ export interface CourseDetailsList {
   price: number;
   thumbnailImage: string;
   chapters: ChapterDetailsList[];
-  isPublished: boolean;
+  isPublished: string;
   isListed: boolean;
   enrollmentCount: number;
   createdAt: Date;

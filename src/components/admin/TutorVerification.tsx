@@ -283,7 +283,6 @@ function TutorVerification() {
     try {
       setLoading(true);
       const response = await getTutorsForVerification(page, search);
-      console.log("@@@@", response);
       if (response && response.success) {
         const rawTutors = response.data.tutorDocs || [];
         const transformedTutors = transformTutorData(rawTutors);
