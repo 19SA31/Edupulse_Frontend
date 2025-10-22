@@ -394,6 +394,15 @@ export const getAllCoursesTutor = async (
   }
 };
 
+export const getCourseStats=async()=>{
+  try {
+    
+  } catch (error) {
+    console.log("error in  fetching course status")
+    throw error
+  }
+}
+
 export async function fetchCourseDetails(
   courseId: string
 ): Promise<CourseDetails> {

@@ -38,6 +38,11 @@ function TutorLayout() {
       label: "Add Slot",
       icon: <FiClock className="w-5 h-5" />,
     },
+    {
+      path:"/tutor/dashboard/course-dashboard",
+      label:"Course Dashboard",
+      icon: <FiClock className="w-5 h-5"/>
+    }
   ];
 
   return (

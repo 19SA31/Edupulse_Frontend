@@ -12,7 +12,6 @@ function RevenueManagement() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
-  const [totalCommission, setTotalCommission] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRevenue, setSelectedRevenue] = useState<RevenueRecord | null>(
@@ -38,7 +37,7 @@ function RevenueManagement() {
       tutorId: enrollmentData.tutorId?._id || "N/A",
       categoryName: enrollmentData.categoryId?.name || "Unknown Category",
       price: enrollmentData.price || 0,
-      adminCommission: enrollmentData.adminCommission || 0,
+      platformFee: enrollmentData.platformFee || 0,
       tutorEarnings: enrollmentData.tutorEarnings || 0,
       paymentDate:
         enrollmentData.dateOfEnrollment ||
@@ -89,16 +88,11 @@ function RevenueManagement() {
         setTotalCount(pagination.totalCount || 0);
 
         const calculatedTotalRevenue = transformedRevenues.reduce(
-          (sum: number, item: RevenueRecord) => sum + item.price,
-          0
-        );
-        const calculatedTotalCommission = transformedRevenues.reduce(
-          (sum: number, item: RevenueRecord) => sum + item.adminCommission,
+          (sum: number, item: RevenueRecord) => sum + item.platformFee,
           0
         );
 
         setTotalRevenue(calculatedTotalRevenue);
-        setTotalCommission(calculatedTotalCommission);
       } else if (responseData.revenues) {
         const transformedRevenues =
           responseData.revenues.map(transformRevenueData);
@@ -106,13 +100,11 @@ function RevenueManagement() {
         setTotalPages(responseData.totalPages || 1);
         setTotalCount(responseData.totalCount || 0);
         setTotalRevenue(responseData.totalRevenue || 0);
-        setTotalCommission(responseData.totalCommission || 0);
       } else {
         setRevenues([]);
         setTotalPages(1);
         setTotalCount(0);
         setTotalRevenue(0);
-        setTotalCommission(0);
       }
     } catch (err) {
       console.error("Failed to fetch revenue data:", err);
@@ -121,7 +113,6 @@ function RevenueManagement() {
       setTotalPages(1);
       setTotalCount(0);
       setTotalRevenue(0);
-      setTotalCommission(0);
     } finally {
       setLoading(false);
     }
@@ -194,13 +185,13 @@ function RevenueManagement() {
       ),
     },
     {
-      key: "adminCommission",
-      title: "Commission",
+      key: "platformFee",
+      title: "Commission (5%)",
       align: "right",
       width: "10%",
       render: (revenue: RevenueRecord) => (
         <span className="font-semibold text-green-600">
-          ₹{revenue.adminCommission.toFixed(2)}
+          ₹{revenue.platformFee.toFixed(2)}
         </span>
       ),
     },
@@ -306,8 +297,8 @@ function RevenueManagement() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white p-4 rounded-lg shadow ">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <span className="text-blue-600 text-lg font-semibold">₹</span>
+              <div className="p-2 bg-green-100 rounded-lg">
+                <span className="text-green-600 text-lg font-semibold">₹</span>
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">
@@ -315,34 +306,6 @@ function RevenueManagement() {
                 </p>
                 <p className="text-2xl font-semibold text-gray-900">
                   ₹{totalRevenue.toFixed(2)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow ">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <svg
-                  className="w-6 h-6 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">
-                  Total Commission
-                </p>
-                <p className="text-2xl font-semibold text-green-600">
-                  ₹{totalCommission.toFixed(2)}
                 </p>
               </div>
             </div>

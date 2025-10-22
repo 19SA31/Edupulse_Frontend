@@ -978,7 +978,7 @@ const AddCourse: React.FC = () => {
 
                 <div className="mb-6">
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Course Price (Enter 0 for free course)
+                    Course Price (5% platform will be deducted)
                   </label>
                   <Field
                     type="number"

@@ -214,7 +214,7 @@ function PurchaseDetailsModal({
                   Admin Commission
                 </label>
                 <p className="text-2xl font-bold text-green-600">
-                  ₹{revenueRecord.adminCommission.toFixed(2)}
+                  ₹{revenueRecord.platformFee.toFixed(2)}
                 </p>
               </div>
               <div className="text-center">

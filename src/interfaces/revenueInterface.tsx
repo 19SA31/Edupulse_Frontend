@@ -6,7 +6,7 @@ export interface RevenueRecord {
   tutorName: string;
   categoryName: string;
   price: number;
-  adminCommission: number;
+  platformFee: number;
   tutorEarnings: number;
   paymentDate: string;
   paymentMethod: string;
@@ -42,7 +42,7 @@ export interface AdminRevenueData {
     name: string;
   };
   price: number;
-  adminCommission: number;
+  platformFee: number;
   tutorEarnings: number;
   paymentId: string;
   paymentMethod: string;
