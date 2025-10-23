@@ -17,6 +17,7 @@ import DashboardPage from "../pages/tutor/DashboardPage";
 import CourseManagementPage from "../pages/tutor/CourseManagementPage";
 import AddSlotPage from "../pages/tutor/AddSlotPage";
 import CourseWiseDashboardPage from "../pages/tutor/CourseWiseDashboardPage";
+import CourseRevenuePage from "../pages/tutor/CourseRevenuePage";
 
 function TutorRoutes() {
   return (
@@ -74,6 +75,8 @@ function TutorRoutes() {
           <Route path="course-management" element={<CourseManagementPage />} />
           <Route path="add-slot" element={<AddSlotPage />} />
           <Route path="course-dashboard" element={<CourseWiseDashboardPage/>}/>
+          <Route path="course-revenue" element={<CourseRevenuePage />} />
+
         </Route>
 
         <Route path="forgot-password" element={<ForgotPassword />} />

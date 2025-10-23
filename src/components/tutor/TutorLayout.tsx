@@ -8,7 +8,7 @@ import {
   MdPerson,
   MdMenuBook,
 } from "react-icons/md";
-import { FiClock } from "react-icons/fi";
+import { FiClock, FiLayers } from "react-icons/fi";
 
 
 function TutorLayout() {
@@ -41,7 +41,7 @@ function TutorLayout() {
     {
       path:"/tutor/dashboard/course-dashboard",
       label:"Course Dashboard",
-      icon: <FiClock className="w-5 h-5"/>
+      icon: <FiLayers className="w-5 h-5"/>
     }
   ];
 

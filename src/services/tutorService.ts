@@ -394,11 +394,31 @@ export const getAllCoursesTutor = async (
   }
 };
 
-export const getCourseStats=async()=>{
+export const getTutorRevenue=async()=>{
   try {
-    
+    const response = await tutorAxiosInstance.get("/tutor-revenue")
+    console.log("$$$",response.data)
+    return response.data
   } catch (error) {
-    console.log("error in  fetching course status")
+    console.log("error in  fetching tutors revenue")
+    throw error
+  }
+}
+
+export const getCourseEnrollments=async(
+  courseId: string,
+  page: number = 1,
+  limit: number = 10,
+  search: string = ""
+)=>{
+  try {
+    const response= await tutorAxiosInstance.get(`/course-enrollments/${courseId}`, {
+      params: { page, limit, search },
+    })
+    console.log("###",response.data)
+    return response.data
+  } catch (error) {
+    console.log("error in  fetching course enrollments")
     throw error
   }
 }
