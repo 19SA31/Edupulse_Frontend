@@ -13,7 +13,7 @@ const initialState: UserState = {
   user: null,
   loading: false,
   error: null,
-  isAuthenticated: false
+  isAuthenticated: false,
 };
 
 const userSlice = createSlice({
@@ -34,14 +34,12 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload || "Signup failed";
       })
-      
 
       .addCase(verifyOtp.fulfilled, (state, action: PayloadAction<any>) => {
         state.user = action.payload.user;
         state.isAuthenticated = true;
         state.error = null;
       })
-
       .addCase(login.pending, (state) => {
         state.loading = true;
       })
@@ -59,7 +57,8 @@ const userSlice = createSlice({
       .addCase(logout.fulfilled, () => {
         return initialState;
       });
-  }
+      
+  },
 });
 
 export const { clearError } = userSlice.actions;
