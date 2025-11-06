@@ -11,7 +11,7 @@ import { AxiosResponse } from "axios";
 import { CourseSearchParams } from "../interfaces/courseInterface";
 import { EnrollmentData } from "../interfaces/enrollmentInterface";
 import { loadStripe, Stripe } from "@stripe/stripe-js";
-                                                          
+
 const userAxiosInstance = createAxiosInstance("user");
 
 let stripePromise: Promise<Stripe | null> | null = null;
@@ -225,7 +225,6 @@ export const updateUserProfile = async (
       }
     );
 
-
     if (!response.data.success) {
       return {
         success: false,
@@ -335,14 +334,25 @@ export const getAllCourses = async (): Promise<CourseListingUser[]> => {
 };
 
 export const getAllListedCourses = async (
-  params?: CourseSearchParams
+  params?: CourseSearchParams,
+  page: number = 1,
+  limit: number = 6
 ): Promise<{
   success: boolean;
-  data: CourseListingUser[];
+  data: {
+    courses: CourseListingUser[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
   message?: string;
 }> => {
   try {
     const queryParams = new URLSearchParams();
+
+    queryParams.append("page", page.toString());
+    queryParams.append("limit", limit.toString());
 
     if (params?.search) {
       queryParams.append("search", params.search);
@@ -360,22 +370,22 @@ export const getAllListedCourses = async (
       queryParams.append("sortBy", params.sortBy);
     }
 
-    const queryString = queryParams.toString();
-    const url = queryString
-      ? `/listed-courses?${queryString}`
-      : "/listed-courses";
+    const response = await userAxiosInstance.get(
+      `/listed-courses?${queryParams.toString()}`
+    );
 
-    const response: AxiosResponse<{
-      success: boolean;
-      data: CourseListingUser[];
-      message?: string;
-    }> = await userAxiosInstance.get(url);
     return response.data;
   } catch (error: any) {
     console.error("Error fetching courses:", error);
     return {
       success: false,
-      data: [],
+      data: {
+        courses: [],
+        total: 0,
+        page: 1,
+        limit: 6,
+        totalPages: 0,
+      },
       message: error.response?.data?.message || "Failed to fetch courses",
     };
   }
@@ -488,14 +498,12 @@ export const getUserEnrollments = async (page: number, search: string = "") => {
   }
 };
 
-export const getEnrolledCourses = async ()=>{
+export const getEnrolledCourses = async () => {
   try {
-    const response = await userAxiosInstance.get("/courses-enrolled")
-    return response.data
+    const response = await userAxiosInstance.get("/courses-enrolled");
+    return response.data;
   } catch (error) {
-    console.error("error in fetching enrolled courses:",error)
-    throw error
+    console.error("error in fetching enrolled courses:", error);
+    throw error;
   }
-}
-
-
+};

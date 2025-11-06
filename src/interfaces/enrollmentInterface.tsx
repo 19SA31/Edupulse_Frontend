@@ -83,3 +83,10 @@ export interface TutorRevenueData {
   totalEnrollments: number;
   courses: TutorRevenueCourse[];
 }
+
+export interface EnrollmentData {
+  courseId: string;
+  tutorId: string;
+  categoryId: string;
+  price: number;
+}

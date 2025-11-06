@@ -197,22 +197,17 @@ const LoginForm: React.FC<LoginFormProps> = ({ role, onLoginSuccess }) => {
                 Login
               </button>
 
-              {(role === "user" || role === "tutor") && (
+              {(role === "user" || role === "tutor") && GOOGLE_CLIENT_ID && (
                 <div className="mt-4">
-
-
                   <div className="flex justify-center">
-                    <div >
-                      <GoogleLogin
-                        onSuccess={handleGoogleSuccess}
-                        onError={handleGoogleError}
-                        useOneTap
-                        theme="filled_blue"
-                        size="large"
-                        width="100%"
-                        text="signin_with"
-                      />
-                    </div>
+                    <GoogleLogin
+                      onSuccess={handleGoogleSuccess}
+                      onError={handleGoogleError}
+                      useOneTap
+                      theme="filled_blue"
+                      size="large"
+                      text="signin_with"
+                    />
                   </div>
                 </div>
               )}

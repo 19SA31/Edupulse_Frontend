@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Search,
   Users,
@@ -6,6 +6,8 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   getAllListedTutors,
@@ -19,21 +21,11 @@ import {
   CourseListingUser,
   CategoryListingUser,
 } from "../../interfaces/userInterface";
-import { Link, useNavigate } from "react-router-dom";
-
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
+import { useNavigate } from "react-router-dom";
 
 interface Enrollment {
   courseId: string;
   count: number;
-}
-
-interface EnrollmentResponse {
-  enrollments: Enrollment[];
 }
 
 const CourseListing = () => {
@@ -48,6 +40,11 @@ const CourseListing = () => {
   const [error, setError] = useState<string | null>(null);
   const [minPrice, setMinPrice] = useState<number | "">("");
   const [maxPrice, setMaxPrice] = useState<number | "">("");
+  const [page, setPage] = useState<number>(1);
+  const [limit] = useState<number>(6);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [totalCount, setTotalCount] = useState<number>(0);
+
   type SortOption =
     | "title_asc"
     | "title_desc"
@@ -78,7 +75,7 @@ const CourseListing = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [tutorsRes, categoriesRes,  enrolledCoursesRes] =
+        const [tutorsRes, categoriesRes, enrolledCoursesRes] =
           await Promise.all([
             getAllListedTutors(),
             getAllListedCategories(),
@@ -115,16 +112,26 @@ const CourseListing = () => {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const coursesRes = await getAllListedCourses({
-        search: debouncedSearchTerm,
-        category: selectedCategory,
-        minPrice: minPrice || undefined,
-        maxPrice: maxPrice || undefined,
-        sortBy: sortBy || undefined,
-      });
+      const coursesRes = await getAllListedCourses(
+        {
+          search: debouncedSearchTerm,
+          category: selectedCategory,
+          minPrice: minPrice || undefined,
+          maxPrice: maxPrice || undefined,
+          sortBy: sortBy || undefined,
+        },
+        page,
+        limit
+      );
 
-      if (coursesRes.success) {
-        const coursesWithEnrollmentCounts = coursesRes.data.map(
+      if (coursesRes.success && coursesRes.data) {
+        const {
+          courses: coursesArray,
+          total,
+          totalPages: pages,
+        } = coursesRes.data;
+
+        const coursesWithEnrollmentCounts = coursesArray.map(
           (course: CourseListingUser) => ({
             ...course,
             isEnrolled: enrolledCourseIds.has(course.courseId),
@@ -132,6 +139,12 @@ const CourseListing = () => {
         );
 
         setCourses(coursesWithEnrollmentCounts);
+        setTotalCount(total);
+        setTotalPages(pages);
+      } else {
+        setCourses([]);
+        setTotalPages(0);
+        setTotalCount(0);
       }
     } catch (err) {
       setError("Failed to fetch courses. Please try again later.");
@@ -149,7 +162,7 @@ const CourseListing = () => {
     minPrice,
     maxPrice,
     sortBy,
-    enrollmentCounts,
+    page,
     enrolledCourseIds,
   ]);
 
@@ -202,7 +215,22 @@ const CourseListing = () => {
     setMinPrice("");
     setMaxPrice("");
     setSortBy("");
+    setPage(1);
   };
+
+  const goToPage = (p: number) => {
+    if (p < 1 || p > totalPages) return;
+    setPage(p);
+    window.scrollTo({ top: 200, behavior: "smooth" });
+  };
+
+  const pageNumbers = useMemo(() => {
+    const pages: number[] = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }, [totalPages]);
 
   const CourseCard = ({
     course,
@@ -212,7 +240,7 @@ const CourseListing = () => {
     const tutor = getTutorInfo(course.tutorName);
 
     return (
-      <div className="bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group">
+      <div className="bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer group">
         <div
           className="relative overflow-hidden"
           onClick={() => handleCourseClick(course.courseId)}
@@ -244,7 +272,7 @@ const CourseListing = () => {
         </div>
 
         <div
-          className="p-4 cursor-pointer hover:bg-gray-800 transition-colors rounded-lg"
+          className="p-4 cursor-pointer hover:bg-gray-750 transition-colors"
           onClick={() => handleCourseClick(course.courseId)}
         >
           <div className="flex items-center justify-between mb-2 text-sm text-white">
@@ -256,7 +284,7 @@ const CourseListing = () => {
             </div>
             <div className="flex items-center gap-1">
               <Star size={14} className="fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-medium"></span>
+              <span className="text-sm font-medium">4.5</span>
             </div>
           </div>
 
@@ -306,10 +334,10 @@ const CourseListing = () => {
 
   if (loading && courses.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-yellow-600" />
-          <p className="text-gray-600">Loading courses...</p>
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-yellow-400" />
+          <p className="text-gray-300">Loading courses...</p>
         </div>
       </div>
     );
@@ -317,10 +345,10 @@ const CourseListing = () => {
 
   if (error && courses.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-8 h-8 mx-auto mb-4 text-red-500" />
-          <p className="text-gray-600 mb-4">{error}</p>
+          <p className="text-gray-300 mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded font-medium"
@@ -333,7 +361,7 @@ const CourseListing = () => {
   }
 
   return (
-    <div className=" bg-black">
+    <div className="bg-black min-h-screen">
       <div className="bg-gradient-to-r from-yellow-600 via-yellow-200 to-yellow-600 text-white py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 text-black">
@@ -364,13 +392,18 @@ const CourseListing = () => {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="lg:w-64 flex-shrink-0">
-            <div className="bg-black rounded-lg p-6 shadow-sm sticky top-4">
-              <h3 className="font-semibold text-white mb-4">Categories</h3>
+            <div className="bg-gray-900 rounded-lg p-6 shadow-lg sticky top-4 border border-gray-800">
+              <h3 className="font-semibold text-white mb-4 text-lg">
+                Categories
+              </h3>
               <ul className="space-y-2">
                 {categories.map((category, index) => (
                   <li key={index}>
                     <button
-                      onClick={() => setSelectedCategory(category)}
+                      onClick={() => {
+                        setSelectedCategory(category);
+                        setPage(1);
+                      }}
                       className={`w-full text-left px-3 py-2 rounded transition-colors text-sm ${
                         selectedCategory === category
                           ? "bg-yellow-400 text-black font-medium"
@@ -391,11 +424,12 @@ const CourseListing = () => {
                       type="number"
                       placeholder="Min Price (₹)"
                       value={minPrice}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setMinPrice(
                           e.target.value ? Number(e.target.value) : ""
-                        )
-                      }
+                        );
+                        setPage(1);
+                      }}
                       className="w-full px-3 py-2 bg-gray-700 text-white rounded text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                       min="0"
                     />
@@ -405,11 +439,12 @@ const CourseListing = () => {
                       type="number"
                       placeholder="Max Price (₹)"
                       value={maxPrice}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setMaxPrice(
                           e.target.value ? Number(e.target.value) : ""
-                        )
-                      }
+                        );
+                        setPage(1);
+                      }}
                       className="w-full px-3 py-2 bg-gray-700 text-white rounded text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                       min="0"
                     />
@@ -418,6 +453,7 @@ const CourseListing = () => {
                     onClick={() => {
                       setMinPrice("");
                       setMaxPrice("");
+                      setPage(1);
                     }}
                     className="text-yellow-400 text-sm hover:text-yellow-300 transition-colors"
                   >
@@ -458,7 +494,10 @@ const CourseListing = () => {
                 <span className="text-white text-sm">Sort by:</span>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
+                  onChange={(e) => {
+                    setSortBy(e.target.value);
+                    setPage(1);
+                  }}
                   className="bg-gray-700 text-white px-3 py-2 rounded text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 >
                   <option value="">Default</option>
@@ -474,18 +513,85 @@ const CourseListing = () => {
                 {loading && courses.length > 0 && (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 )}
-                <span>{courses.length} courses found</span>
+                <span className="font-medium text-white">{totalCount}</span>
+                <span>courses found</span>
               </div>
             </div>
 
             {courses.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {courses.map((course) => (
-                  <CourseCard key={course.courseId} course={course} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                  {courses.map((course) => (
+                    <CourseCard key={course.courseId} course={course} />
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="bg-black rounded-lg p-6 border">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="text-sm text-gray-300">
+                        Showing{" "}
+                        <span className="font-semibold text-yellow-400">
+                          {(page - 1) * limit + 1}
+                        </span>{" "}
+                        -{" "}
+                        <span className="font-semibold text-yellow-400">
+                          {Math.min(page * limit, totalCount)}
+                        </span>{" "}
+                        of{" "}
+                        <span className="font-semibold text-yellow-400">
+                          {totalCount}
+                        </span>{" "}
+                        courses
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => goToPage(page - 1)}
+                          disabled={page === 1}
+                          className={`p-2 rounded-lg transition-all ${
+                            page === 1
+                              ? "bg-gray-800 text-gray-600 cursor-not-allowed"
+                              : "bg-gray-800 text-white hover:bg-yellow-400 hover:text-black"
+                          }`}
+                          aria-label="Previous page"
+                        >
+                          <ChevronLeft size={20} />
+                        </button>
+
+                        {pageNumbers.map((p) => (
+                          <button
+                            key={p}
+                            onClick={() => goToPage(p)}
+                            className={`min-w-[40px] px-3 py-2 rounded-lg transition-all font-medium ${
+                              p === page
+                                ? "bg-yellow-400 text-black shadow-lg scale-110"
+                                : "bg-gray-800 text-white hover:bg-yellow-400 hover:text-black"
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        ))}
+
+                        <button
+                          onClick={() => goToPage(page + 1)}
+                          disabled={page === totalPages}
+                          className={`p-2 rounded-lg transition-all ${
+                            page === totalPages
+                              ? "bg-gray-800 text-gray-600 cursor-not-allowed"
+                              : "bg-gray-800 text-white hover:bg-yellow-400 hover:text-black"
+                          }`}
+                          aria-label="Next page"
+                        >
+                          <ChevronRight size={20} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
-              <div className="text-center py-12">
+              <div className="text-center py-12 bg-gray-900 rounded-lg border border-gray-800">
                 <div className="text-gray-400 mb-4">
                   <Search size={48} className="mx-auto" />
                 </div>
@@ -523,21 +629,21 @@ const CourseListing = () => {
                   {tutors.slice(0, 4).map((tutor) => (
                     <div
                       key={tutor.tutorId}
-                      className="bg-gray-800 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
+                      className="bg-gray-900 rounded-lg p-6 shadow-lg hover:shadow-xl transition-all border border-gray-800 hover:border-yellow-400"
                     >
                       <div className="text-center">
                         <div className="relative inline-block mb-4">
                           <img
                             src={tutor.avatar}
                             alt={tutor.name}
-                            className="w-16 h-16 rounded-full object-cover mx-auto"
+                            className="w-16 h-16 rounded-full object-cover mx-auto border-2 border-gray-700"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.src = "/api/placeholder/64/64";
                             }}
                           />
                           {tutor.isVerified && (
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-gray-900">
                               <svg
                                 className="w-3 h-3 text-white"
                                 fill="currentColor"
@@ -555,7 +661,7 @@ const CourseListing = () => {
                         <h4 className="font-semibold text-white mb-1">
                           {tutor.name}
                         </h4>
-                        <p className="text-sm text-gray-200 mb-2">
+                        <p className="text-sm text-gray-300 mb-2">
                           {tutor.designation}
                         </p>
                         <p className="text-xs text-gray-400 line-clamp-2">
@@ -570,9 +676,6 @@ const CourseListing = () => {
           </div>
         </div>
       </div>
-      <div className="mt-6 pt-6"></div>
-      <div className="mt-6 pt-6"></div>
-      <div className="mt-6 pt-6"></div>
     </div>
   );
 };

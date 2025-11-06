@@ -13,6 +13,7 @@ import {
   CropData,
   UpdateProfileData,
   VerificationDocuments,
+  ApiResponse,
 } from "../interfaces/tutorInterface";
 
 export const tutorSignUpService = async (
@@ -394,34 +395,37 @@ export const getAllCoursesTutor = async (
   }
 };
 
-export const getTutorRevenue=async()=>{
+export const getTutorRevenue = async () => {
   try {
-    const response = await tutorAxiosInstance.get("/tutor-revenue")
-    console.log("$$$",response.data)
-    return response.data
+    const response = await tutorAxiosInstance.get("/tutor-revenue");
+    console.log("$$$", response.data);
+    return response.data;
   } catch (error) {
-    console.log("error in  fetching tutors revenue")
-    throw error
+    console.log("error in  fetching tutors revenue");
+    throw error;
   }
-}
+};
 
-export const getCourseEnrollments=async(
+export const getCourseEnrollments = async (
   courseId: string,
   page: number = 1,
   limit: number = 10,
   search: string = ""
-)=>{
+) => {
   try {
-    const response= await tutorAxiosInstance.get(`/course-enrollments/${courseId}`, {
-      params: { page, limit, search },
-    })
-    console.log("###",response.data)
-    return response.data
+    const response = await tutorAxiosInstance.get(
+      `/course-enrollments/${courseId}`,
+      {
+        params: { page, limit, search },
+      }
+    );
+    console.log("###", response.data);
+    return response.data;
   } catch (error) {
-    console.log("error in  fetching course enrollments")
-    throw error
+    console.log("error in  fetching course enrollments");
+    throw error;
   }
-}
+};
 
 export async function fetchCourseDetails(
   courseId: string
@@ -530,7 +534,7 @@ export const createTutorSlots = async (slotData: slotRequest) => {
 
 export const getTutorSlots = async () => {
   try {
-    console.log("inside get tutor slots")
+    console.log("inside get tutor slots");
     const response = await tutorAxiosInstance.get("/get-slots");
     return response.data;
   } catch (error: unknown) {

@@ -6,7 +6,7 @@ import {
   PopulatedEnrollment,
   TutorRevenueCourse,
 } from "../../interfaces/enrollmentInterface";
-import { FiArrowLeft } from "react-icons/fi"; // Import a nice back icon
+import { FiArrowLeft } from "react-icons/fi";
 
 const PAGE_SIZE = 10;
 
@@ -105,34 +105,53 @@ const CourseRevenue: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 bg-white rounded-xl shadow-md">
+      {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
         className="mb-6 flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded transition font-semibold w-fit"
+        style={{ position: "relative", zIndex: 2 }}
       >
         <FiArrowLeft className="text-lg" />
         <span>Back to Dashboard</span>
       </button>
 
-      <div className="flex gap-6 flex-wrap items-center mb-6">
-        <img
-          src={course.courseThumbnail}
-          alt={course.courseTitle}
-          className="w-52 h-32 object-cover rounded shadow"
+      <div
+        className="relative rounded-lg overflow-hidden mb-8 flex items-center"
+        style={{
+          minHeight: "170px",
+          backgroundImage: `url(${course.courseThumbnail})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "rgba(0,0,0,0.3)",
+            zIndex: 1,
+          }}
         />
-        <div className="flex flex-col gap-1">
-          <h2 className="text-3xl font-bold">{course.courseTitle}</h2>
-          <div className="flex gap-8 mt-3">
-            <span className="font-semibold text-green-700">
-              Earnings: ₹{course.tutorEarnings.toLocaleString()}
-            </span>
-            <span className="font-semibold text-red-600">
-              Platform Fee: ₹{course.platformFee.toLocaleString()}
-            </span>
-            <span className="font-semibold text-blue-600">
-              Enrollments: {enrollmentCount}
-            </span>
-          </div>
-        </div>
+        <h2
+          className="relative text-4xl font-bold text-white drop-shadow-lg px-10"
+          style={{
+            zIndex: 2,
+            textShadow: "0 2px 8px rgba(0,0,0,0.7)",
+          }}
+        >
+          {course.courseTitle}
+        </h2>
+      </div>
+
+      <div className="flex gap-8 flex-wrap items-center mb-6">
+        <span className="font-semibold text-green-700">
+          Earnings: ₹{course.tutorEarnings.toLocaleString()}
+        </span>
+        <span className="font-semibold text-red-600">
+          Platform Fee: ₹{course.platformFee.toLocaleString()}
+        </span>
+        <span className="font-semibold text-blue-600">
+          Enrollments: {enrollmentCount}
+        </span>
       </div>
 
       <div className="mt-10">

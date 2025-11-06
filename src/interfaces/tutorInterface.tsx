@@ -11,6 +11,12 @@ export interface Tutor {
   isBlocked?: boolean;
 }
 
+export interface ApiResponse<T = any> {
+  success: boolean;
+  message: string;
+  data?: T;
+}
+
 export interface TutorSignup {
   name: string;
   email: string;
