@@ -93,8 +93,8 @@ export const googleLogin = createAsyncThunk(
   async (credential: string, { rejectWithValue }) => {
     try {
       const result = await googleUserAuthService(credential);
-      if (result.success) {
-        return result.data;
+      if (result.success  && result.data.user) {
+        return { user: result.data.user, accessToken: result.data.accessToken }
       } else {
         return rejectWithValue(result.message || "Google login failed");
       }

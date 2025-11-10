@@ -90,6 +90,8 @@ export const googleUserAuthService = async (
 
     if (response.data.success && response.data.data) {
       const { accessToken, user } = response.data.data;
+
+      console.log("555",user)
       TokenManager.setTokens("user", accessToken, user);
     }
 

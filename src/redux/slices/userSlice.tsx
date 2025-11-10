@@ -1,6 +1,12 @@
 // redux/slices/userSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { login, logout, signUp, verifyOtp } from "../actions/userActions";
+import {
+  login,
+  logout,
+  signUp,
+  verifyOtp,
+  googleLogin,
+} from "../actions/userActions";
 
 interface UserState {
   user: any;
@@ -56,8 +62,13 @@ const userSlice = createSlice({
 
       .addCase(logout.fulfilled, () => {
         return initialState;
+      })
+
+      .addCase(googleLogin.fulfilled, (state, action) => {
+        state.user = action.payload.user;
+        state.isAuthenticated = true;
+        state.error = null;
       });
-      
   },
 });
 

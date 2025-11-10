@@ -101,8 +101,8 @@ export const googleTutorLogin = createAsyncThunk(
   async (credential: string, { rejectWithValue }) => {
     try {
       const result = await googleTutorAuthService(credential);
-      if (result.success) {
-        return result.data;
+      if (result.success  && result.data.user) {
+        return { tutor: result.data.user, accessToken: result.data.accessToken }
       } else {
         return rejectWithValue(result.message || "Google login failed");
       }
