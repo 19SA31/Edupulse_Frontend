@@ -403,6 +403,7 @@ export async function fetchCourseDetails(
   courseId: string
 ): Promise<CourseDetails> {
   const response = await userAxiosInstance.get(`/course-details/${courseId}`);
+  console.log("KK",response.data)
   return response.data;
 }
 

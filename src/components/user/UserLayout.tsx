@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import Header from "../../components/common/Header";
 import ReusableSidebar from "../../components/common/Sidebar";
 import { SidebarItem } from "../../interfaces/userInterface";
-import { HiUser, HiCreditCard } from "react-icons/hi";
+import { HiUser, HiCreditCard, HiAcademicCap } from "react-icons/hi";
 
 function UserLayout() {
   const userSidebarItems: SidebarItem[] = [
@@ -15,6 +15,11 @@ function UserLayout() {
       path: "/profile/payment-history",
       label: "Payment History",
       icon: <HiCreditCard className="w-5 h-5" />,
+    },
+    {
+      path: "/profile/user-courses",
+      label: "My Courses",
+      icon: <HiAcademicCap className="w-5 h-5" />,
     },
   ];
 

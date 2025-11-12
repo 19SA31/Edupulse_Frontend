@@ -16,6 +16,7 @@ import CourseListingPage from "../pages/user/CourseListingPage";
 import CourseDetailsPage from "../pages/user/CourseDetailsPage";
 import PaymentSuccessPage from "../pages/user/PaymentSuccessPage";
 import PaymentHistoryPage from "../pages/user/PaymentHistoryPage";
+import UserCoursesPage from "../pages/user/UserCoursesPage";
 
 function UserRoutes() {
   return (
@@ -83,6 +84,7 @@ function UserRoutes() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="payment-history" element={<PaymentHistoryPage/>} />
+          <Route path='user-courses' element={<UserCoursesPage/>}/>
         </Route>
       </Routes>
     </div>
