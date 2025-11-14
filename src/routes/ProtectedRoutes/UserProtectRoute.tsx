@@ -11,11 +11,9 @@ function UserProtectRoute({ children }: UserProtectRouteProps) {
   const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(true);
 
-
   const userState = useSelector((state: RootState) => state.user);
   const isLoggedIn =
     userState && (userState.user !== null || userState.isAuthenticated);
-
 
   const checkLocalStorageAuth = () => {
     const persistedData = localStorage.getItem("persist:user");
@@ -36,20 +34,11 @@ function UserProtectRoute({ children }: UserProtectRouteProps) {
     return false;
   };
 
-  console.log("user protect route - Redux state:", userState);
-  console.log(
-    "user protect route - localStorage check:",
-    checkLocalStorageAuth()
-  );
-
   useEffect(() => {
-
     const authCheck = setTimeout(() => {
       const hasLocalAuth = checkLocalStorageAuth();
 
-
       if (!isLoggedIn && !hasLocalAuth) {
-        console.log("Not logged in, redirecting to login page");
         navigate("/", {
           state: { message: "Authorization required" },
           replace: true,
@@ -62,11 +51,9 @@ function UserProtectRoute({ children }: UserProtectRouteProps) {
     return () => clearTimeout(authCheck);
   }, [navigate, isLoggedIn, userState]);
 
-
   if (isChecking) {
     return null;
   }
-
 
   return isLoggedIn || checkLocalStorageAuth() ? <>{children}</> : null;
 }

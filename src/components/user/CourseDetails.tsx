@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams, useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import {
   Play,
   Download,
@@ -9,9 +11,17 @@ import {
   ChevronDown,
   ChevronRight,
   Eye,
+  Loader2,
+  Lock,
 } from "lucide-react";
 import VideoPlayer from "./VideoPlayer";
 import DocumentViewer from "./DocumentViewer";
+import {
+  verifyPayment,
+  createPayment,
+  processStripePayment,
+  verifyEnrollment,
+} from "../../services/userService";
 import {
   CourseDetails,
   CourseVideo,
@@ -23,6 +33,9 @@ import {
 const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
   courseData,
 }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const params = useParams();
   const [expandedChapters, setExpandedChapters] = useState<
     Record<string, boolean>
   >({});
@@ -34,16 +47,98 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
     []
   );
   const [activeLesson, setActiveLesson] = useState<CourseLesson | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] =
+    useState<boolean>(false);
+  const [isEnrolled, setIsEnrolled] = useState<boolean>(false);
+  const [isCheckingEnrollment, setIsCheckingEnrollment] =
+    useState<boolean>(true);
 
-  console.log("inside component", courseData);
+  const [paymentStatus, setPaymentStatus] = useState<
+    "success" | "cancelled" | null
+  >(null);
+
   useEffect(() => {
-    if (courseData?.chapters?.[0]?.lessons?.[0]?.videos?.[0]) {
-      setSelectedVideo(courseData.chapters[0].lessons[0].videos[0]);
-      setActiveLesson(courseData.chapters[0].lessons[0]);
+    const checkEnrollment = async () => {
+      if (!courseData?._id) return;
+
+      try {
+        setIsCheckingEnrollment(true);
+        const enrollmentResponse = await verifyEnrollment(courseData._id);
+        setIsEnrolled(enrollmentResponse.success);
+
+        if (enrollmentResponse.success && courseData.chapters && courseData.chapters.length > 0) {
+          setExpandedChapters({
+            [courseData.chapters[0]._id]: true,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to verify enrollment:", error);
+        setIsEnrolled(false);
+      } finally {
+        setIsCheckingEnrollment(false);
+      }
+    };
+
+    checkEnrollment();
+  }, [courseData?._id]);
+
+  useEffect(() => {
+    if (
+      courseData?.chapters &&
+      courseData.chapters.length > 0 &&
+      !selectedVideo
+    ) {
+      const firstChapter = courseData.chapters[0];
+      const firstLesson = firstChapter.lessons?.[0];
+      const firstVideo = firstLesson?.videos?.[0];
+
+      if (firstVideo && firstLesson) {
+        setSelectedVideo(firstVideo);
+        setActiveLesson(firstLesson);
+      }
     }
-  }, [courseData]);
+  }, [courseData, selectedVideo]);
+
+  useEffect(() => {
+    const paymentParam = searchParams.get("payment");
+    const sessionId = searchParams.get("session_id");
+
+    if (paymentParam === "success" && sessionId) {
+      setPaymentStatus("success");
+      verifyPayment(sessionId)
+        .then(() => {
+          setIsEnrolled(true);
+
+          if (courseData?.chapters && courseData.chapters.length > 0) {
+            setExpandedChapters({
+              [courseData.chapters[0]._id]: true,
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Payment verification error:", error);
+        });
+
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete("payment");
+      newSearchParams.delete("session_id");
+      setSearchParams(newSearchParams);
+    } else if (paymentParam === "cancelled") {
+      setPaymentStatus("cancelled");
+
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete("payment");
+      setSearchParams(newSearchParams);
+    }
+  }, [searchParams, setSearchParams, courseData]);
 
   const toggleChapter = (chapterId: string): void => {
+
+    if (!isEnrolled && !expandedChapters[chapterId]) {
+      toast.error("Please enroll in the course to access all content.");
+      return;
+    }
+    
     setExpandedChapters((prev) => ({
       ...prev,
       [chapterId]: !prev[chapterId],
@@ -54,11 +149,17 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
     video: CourseVideo,
     lesson: CourseLesson
   ): void => {
+
     setSelectedVideo(video);
     setActiveLesson(lesson);
   };
 
   const handleDocumentView = (documents: CourseDocument[]): void => {
+    if (!isEnrolled) {
+      toast.error("Please enroll in the course to access documents.");
+      return;
+    }
+
     if (documents && documents.length > 0) {
       setSelectedDocuments(documents);
       setShowDocuments(true);
@@ -67,6 +168,37 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
 
   const handlePaywallTrigger = (): void => {
     console.log("Paywall triggered - redirect to enrollment");
+  };
+
+  const handleEnrollNow = async (): Promise<void> => {
+    if (!courseData) {
+      console.error("No course data available");
+      return;
+    }
+
+    setIsProcessingPayment(true);
+
+    try {
+      const enrollmentData = {
+        courseId: courseData._id,
+        tutorId: courseData.tutor._id,
+        categoryId: courseData.category._id,
+        price: courseData.price,
+      };
+
+      const response = await createPayment(enrollmentData);
+
+      if (response.success && response.data.sessionId) {
+        await processStripePayment(response.data.sessionId);
+      } else {
+        throw new Error(response.message || "Failed to create payment session");
+      }
+    } catch (error: any) {
+      console.error("Enrollment error:", error);
+      alert(error.message || "Something went wrong. Please try again.");
+    } finally {
+      setIsProcessingPayment(false);
+    }
   };
 
   const formatPrice = (price: number): string => {
@@ -111,12 +243,26 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
     <div className="min-h-screen bg-gray-50">
       <div className="bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
+          <div
+            className={`grid grid-cols-1 ${
+              isEnrolled ? "lg:grid-cols-1" : "lg:grid-cols-3"
+            } gap-8`}
+          >
+            <div className={isEnrolled ? "col-span-1" : "lg:col-span-2"}>
               <div className="mb-4">
                 <span className="inline-block bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-semibold">
                   {category?.name || "Course"}
                 </span>
+                {isCheckingEnrollment && (
+                  <span className="ml-2 text-sm text-gray-400">
+                    Checking enrollment...
+                  </span>
+                )}
+                {!isCheckingEnrollment && isEnrolled && (
+                  <span className="ml-2 inline-block bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                    Enrolled
+                  </span>
+                )}
               </div>
 
               <h1 className="text-3xl lg:text-4xl font-bold mb-6 leading-tight">
@@ -128,7 +274,8 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
                   <VideoPlayer
                     video={selectedVideo}
                     onPaywallTrigger={handlePaywallTrigger}
-                    freeWatchTime={30}
+                    freeWatchTime={isEnrolled ? Infinity : 30}
+                    isEnrolled={isEnrolled}
                   />
                 </div>
               )}
@@ -185,61 +332,71 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
               </div>
             </div>
 
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg overflow-hidden sticky top-6">
-                <div className="relative">
-                  <img
-                    src={thumbnailImage || "/api/placeholder/400/225"}
-                    alt={title || "Course thumbnail"}
-                    className="w-full h-48 object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        "/api/placeholder/400/225";
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
-                    <Play className="w-16 h-16 text-white opacity-80" />
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  <div className="text-center mb-6">
-                    <div className="text-3xl font-bold text-gray-900">
-                      {formatPrice(price)}
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">
-                      One-time payment
-                    </p>
+            {!isEnrolled && (
+              <div className="h-fit lg:h-full">
+                <div className="bg-white rounded-lg overflow-hidden sticky top-6">
+                  <div className="relative">
+                    <img
+                      src={thumbnailImage || "/api/placeholder/400/225"}
+                      alt={title || "Course thumbnail"}
+                      className="w-full h-48 object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          "/api/placeholder/400/225";
+                      }}
+                    />
                   </div>
 
-                  <button className="w-full bg-yellow-400 hover:bg-gradient-to-bl from-yellow-400 to-yellow-600 text-black font-semibold py-3 px-4 rounded-lg mb-3 transition-colors">
-                    Enroll Now
-                  </button>
-
-                  <button className="w-full border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-3 px-4 rounded-lg transition-colors">
-                    Add to Wishlist
-                  </button>
-
-                  <div className="mt-6 space-y-3 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">
-                        30-Day Money-Back Guarantee
-                      </span>
+                  <div className="p-6">
+                    <div className="text-center mb-6">
+                      <div className="text-3xl font-bold text-gray-900">
+                        {formatPrice(price)}
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">
+                        One-time payment
+                      </p>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">
-                        Full Lifetime Access
-                      </span>
+
+                    <button
+                      onClick={handleEnrollNow}
+                      disabled={isProcessingPayment}
+                      className="w-full bg-yellow-400 hover:bg-gradient-to-bl from-yellow-400 to-yellow-600 text-black font-semibold py-3 px-4 rounded-lg mb-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    >
+                      {isProcessingPayment ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                          Processing...
+                        </>
+                      ) : (
+                        "Enroll Now"
+                      )}
+                    </button>
+
+                    <button className="w-full border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-3 px-4 rounded-lg transition-colors">
+                      Add to Wishlist
+                    </button>
+
+                    <div className="mt-6 space-y-3 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">
+                          30-Day Money-Back Guarantee
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">
+                          Full Lifetime Access
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div className=" bg-black max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="bg-black max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-12">
             <section>
@@ -264,34 +421,36 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold  text-white mb-6">
+              <h2 className="text-2xl font-bold text-white mb-6">
                 Course content
               </h2>
-              <div className="bg-gray-800 border border-ywllow-200 rounded-lg p-6">
+              <div className="bg-gray-800 border border-yellow-200 rounded-lg p-6">
                 <div className="p-4 bg-gray-800 border-yellow-200">
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-white">
                       {chapters?.length || 0} chapters • {totalLessons} lessons
                     </span>
-                    <button
-                      className="text-yellow-400 hover:text-yellow-700 font-medium text-sm"
-                      onClick={() => {
-                        const allExpanded =
-                          Object.keys(expandedChapters).length ===
-                          chapters.length;
-                        const newState: Record<string, boolean> = {};
-                        if (!allExpanded) {
-                          chapters.forEach((chapter) => {
-                            newState[chapter._id] = true;
-                          });
-                        }
-                        setExpandedChapters(newState);
-                      }}
-                    >
-                      {Object.keys(expandedChapters).length === chapters.length
-                        ? "Collapse all"
-                        : "Expand all"}
-                    </button>
+                    {isEnrolled && (
+                      <button
+                        className="text-yellow-400 hover:text-yellow-700 font-medium text-sm"
+                        onClick={() => {
+                          const allExpanded =
+                            Object.keys(expandedChapters).length ===
+                            chapters.length;
+                          const newState: Record<string, boolean> = {};
+                          if (!allExpanded) {
+                            chapters.forEach((chapter) => {
+                              newState[chapter._id] = true;
+                            });
+                          }
+                          setExpandedChapters(newState);
+                        }}
+                      >
+                        {Object.keys(expandedChapters).length === chapters.length
+                          ? "Collapse all"
+                          : "Expand all"}
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -338,9 +497,11 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
                                     <span className="text-sm font-medium text-gray-200">
                                       {lesson.title}
                                     </span>
-                                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                      Preview
-                                    </span>
+                                    {!isEnrolled && (
+                                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                        Preview
+                                      </span>
+                                    )}
                                   </div>
                                   <div className="flex items-center space-x-2 text-sm text-gray-300">
                                     <Clock className="w-4 h-4" />
@@ -362,7 +523,6 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
                                     type="button"
                                   >
                                     <Play className="w-4 h-4 text-purple-600" />
-
                                     <span
                                       className={`text-sm ${
                                         selectedVideo?._id === video._id
@@ -383,9 +543,25 @@ const CourseDetailsComponent: React.FC<CourseDetailsComponentProps> = ({
                                     className="ml-6 flex items-center space-x-3 py-2 px-3 rounded text-left hover:bg-gray-50 transition-colors"
                                     type="button"
                                   >
-                                    <FileText className="w-4 h-4 text-green-600" />
-                                    <span className="text-sm text-gray-200">
+                                    {!isEnrolled && (
+                                      <Lock className="w-4 h-4 text-red-600" />
+                                    )}
+                                    <FileText
+                                      className={`w-4 h-4 ${
+                                        isEnrolled
+                                          ? "text-green-600"
+                                          : "text-gray-400"
+                                      }`}
+                                    />
+                                    <span
+                                      className={`text-sm ${
+                                        isEnrolled
+                                          ? "text-gray-200"
+                                          : "text-gray-400"
+                                      }`}
+                                    >
                                       Documents ({lesson.documents.length})
+                                      {!isEnrolled && " - Locked"}
                                     </span>
                                   </button>
                                 )}

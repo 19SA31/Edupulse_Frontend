@@ -219,16 +219,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         height: size,
       };
       setCropData(newCropData);
-
-      console.log("Initial crop data set:", newCropData);
-      console.log("Image natural size:", {
-        width: naturalWidth,
-        height: naturalHeight,
-      });
-      console.log("Image client size:", {
-        width: clientWidth,
-        height: clientHeight,
-      });
     }
   };
 
@@ -290,9 +280,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       };
 
       setFinalCropData(finalCrop);
-      console.log("Final crop data stored:", finalCrop);
-      console.log("Original crop data:", cropData);
-      console.log("Scale factors:", { scaleX, scaleY });
     }
     setShowCropper(false);
   };
@@ -336,9 +323,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
         if (finalCropData) {
           updateData.cropData = finalCropData;
-          console.log("Using stored crop data:", finalCropData);
-        } else {
-          console.log("No crop data available - using full image");
         }
 
         setUploadProgress(40);
@@ -347,30 +331,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
       setUploadProgress(60);
       setUploadStatus("Processing profile data...");
-
-      console.log("Submitting profile update with S3 upload:", updateData);
-
-      console.log("=== DEBUG: Profile Update Data ===");
-      console.log("updateData keys:", Object.keys(updateData));
-      console.log("avatarFile exists:", !!avatarFile);
-      console.log("avatarFile details:", {
-        name: avatarFile?.name,
-        type: avatarFile?.type,
-        size: avatarFile?.size,
-        lastModified: avatarFile?.lastModified,
-      });
-      console.log("cropData:", updateData.cropData);
-      console.log("Full updateData:", updateData);
-
-      if (updateData.avatar) {
-        console.log("Avatar in updateData:", {
-          isFile: updateData.avatar instanceof File,
-          constructor: updateData.avatar.constructor.name,
-          name: updateData.avatar.name,
-          type: updateData.avatar.type,
-          size: updateData.avatar.size,
-        });
-      }
 
       let response;
       if (role === "tutor") {
@@ -441,7 +401,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+    <div className="bg-black/80 fixed inset-0 flex justify-center items-center z-50 p-4">
       <div className="bg-gray-800 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <Formik
           initialValues={initialValues}

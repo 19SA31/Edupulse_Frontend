@@ -27,14 +27,13 @@ interface TutorWithDocuments {
   }[];
   verificationStatus: "pending" | "verified" | "rejected";
   submittedAt: string;
-  
+
   userId?: string;
   phone?: string;
   avatar?: string;
   createdAt?: string;
   isBlocked?: boolean;
 }
-
 
 interface RawTutorDoc {
   id: string;
@@ -49,7 +48,6 @@ interface RawTutorDoc {
   submittedAt: string;
 }
 
-
 const rejectionValidationSchema = Yup.object({
   reason: Yup.string()
     .trim()
@@ -58,7 +56,6 @@ const rejectionValidationSchema = Yup.object({
     .required("Please provide a reason for rejection"),
 });
 
-
 interface RejectionFormValues {
   reason: string;
 }
@@ -66,7 +63,6 @@ interface RejectionFormValues {
 const initialRejectionValues: RejectionFormValues = {
   reason: "",
 };
-
 
 interface RejectionModalProps {
   isOpen: boolean;
@@ -214,7 +210,6 @@ function TutorVerification() {
   >([]);
   const [initialDocumentIndex, setInitialDocumentIndex] = useState<number>(0);
 
- 
   const [isRejectionModalOpen, setIsRejectionModalOpen] =
     useState<boolean>(false);
   const [selectedTutorForRejection, setSelectedTutorForRejection] =
@@ -227,7 +222,6 @@ function TutorVerification() {
     return rawTutors.map((rawTutor) => {
       const documents = [];
 
-     
       if (rawTutor.avatar) {
         documents.push({
           id: `${rawTutor.id}-avatar`,
@@ -269,18 +263,18 @@ function TutorVerification() {
       }
 
       return {
-        id: rawTutor.tutorId, 
+        id: rawTutor.tutorId,
         name: rawTutor.tutorName,
         email: rawTutor.tutorEmail,
         documents,
         verificationStatus: rawTutor.verificationStatus,
         submittedAt: rawTutor.submittedAt,
-        
+
         userId: rawTutor.tutorId,
-        phone: undefined, 
+        phone: undefined,
         avatar: rawTutor.avatar,
         createdAt: rawTutor.submittedAt,
-        isBlocked: false, 
+        isBlocked: false,
       } as TutorWithDocuments;
     });
   };
@@ -289,12 +283,8 @@ function TutorVerification() {
     try {
       setLoading(true);
       const response = await getTutorsForVerification(page, search);
-
-      console.log("tutor verific docs:", response);
-
       if (response && response.success) {
-        
-        const rawTutors = response.data.tutorDocs || []; 
+        const rawTutors = response.data.tutorDocs || [];
         const transformedTutors = transformTutorData(rawTutors);
 
         setTutors(transformedTutors);
@@ -339,7 +329,7 @@ function TutorVerification() {
   const handleRejectTutor = async (tutorId: string, reason: string) => {
     try {
       setRejectionLoading(true);
-     
+
       await rejectTutor(tutorId, reason);
       setTutors((prevTutors) =>
         prevTutors.map((tutor) =>
@@ -373,12 +363,9 @@ function TutorVerification() {
     }
   };
 
-  const handlePagination = (direction: "next" | "previous") => {
-    if (direction === "next" && currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    } else if (direction === "previous" && currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
+  const handlePagination = (page: number) => {
+    setCurrentPage(page);
+    fetchTutorsForVerification(page, searchQuery);
   };
 
   const handleSearch = () => {
@@ -419,7 +406,6 @@ function TutorVerification() {
     );
   };
 
-  
   const columns: TableColumn<TutorWithDocuments>[] = [
     {
       key: "name",
@@ -477,49 +463,40 @@ function TutorVerification() {
     },
   ];
 
-  const getActions = (tutor: TutorWithDocuments): TableAction<TutorWithDocuments>[] => {
-  if (tutor.verificationStatus === "pending") {
-    return [
-      {
-        label: () => "Approve",
-        onClick: () => handleVerifyTutor(tutor.id),
-        variant: () => "success",
-      },
-      {
-        label: () => "Reject",
-        onClick: () => handleOpenRejectionModal(tutor),
-        variant: () => "danger",
-      },
-    ];
-  } else {
-    return [
-      {
-        label: () =>
-          tutor.verificationStatus === "verified" ? "Approved" : "Rejected",
-        onClick: () => {},
-        variant: () => "secondary",
-      },
-    ];
-  }
-};
-
-
-  const actions: TableAction<TutorWithDocuments>[] = [
-    {
-      label: (tutor: TutorWithDocuments) =>
-        tutor.verificationStatus === "pending" ? "Approve" : "",
-      onClick: (tutor: TutorWithDocuments) => handleVerifyTutor(tutor.id),
-      variant: (tutor: TutorWithDocuments) =>
-        tutor.verificationStatus === "pending" ? "success" : "primary",
-    },
-    {
-      label: (tutor: TutorWithDocuments) =>
-        tutor.verificationStatus === "pending" ? "Reject" : "",
-      onClick: (tutor: TutorWithDocuments) => handleOpenRejectionModal(tutor),
-      variant: (tutor: TutorWithDocuments) =>
-        tutor.verificationStatus === "pending" ? "danger" : "primary",
-    },
-  ];
+  const getActions = (
+    tutor: TutorWithDocuments
+  ): TableAction<TutorWithDocuments>[] => {
+    if (tutor.verificationStatus === "pending") {
+      return [
+        {
+          label: () => "Approve",
+          onClick: () => handleVerifyTutor(tutor.id),
+          variant: () => "success",
+        },
+        {
+          label: () => "Reject",
+          onClick: () => handleOpenRejectionModal(tutor),
+          variant: () => "danger",
+        },
+      ];
+    } else if (tutor.verificationStatus === "verified") {
+      return [
+        {
+          label: () => "Approved",
+          onClick: () => {},
+          variant: () => "success",
+        },
+      ];
+    } else {
+      return [
+        {
+          label: () => "Rejected",
+          onClick: () => {},
+          variant: () => "danger",
+        },
+      ];
+    }
+  };
 
   return (
     <div className="p-6 mt-4">
@@ -548,7 +525,6 @@ function TutorVerification() {
         getItemId={(tutor) => tutor.id}
       />
 
-      
       <DocumentViewModal
         isOpen={isDocumentModalOpen}
         onClose={handleCloseDocumentModal}
@@ -556,7 +532,6 @@ function TutorVerification() {
         initialDocumentIndex={initialDocumentIndex}
       />
 
-      
       <RejectionModal
         isOpen={isRejectionModalOpen}
         onClose={handleCloseRejectionModal}

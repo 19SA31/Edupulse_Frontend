@@ -1,4 +1,5 @@
 import React from "react";
+import { Search } from "lucide-react";
 
 export interface TableColumn<T> {
   key: keyof T | string;
@@ -30,7 +31,8 @@ export interface TableProps<T> {
   searchPlaceholder?: string;
   currentPage: number;
   totalPages: number;
-  onPageChange: (direction: "next" | "previous") => void;
+  totalCount?: number;
+  onPageChange: (page: number) => void;
   itemsPerPage?: number;
   emptyMessage?: string;
   emptyIcon?: React.ReactNode;
@@ -52,7 +54,6 @@ function Table<T>({
   currentPage,
   totalPages,
   onPageChange,
-  itemsPerPage = 10,
   emptyMessage = "No items found",
   emptyIcon,
   showSearch = true,
@@ -122,6 +123,7 @@ function Table<T>({
       {showSearch && (
         <div className="bg-gray-600 px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex space-x-4 items-center w-full sm:w-auto ml-auto">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-white" />
             <input
               type="text"
               placeholder={searchPlaceholder}
@@ -233,70 +235,89 @@ function Table<T>({
 
       {data.length > 0 && (
         <div className="flex flex-col items-center py-6 border-t border-gray-200">
-          <span className="text-sm text-slate-500 mb-4">
-            Showing{" "}
-            <span className="font-semibold text-gray-900">{data.length}</span>{" "}
-            of{" "}
-            <span className="font-semibold text-gray-900">
-              {totalPages * itemsPerPage}
-            </span>{" "}
-            Entries
-          </span>
+          <div className="flex items-center space-x-2">
+            {(() => {
+              const pages = [];
+              const maxVisiblePages = 5;
+              let startPage = Math.max(
+                1,
+                currentPage - Math.floor(maxVisiblePages / 2)
+              );
+              let endPage = Math.min(
+                totalPages,
+                startPage + maxVisiblePages - 1
+              );
 
-          <div className="inline-flex space-x-2">
-            <button
-              className={`flex items-center justify-center px-5 py-2 h-10 text-base font-medium ${
-                currentPage === 1
-                  ? "bg-slate-500 text-gray-100 cursor-not-allowed"
-                  : "bg-gradient-to-br from-gray-700 via-gray-600 to-gray-800 text-white hover:scale-105 hover:shadow-xl hover:from-blue-600 hover:to-cyan-600"
-              } rounded-l-md shadow-lg transform transition duration-300 ease-in-out`}
-              onClick={() => onPageChange("previous")}
-              disabled={currentPage === 1}
-            >
-              <svg
-                className="w-4 h-4 mr-2 rtl:rotate-180"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 14 10"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M13 5H1m0 0 4 4M1 5l4-4"
-                />
-              </svg>
-              Prev
-            </button>
+              if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+              }
 
-            <button
-              className={`flex items-center justify-center px-5 py-2 h-10 text-base font-medium ${
-                currentPage === totalPages
-                  ? "bg-slate-500 text-gray-100 cursor-not-allowed"
-                  : "bg-gradient-to-br from-gray-800 via-gray-600 to-gray-700 text-white hover:scale-105 hover:shadow-xl hover:from-cyan-600 hover:to-blue-600"
-              } rounded-r-md shadow-lg transform transition duration-300 ease-in-out`}
-              onClick={() => onPageChange("next")}
-              disabled={currentPage === totalPages}
-            >
-              Next
-              <svg
-                className="w-4 h-4 ml-2 rtl:rotate-180"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 14 10"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M1 5h12m0 0L9 1m4 4L9 9"
-                />
-              </svg>
-            </button>
+              if (startPage > 1) {
+                pages.push(
+                  <button
+                    key={1}
+                    className={`flex items-center justify-center px-3 py-1 h-8 text-sm font-medium ${
+                      currentPage === 1
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    } rounded-md shadow-sm min-w-[2rem]`}
+                    onClick={() => onPageChange(1)}
+                  >
+                    1
+                  </button>
+                );
+
+                if (startPage > 2) {
+                  pages.push(
+                    <span key="ellipsis-start" className="px-1">
+                      ...
+                    </span>
+                  );
+                }
+              }
+
+              for (let page = startPage; page <= endPage; page++) {
+                pages.push(
+                  <button
+                    key={page}
+                    className={`flex items-center justify-center px-3 py-1 h-8 text-sm font-medium ${
+                      currentPage === page
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    } rounded-md shadow-sm min-w-[2rem]`}
+                    onClick={() => onPageChange(page)}
+                  >
+                    {page}
+                  </button>
+                );
+              }
+
+              if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                  pages.push(
+                    <span key="ellipsis-end" className="px-1">
+                      ...
+                    </span>
+                  );
+                }
+
+                pages.push(
+                  <button
+                    key={totalPages}
+                    className={`flex items-center justify-center px-3 py-1 h-8 text-sm font-medium ${
+                      currentPage === totalPages
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    } rounded-md shadow-sm min-w-[2rem]`}
+                    onClick={() => onPageChange(totalPages)}
+                  >
+                    {totalPages}
+                  </button>
+                );
+              }
+
+              return pages;
+            })()}
           </div>
         </div>
       )}

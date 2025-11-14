@@ -1,4 +1,3 @@
-
 import { createAxiosInstance } from "../api/axiosInstance";
 import {
   TutorListingUser,
@@ -9,9 +8,29 @@ import {
 } from "../interfaces/userInterface";
 import { CourseDetails } from "../interfaces/courseInterface";
 import { AxiosResponse } from "axios";
-import { Course,CourseSearchParams } from "../interfaces/courseInterface";
+import { CourseSearchParams } from "../interfaces/courseInterface";
+import { EnrollmentData } from "../interfaces/enrollmentInterface";
+import { loadStripe, Stripe } from "@stripe/stripe-js";
 
 const userAxiosInstance = createAxiosInstance("user");
+
+let stripePromise: Promise<Stripe | null> | null = null;
+
+const getStripe = () => {
+  if (!stripePromise) {
+    const publishableKey = import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY || "";
+
+    if (!publishableKey) {
+      console.error(
+        "Stripe publishable key not found. Make sure to set STRIPE_PUBLISHABLE_KEY in your .env file"
+      );
+      return Promise.resolve(null);
+    }
+
+    stripePromise = loadStripe(publishableKey);
+  }
+  return stripePromise;
+};
 
 export const signUpService = async (
   name: string,
@@ -26,7 +45,7 @@ export const signUpService = async (
       phone,
       password,
     });
-    console.log("inside signup service");
+
     return response.data;
   } catch (error: any) {
     if (error.response?.data) {
@@ -179,7 +198,6 @@ export const updateUserProfile = async (
 
     const formData = new FormData();
     formData.append("id", userId);
-    console.log("%%%", profileData);
 
     if (profileData.name?.trim())
       formData.append("name", profileData.name.trim());
@@ -196,17 +214,6 @@ export const updateUserProfile = async (
       }
     }
 
-    console.log("Sending profile update data:", {
-      id: userId,
-      name: profileData.name,
-      phone: profileData.phone,
-      DOB: profileData.DOB,
-      gender: profileData.gender,
-      hasAvatar: !!profileData.avatar,
-      hasCropData: !!profileData.cropData,
-      cropData: profileData.cropData,
-    });
-
     const response = await userAxiosInstance.put(
       "/profile/update-profile",
       formData,
@@ -217,8 +224,6 @@ export const updateUserProfile = async (
         timeout: 60000,
       }
     );
-
-    console.log("Profile update response:", response.data);
 
     if (!response.data.success) {
       return {
@@ -240,7 +245,6 @@ export const updateUserProfile = async (
     };
 
     localStorage.setItem("user", JSON.stringify(updatedUser));
-    console.log("Updated user data with S3 URL:", updatedUser);
 
     return {
       success: true,
@@ -323,47 +327,66 @@ export const getAllListedTutors = async (): Promise<TutorListingUser[]> => {
   return response.data;
 };
 
-export const getAllListedCourses = async (params?: CourseSearchParams): Promise<{
+export const getAllCourses = async (): Promise<CourseListingUser[]> => {
+  const response: AxiosResponse<CourseListingUser[]> =
+    await userAxiosInstance.get("/all-courses");
+  return response.data;
+};
+
+export const getAllListedCourses = async (
+  params?: CourseSearchParams,
+  page: number = 1,
+  limit: number = 6
+): Promise<{
   success: boolean;
-  data: CourseListingUser[];
+  data: {
+    courses: CourseListingUser[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
   message?: string;
 }> => {
   try {
     const queryParams = new URLSearchParams();
-    
+
+    queryParams.append("page", page.toString());
+    queryParams.append("limit", limit.toString());
+
     if (params?.search) {
-      queryParams.append('search', params.search);
+      queryParams.append("search", params.search);
     }
-    if (params?.category && params.category !== 'All classes') {
-      queryParams.append('category', params.category);
+    if (params?.category && params.category !== "All classes") {
+      queryParams.append("category", params.category);
     }
     if (params?.minPrice !== undefined) {
-      queryParams.append('minPrice', params.minPrice.toString());
+      queryParams.append("minPrice", params.minPrice.toString());
     }
     if (params?.maxPrice !== undefined) {
-      queryParams.append('maxPrice', params.maxPrice.toString());
+      queryParams.append("maxPrice", params.maxPrice.toString());
     }
     if (params?.sortBy) {
-      queryParams.append('sortBy', params.sortBy);
+      queryParams.append("sortBy", params.sortBy);
     }
 
-    const queryString = queryParams.toString();
-    console.log("get all listed courses",queryString)
-    const url = queryString ? `/listed-courses?${queryString}` : '/listed-courses';
-    
-    const response: AxiosResponse<{
-      success: boolean;
-      data: CourseListingUser[];
-      message?: string;
-    }> = await userAxiosInstance.get(url);
-    
+    const response = await userAxiosInstance.get(
+      `/listed-courses?${queryParams.toString()}`
+    );
+
     return response.data;
   } catch (error: any) {
-    console.error('Error fetching courses:', error);
+    console.error("Error fetching courses:", error);
     return {
       success: false,
-      data: [],
-      message: error.response?.data?.message || 'Failed to fetch courses'
+      data: {
+        courses: [],
+        total: 0,
+        page: 1,
+        limit: 6,
+        totalPages: 0,
+      },
+      message: error.response?.data?.message || "Failed to fetch courses",
     };
   }
 };
@@ -376,12 +399,112 @@ export const getAllListedCategories = async (): Promise<
   return response.data;
 };
 
-
 export async function fetchCourseDetails(
   courseId: string
 ): Promise<CourseDetails> {
-    const response = await userAxiosInstance.get(`/course-details/${courseId}`);
-    console.log("fetchCourseDetails frnt serv",response.data)
-    return response.data
+  const response = await userAxiosInstance.get(`/course-details/${courseId}`);
+  console.log("KK",response.data)
+  return response.data;
 }
 
+export async function createPayment(enrollmentData: EnrollmentData) {
+  try {
+    const token = localStorage.getItem("userAccessToken");
+
+    const response = await userAxiosInstance.post(
+      "/create-payment",
+      enrollmentData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.status !== 200) {
+      throw new Error("Failed to create payment intent");
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Error creating payment intent:", error);
+    throw error;
+  }
+}
+
+export async function processStripePayment(sessionId: string) {
+  try {
+    const stripe = await getStripe();
+
+    if (!stripe) {
+      throw new Error("Stripe failed to initialize");
+    }
+
+    const { error } = await stripe.redirectToCheckout({
+      sessionId: sessionId,
+    });
+
+    if (error) {
+      console.error("Stripe redirect error:", error);
+      throw new Error("Payment redirection failed");
+    }
+  } catch (error) {
+    console.error("Stripe payment error:", error);
+    throw error;
+  }
+}
+
+export const verifyPayment = async (sessionId: string) => {
+  try {
+    const response = await userAxiosInstance.post(
+      "/verify-payment",
+      {
+        sessionId,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("userAccessToken")}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Payment verification failed:", error);
+    throw error;
+  }
+};
+
+export const verifyEnrollment = async (courseId: string) => {
+  try {
+    const response = await userAxiosInstance.get(
+      `/verify-enrollment/${courseId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("verifying enrollment failed:", error);
+    throw error;
+  }
+};
+
+export const getUserEnrollments = async (page: number, search: string = "") => {
+  try {
+    const response = await userAxiosInstance.get("/user-payments", {
+      params: { page, limit: 10, search },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("error in fetching user enrollments:", error);
+    throw error;
+  }
+};
+
+export const getEnrolledCourses = async () => {
+  try {
+    const response = await userAxiosInstance.get("/courses-enrolled");
+    return response.data;
+  } catch (error) {
+    console.error("error in fetching enrolled courses:", error);
+    throw error;
+  }
+};

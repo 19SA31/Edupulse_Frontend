@@ -3,7 +3,7 @@ import { Play, Users, BookOpen, Award, ChevronRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   getAllListedTutors,
-  getAllListedCourses,
+  getAllCourses,
   getAllListedCategories,
 } from "../../services/userService";
 import {
@@ -55,7 +55,7 @@ function Banner() {
         const [tutorsResponse, coursesResponse, categoriesResponse] =
           await Promise.all([
             getAllListedTutors(),
-            getAllListedCourses(),
+            getAllCourses(),
             getAllListedCategories(),
           ]);
         setTutors(tutorsResponse?.data || []);
@@ -158,7 +158,10 @@ function Banner() {
               learning experiences, and personalized education paths designed
               for the modern learner.
             </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
+            <div
+              className="flex flex-col sm:flex-row gap-6 justify-center mb-16"
+              onClick={() => (window.location.href = "/login")}
+            >
               <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 px-8 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl">
                 Start Learning Today
               </button>
@@ -227,23 +230,24 @@ function Banner() {
           {courses.length > 0 ? (
             <>
               <div className="max-w-7xl mx-auto px-4 mb-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 justify-items-center">
-                  {courses.slice(0, 6).map((course) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 justify-items-center">
+                  {courses.slice(0,4).map((course) => (
                     <div
                       key={course.courseId}
-                      className="w-full max-w-sm bg-gray-900 rounded-2xl overflow-hidden hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 hover:shadow-xl group"
+                      className="w-full bg-gray-900 rounded-2xl overflow-hidden hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 hover:shadow-xl group flex flex-col"
+                      style={{ minHeight: "400px" }}
                     >
-                      <div className="relative">
+                      <div className="relative h-48 flex-shrink-0">
                         {course.thumbnailImage ? (
                           <img
                             src={course.thumbnailImage}
                             alt={course.title}
-                            className="h-48 w-full object-cover"
+                            className="h-full w-full object-cover"
                             onError={handleImageError}
                           />
                         ) : null}
                         <div
-                          className="h-48 bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center"
+                          className="absolute inset-0 bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center"
                           style={{
                             display: course.thumbnailImage ? "none" : "flex",
                           }}
@@ -259,21 +263,21 @@ function Banner() {
                         </div>
                       </div>
 
-                      <div className="p-6 space-y-4">
+                      <div className="p-6 space-y-4 flex-grow flex flex-col">
                         <div className="flex items-center gap-2 text-sm text-gray-400">
                           <Users className="w-4 h-4" />
                           <span>{course.enrollmentCount || 0} students</span>
                         </div>
 
-                        <h3 className="text-lg text-white font-semibold leading-tight group-hover:text-yellow-400 transition-colors">
+                        <h3 className="text-lg text-white font-semibold leading-tight group-hover:text-yellow-400 transition-colors line-clamp-2">
                           {course.title}
                         </h3>
 
-                        <div className="text-sm text-gray-400">
+                        <div className="text-sm text-gray-400 mt-auto">
                           By {course.tutorName}
                         </div>
 
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between mt-auto">
                           <div className="flex items-center gap-1">
                             <span className="text-lg font-bold text-yellow-400">
                               ₹{course.price}

@@ -49,7 +49,6 @@ const ProfileLayout: React.FC<ProfileProps> = ({ role }) => {
     try {
       if (role === "user") {
         const storedUser = localStorage.getItem("user");
-        console.log("Loading user data:", storedUser);
 
         if (storedUser) {
           const user = JSON.parse(storedUser);
@@ -66,7 +65,6 @@ const ProfileLayout: React.FC<ProfileProps> = ({ role }) => {
         }
       } else if (role === "tutor") {
         const storedTutor = localStorage.getItem("tutor");
-        console.log("Loading tutor data:", storedTutor);
         if (storedTutor) {
           const tutor = JSON.parse(storedTutor);
           setUserData({
