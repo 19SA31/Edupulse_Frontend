@@ -1,4 +1,3 @@
-import { TutorDetailsList } from "./tutorInterface";
 
 export interface CourseDocument {
   _id: string;
@@ -95,7 +94,6 @@ export interface CourseImage {
   file: File;
   preview: string;
   name: string;
-  isExisting?: boolean;
 }
 
 export interface FormData {
@@ -105,7 +103,7 @@ export interface FormData {
   requirements: string;
   category: string;
   price: string;
-  thumbnailImage: CourseImage | null;
+  courseImage: CourseImage | null;
 }
 
 export interface UploadedFile {
@@ -115,8 +113,6 @@ export interface UploadedFile {
   size: number;
   type: string;
   preview: string | null;
-  isExisting?: boolean;  
-  url?: string; 
 }
 
 export interface Lesson {
@@ -210,59 +206,4 @@ export interface CourseSearchParams {
   minPrice?: number;
   maxPrice?: number;
   sortBy?: 'title_asc' | 'title_desc' | 'price_asc' | 'price_desc' | 'category_asc' | 'category_desc';
-}
-
-export interface CategoryDetailsList {
-  _id: string;
-  name: string;
-  description: string;
-}
-
-export interface DocumentFileList {
-  _id: string;
-  fileName: string;
-  signedUrl: string;
-  originalName: string;
-}
-
-export interface VideoFileList {
-  _id: string;
-  fileName: string;
-  signedUrl: string;
-  originalName: string;
-}
-
-export interface LessonDetailsList {
-  _id: string;
-  title: string;
-  description: string;
-  documents: DocumentFileList[];
-  videos: VideoFileList[];
-  order: number;
-}
-
-export interface ChapterDetailsList {
-  _id: string;
-  title: string;
-  description: string;
-  lessons: LessonDetailsList[];
-  order: number;
-}
-
-export interface CourseDetailsList {
-  _id: string;
-  title: string;
-  description: string;
-  benefits: string;
-  requirements: string;
-  category: CategoryDetailsList;
-  tutor: TutorDetailsList;
-  price: number;
-  thumbnailImage: string;
-  chapters: ChapterDetailsList[];
-  isPublished: string;
-  isListed: boolean;
-  enrollmentCount: number;
-  createdAt: Date;
-  updatedAt: Date;
 }

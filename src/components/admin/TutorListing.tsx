@@ -18,7 +18,6 @@ function TutorListing() {
   const [loading, setLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedTutor, setSelectedTutor] = useState<UserDetails | null>(null);
-  const [totalCount, setTotalCount] = useState<number>(0);
 
   const fetchTutors = async (page: number, search: string) => {
     try {
@@ -28,11 +27,9 @@ function TutorListing() {
       if (response.data && response.data.success) {
         setTutors(response.data.data.tutors || []);
         setTotalPages(response.data.data.totalPages || 1);
-        setTotalCount(response.data.data.tutors?.length || 0);
       } else {
         setTutors([]);
         setTotalPages(1);
-        setTotalCount(0);
       }
     } catch (error: any) {
       if (error.response && error.response.status === 401) {
@@ -42,7 +39,6 @@ function TutorListing() {
       } else {
         console.error("Error fetching tutor details:", error);
         setTutors([]);
-        setTotalCount(0);
       }
     } finally {
       setLoading(false);
@@ -66,13 +62,11 @@ function TutorListing() {
     }
   };
 
-  const handlePagination = (direction: "next" | "previous" | number) => {
+  const handlePagination = (direction: "next" | "previous") => {
     if (direction === "next" && currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     } else if (direction === "previous" && currentPage > 1) {
       setCurrentPage(currentPage - 1);
-    } else if (typeof direction === "number") {
-      setCurrentPage(direction);
     }
   };
 
@@ -90,6 +84,7 @@ function TutorListing() {
     setIsModalOpen(false);
     setSelectedTutor(null);
   };
+
 
   const columns: TableColumn<UserDetails>[] = [
     {
@@ -117,6 +112,7 @@ function TutorListing() {
     },
   ];
 
+
   const actions: TableAction<UserDetails>[] = [
     {
       label: (tutor: UserDetails) => (tutor.isBlocked ? "List" : "Unlist"),
@@ -128,8 +124,12 @@ function TutorListing() {
   return (
     <div className="p-6 mt-4">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Tutors</h1>
-        <p className="text-gray-600">Manage Tutors</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Tutors 
+        </h1>
+        <p className="text-gray-600">
+          Manage Tutors
+        </p>
       </div>
       <Table
         data={tutors}
@@ -142,7 +142,6 @@ function TutorListing() {
         searchPlaceholder="Search Tutors"
         currentPage={currentPage}
         totalPages={totalPages}
-        totalCount={totalCount}
         onPageChange={handlePagination}
         itemsPerPage={7}
         emptyMessage="No tutors found."
@@ -150,22 +149,19 @@ function TutorListing() {
         getItemId={(tutor) => tutor.id}
       />
 
+
       <UserDetailsModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        user={
-          selectedTutor
-            ? {
-                id: selectedTutor.id,
-                name: selectedTutor.name,
-                email: selectedTutor.email,
-                phone: selectedTutor.phone,
-                avatar: selectedTutor.avatar,
-                createdAt: selectedTutor.createdAt,
-                isBlocked: selectedTutor.isBlocked,
-              }
-            : null
-        }
+        user={selectedTutor ? {
+          id: selectedTutor.id,
+          name: selectedTutor.name,
+          email: selectedTutor.email,
+          phone: selectedTutor.phone,
+          avatar: selectedTutor.avatar,
+          createdAt: selectedTutor.createdAt,
+          isBlocked: selectedTutor.isBlocked
+        } : null}
         title="Tutor Details"
       />
     </div>

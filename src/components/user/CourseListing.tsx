@@ -1,36 +1,20 @@
-import { useState, useEffect, useMemo } from "react";
-import {
-  Search,
-  Users,
-  Star,
-  Loader2,
-  AlertCircle,
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Search, Clock, Users, Star, Loader2, AlertCircle } from "lucide-react";
 import {
   getAllListedTutors,
   getAllListedCourses,
   getAllListedCategories,
   fetchCourseDetails,
-  getEnrolledCourses,
 } from "../../services/userService";
 import {
   TutorListingUser,
   CourseListingUser,
   CategoryListingUser,
 } from "../../interfaces/userInterface";
-import { useNavigate } from "react-router-dom";
-
-interface Enrollment {
-  courseId: string;
-  count: number;
-}
+import { Link, useNavigate } from "react-router-dom";
 
 const CourseListing = () => {
-  const [selectedCategory, setSelectedCategory] =
-    useState<string>("All classes");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All classes");
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [courses, setCourses] = useState<CourseListingUser[]>([]);
@@ -38,30 +22,9 @@ const CourseListing = () => {
   const [tutors, setTutors] = useState<TutorListingUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [minPrice, setMinPrice] = useState<number | "">("");
-  const [maxPrice, setMaxPrice] = useState<number | "">("");
-  const [page, setPage] = useState<number>(1);
-  const [limit] = useState<number>(6);
-  const [totalPages, setTotalPages] = useState<number>(0);
-  const [totalCount, setTotalCount] = useState<number>(0);
-
-  type SortOption =
-    | "title_asc"
-    | "title_desc"
-    | "price_asc"
-    | "price_desc"
-    | "category_asc"
-    | "category_desc"
-    | "enrollment_desc"
-    | "";
-
-  const [sortBy, setSortBy] = useState<SortOption>("");
-  const [enrollmentCounts, setEnrollmentCounts] = useState<
-    Record<string, number>
-  >({});
-  const [enrolledCourseIds, setEnrolledCourseIds] = useState<Set<string>>(
-    new Set()
-  );
+  const [minPrice, setMinPrice] = useState<number | ''>('');
+  const [maxPrice, setMaxPrice] = useState<number | ''>('');
+  const [sortBy, setSortBy] = useState<string>('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -75,12 +38,10 @@ const CourseListing = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [tutorsRes, categoriesRes, enrolledCoursesRes] =
-          await Promise.all([
-            getAllListedTutors(),
-            getAllListedCategories(),
-            getEnrolledCourses(),
-          ]);
+        const [tutorsRes, categoriesRes] = await Promise.all([
+          getAllListedTutors(),
+          getAllListedCategories(),
+        ]);
 
         if (categoriesRes.success) {
           setCategories([
@@ -91,15 +52,6 @@ const CourseListing = () => {
         if (tutorsRes.success) {
           setTutors(tutorsRes.data);
         }
-
-        if (enrolledCoursesRes.success) {
-          const enrolledIds = new Set<string>(
-            enrolledCoursesRes.data.map(
-              (enrollment: { courseId: string }) => enrollment.courseId
-            )
-          );
-          setEnrolledCourseIds(enrolledIds);
-        }
       } catch (err) {
         setError("Failed to fetch initial data. Please try again later.");
         console.error("Error fetching initial data:", err);
@@ -109,42 +61,20 @@ const CourseListing = () => {
     fetchInitialData();
   }, []);
 
+
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const coursesRes = await getAllListedCourses(
-        {
-          search: debouncedSearchTerm,
-          category: selectedCategory,
-          minPrice: minPrice || undefined,
-          maxPrice: maxPrice || undefined,
-          sortBy: sortBy || undefined,
-        },
-        page,
-        limit
-      );
+      const coursesRes = await getAllListedCourses({
+        search: debouncedSearchTerm,
+        category: selectedCategory,
+        minPrice: minPrice || undefined,
+        maxPrice: maxPrice || undefined,
+        sortBy: sortBy || undefined,
+      });
 
-      if (coursesRes.success && coursesRes.data) {
-        const {
-          courses: coursesArray,
-          total,
-          totalPages: pages,
-        } = coursesRes.data;
-
-        const coursesWithEnrollmentCounts = coursesArray.map(
-          (course: CourseListingUser) => ({
-            ...course,
-            isEnrolled: enrolledCourseIds.has(course.courseId),
-          })
-        );
-
-        setCourses(coursesWithEnrollmentCounts);
-        setTotalCount(total);
-        setTotalPages(pages);
-      } else {
-        setCourses([]);
-        setTotalPages(0);
-        setTotalCount(0);
+      if (coursesRes.success) {
+        setCourses(coursesRes.data);
       }
     } catch (err) {
       setError("Failed to fetch courses. Please try again later.");
@@ -156,28 +86,7 @@ const CourseListing = () => {
 
   useEffect(() => {
     fetchCourses();
-  }, [
-    selectedCategory,
-    debouncedSearchTerm,
-    minPrice,
-    maxPrice,
-    sortBy,
-    page,
-    enrolledCourseIds,
-  ]);
-
-  useEffect(() => {
-    if (
-      courses.length > 0 &&
-      (Object.keys(enrollmentCounts).length > 0 || enrolledCourseIds.size > 0)
-    ) {
-      const updatedCourses = courses.map((course) => ({
-        ...course,
-        isEnrolled: enrolledCourseIds.has(course.courseId),
-      }));
-      setCourses(updatedCourses);
-    }
-  }, [enrollmentCounts, enrolledCourseIds]);
+  }, [selectedCategory, debouncedSearchTerm, minPrice, maxPrice, sortBy]);
 
   const getTutorInfo = (tutorName: string): TutorListingUser | undefined => {
     return tutors.find((tutor) => tutor.name === tutorName);
@@ -212,35 +121,16 @@ const CourseListing = () => {
   const clearAllFilters = () => {
     setSearchTerm("");
     setSelectedCategory("All classes");
-    setMinPrice("");
-    setMaxPrice("");
-    setSortBy("");
-    setPage(1);
+    setMinPrice('');
+    setMaxPrice('');
+    setSortBy('');
   };
 
-  const goToPage = (p: number) => {
-    if (p < 1 || p > totalPages) return;
-    setPage(p);
-    window.scrollTo({ top: 200, behavior: "smooth" });
-  };
-
-  const pageNumbers = useMemo(() => {
-    const pages: number[] = [];
-    for (let i = 1; i <= totalPages; i++) {
-      pages.push(i);
-    }
-    return pages;
-  }, [totalPages]);
-
-  const CourseCard = ({
-    course,
-  }: {
-    course: CourseListingUser & { isEnrolled?: boolean };
-  }) => {
+  const CourseCard = ({ course }: { course: CourseListingUser }) => {
     const tutor = getTutorInfo(course.tutorName);
 
     return (
-      <div className="bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer group">
+      <div className="bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group">
         <div
           className="relative overflow-hidden"
           onClick={() => handleCourseClick(course.courseId)}
@@ -255,14 +145,7 @@ const CourseListing = () => {
             }}
           />
           <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs font-medium">
-            {course.isEnrolled ? (
-              <span className="flex items-center gap-1">
-                <CheckCircle size={12} className="text-yellow-400" />
-                Paid
-              </span>
-            ) : (
-              formatPrice(course.price)
-            )}
+            {formatPrice(course.price)}
           </div>
           {course.categoryName && (
             <div className="absolute bottom-2 left-2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-medium">
@@ -272,19 +155,19 @@ const CourseListing = () => {
         </div>
 
         <div
-          className="p-4 cursor-pointer hover:bg-gray-750 transition-colors"
+          className="p-4 cursor-pointer hover:bg-gray-800 transition-colors rounded-lg"
           onClick={() => handleCourseClick(course.courseId)}
         >
           <div className="flex items-center justify-between mb-2 text-sm text-white">
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1">
                 <Users size={14} />
-                {course.enrollmentCount || 0} enrolled
+                {course.enrollmentCount} enrolled
               </span>
             </div>
             <div className="flex items-center gap-1">
               <Star size={14} className="fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-medium">4.5</span>
+              <span className="text-sm font-medium"></span>
             </div>
           </div>
 
@@ -334,10 +217,10 @@ const CourseListing = () => {
 
   if (loading && courses.length === 0) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-yellow-400" />
-          <p className="text-gray-300">Loading courses...</p>
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-yellow-600" />
+          <p className="text-gray-600">Loading courses...</p>
         </div>
       </div>
     );
@@ -345,10 +228,10 @@ const CourseListing = () => {
 
   if (error && courses.length === 0) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-8 h-8 mx-auto mb-4 text-red-500" />
-          <p className="text-gray-300 mb-4">{error}</p>
+          <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded font-medium"
@@ -361,7 +244,7 @@ const CourseListing = () => {
   }
 
   return (
-    <div className="bg-black min-h-screen">
+    <div className="min-h-screen bg-black">
       <div className="bg-gradient-to-r from-yellow-600 via-yellow-200 to-yellow-600 text-white py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 text-black">
@@ -391,19 +274,15 @@ const CourseListing = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
+
           <div className="lg:w-64 flex-shrink-0">
-            <div className="bg-gray-900 rounded-lg p-6 shadow-lg sticky top-4 border border-gray-800">
-              <h3 className="font-semibold text-white mb-4 text-lg">
-                Categories
-              </h3>
+            <div className="bg-black rounded-lg p-6 shadow-sm sticky top-4">
+              <h3 className="font-semibold text-white mb-4">Categories</h3>
               <ul className="space-y-2">
                 {categories.map((category, index) => (
                   <li key={index}>
                     <button
-                      onClick={() => {
-                        setSelectedCategory(category);
-                        setPage(1);
-                      }}
+                      onClick={() => setSelectedCategory(category)}
                       className={`w-full text-left px-3 py-2 rounded transition-colors text-sm ${
                         selectedCategory === category
                           ? "bg-yellow-400 text-black font-medium"
@@ -424,12 +303,7 @@ const CourseListing = () => {
                       type="number"
                       placeholder="Min Price (₹)"
                       value={minPrice}
-                      onChange={(e) => {
-                        setMinPrice(
-                          e.target.value ? Number(e.target.value) : ""
-                        );
-                        setPage(1);
-                      }}
+                      onChange={(e) => setMinPrice(e.target.value ? Number(e.target.value) : '')}
                       className="w-full px-3 py-2 bg-gray-700 text-white rounded text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                       min="0"
                     />
@@ -439,22 +313,13 @@ const CourseListing = () => {
                       type="number"
                       placeholder="Max Price (₹)"
                       value={maxPrice}
-                      onChange={(e) => {
-                        setMaxPrice(
-                          e.target.value ? Number(e.target.value) : ""
-                        );
-                        setPage(1);
-                      }}
+                      onChange={(e) => setMaxPrice(e.target.value ? Number(e.target.value) : '')}
                       className="w-full px-3 py-2 bg-gray-700 text-white rounded text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                       min="0"
                     />
                   </div>
                   <button
-                    onClick={() => {
-                      setMinPrice("");
-                      setMaxPrice("");
-                      setPage(1);
-                    }}
+                    onClick={() => { setMinPrice(''); setMaxPrice(''); }}
                     className="text-yellow-400 text-sm hover:text-yellow-300 transition-colors"
                   >
                     Clear Price Filter
@@ -494,10 +359,7 @@ const CourseListing = () => {
                 <span className="text-white text-sm">Sort by:</span>
                 <select
                   value={sortBy}
-                  onChange={(e) => {
-                    setSortBy(e.target.value);
-                    setPage(1);
-                  }}
+                  onChange={(e) => setSortBy(e.target.value)}
                   className="bg-gray-700 text-white px-3 py-2 rounded text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 >
                   <option value="">Default</option>
@@ -505,93 +367,25 @@ const CourseListing = () => {
                   <option value="title_desc">Title Z-A</option>
                   <option value="price_asc">Price Low to High</option>
                   <option value="price_desc">Price High to Low</option>
-                  <option value="enrollment_desc">Most Popular</option>
                 </select>
               </div>
-
+              
               <div className="flex items-center gap-2 text-gray-400 text-sm">
                 {loading && courses.length > 0 && (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 )}
-                <span className="font-medium text-white">{totalCount}</span>
-                <span>courses found</span>
+                <span>{courses.length} courses found</span>
               </div>
             </div>
 
             {courses.length > 0 ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                  {courses.map((course) => (
-                    <CourseCard key={course.courseId} course={course} />
-                  ))}
-                </div>
-
-                {totalPages > 1 && (
-                  <div className="bg-black rounded-lg p-6 border">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                      <div className="text-sm text-gray-300">
-                        Showing{" "}
-                        <span className="font-semibold text-yellow-400">
-                          {(page - 1) * limit + 1}
-                        </span>{" "}
-                        -{" "}
-                        <span className="font-semibold text-yellow-400">
-                          {Math.min(page * limit, totalCount)}
-                        </span>{" "}
-                        of{" "}
-                        <span className="font-semibold text-yellow-400">
-                          {totalCount}
-                        </span>{" "}
-                        courses
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => goToPage(page - 1)}
-                          disabled={page === 1}
-                          className={`p-2 rounded-lg transition-all ${
-                            page === 1
-                              ? "bg-gray-800 text-gray-600 cursor-not-allowed"
-                              : "bg-gray-800 text-white hover:bg-yellow-400 hover:text-black"
-                          }`}
-                          aria-label="Previous page"
-                        >
-                          <ChevronLeft size={20} />
-                        </button>
-
-                        {pageNumbers.map((p) => (
-                          <button
-                            key={p}
-                            onClick={() => goToPage(p)}
-                            className={`min-w-[40px] px-3 py-2 rounded-lg transition-all font-medium ${
-                              p === page
-                                ? "bg-yellow-400 text-black shadow-lg scale-110"
-                                : "bg-gray-800 text-white hover:bg-yellow-400 hover:text-black"
-                            }`}
-                          >
-                            {p}
-                          </button>
-                        ))}
-
-                        <button
-                          onClick={() => goToPage(page + 1)}
-                          disabled={page === totalPages}
-                          className={`p-2 rounded-lg transition-all ${
-                            page === totalPages
-                              ? "bg-gray-800 text-gray-600 cursor-not-allowed"
-                              : "bg-gray-800 text-white hover:bg-yellow-400 hover:text-black"
-                          }`}
-                          aria-label="Next page"
-                        >
-                          <ChevronRight size={20} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {courses.map((course) => (
+                  <CourseCard key={course.courseId} course={course} />
+                ))}
+              </div>
             ) : (
-              <div className="text-center py-12 bg-gray-900 rounded-lg border border-gray-800">
+              <div className="text-center py-12">
                 <div className="text-gray-400 mb-4">
                   <Search size={48} className="mx-auto" />
                 </div>
@@ -602,10 +396,8 @@ const CourseListing = () => {
                   {searchTerm
                     ? `No courses match "${searchTerm}"`
                     : `No courses available`}
-                  {selectedCategory !== "All classes" &&
-                    ` in ${selectedCategory}`}
-                  {(minPrice || maxPrice) &&
-                    ` within the specified price range`}
+                  {selectedCategory !== "All classes" && ` in ${selectedCategory}`}
+                  {(minPrice || maxPrice) && ` within the specified price range`}
                 </p>
                 <button
                   onClick={clearAllFilters}
@@ -629,21 +421,21 @@ const CourseListing = () => {
                   {tutors.slice(0, 4).map((tutor) => (
                     <div
                       key={tutor.tutorId}
-                      className="bg-gray-900 rounded-lg p-6 shadow-lg hover:shadow-xl transition-all border border-gray-800 hover:border-yellow-400"
+                      className="bg-gray-800 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
                     >
                       <div className="text-center">
                         <div className="relative inline-block mb-4">
                           <img
                             src={tutor.avatar}
                             alt={tutor.name}
-                            className="w-16 h-16 rounded-full object-cover mx-auto border-2 border-gray-700"
+                            className="w-16 h-16 rounded-full object-cover mx-auto"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.src = "/api/placeholder/64/64";
                             }}
                           />
                           {tutor.isVerified && (
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-gray-900">
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
                               <svg
                                 className="w-3 h-3 text-white"
                                 fill="currentColor"
@@ -661,7 +453,7 @@ const CourseListing = () => {
                         <h4 className="font-semibold text-white mb-1">
                           {tutor.name}
                         </h4>
-                        <p className="text-sm text-gray-300 mb-2">
+                        <p className="text-sm text-gray-200 mb-2">
                           {tutor.designation}
                         </p>
                         <p className="text-xs text-gray-400 line-clamp-2">
@@ -676,6 +468,9 @@ const CourseListing = () => {
           </div>
         </div>
       </div>
+      <div className="mt-6 pt-6"></div>
+      <div className="mt-6 pt-6"></div>
+      <div className="mt-6 pt-6"></div>
     </div>
   );
 };

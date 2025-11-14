@@ -15,6 +15,7 @@ const ForgotPasswordLayout = ({ role }:ForgotPasswordProps) => {
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
+    console.log(role)
     if (!email) {
       toast.error("Enter email.");
       return;
@@ -22,6 +23,7 @@ const ForgotPasswordLayout = ({ role }:ForgotPasswordProps) => {
     if(role==="user"){
       try {
         const response = await forgotPasswordService(email, true);
+        console.log(response)
         if (response?.success) {
           toast.success("OTP sent successfully");
           setTimeout(() =>

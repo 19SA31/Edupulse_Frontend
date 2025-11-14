@@ -1,12 +1,6 @@
 // redux/slices/userSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import {
-  tutorLogin,
-  logoutTutorAction,
-  tutorSignUp,
-  tutorVerifyOtp,
-  googleTutorLogin,
-} from "../actions/tutorActions";
+import { tutorLogin, logoutTutorAction, tutorSignUp, tutorVerifyOtp } from "../actions/tutorActions";
 
 interface TutorState {
   user: any;
@@ -19,7 +13,7 @@ const initialState: TutorState = {
   user: null,
   loading: false,
   error: null,
-  isAuthenticated: false,
+  isAuthenticated: false
 };
 
 const tutorSlice = createSlice({
@@ -37,18 +31,15 @@ const tutorSlice = createSlice({
         state.error = null;
       })
       .addCase(tutorSignUp.rejected, (state, action: PayloadAction<any>) => {
-        state.loading = false;
-        state.error = action.payload || "Signup failed";
-      })
+              state.loading = false;
+              state.error = action.payload || "Signup failed";
+            })
 
-      .addCase(
-        tutorVerifyOtp.fulfilled,
-        (state, action: PayloadAction<any>) => {
-          state.user = action.payload.user;
-          state.isAuthenticated = true;
-          state.error = null;
-        }
-      )
+      .addCase(tutorVerifyOtp.fulfilled, (state, action: PayloadAction<any>) => {
+        state.user = action.payload.user;
+        state.isAuthenticated = true;
+        state.error = null;
+      })
 
       .addCase(tutorLogin.pending, (state) => {
         state.loading = true;
@@ -65,15 +56,9 @@ const tutorSlice = createSlice({
       })
 
       .addCase(logoutTutorAction.fulfilled, () => {
-        return initialState;
-      })
-
-      .addCase(googleTutorLogin.fulfilled, (state, action) => {
-        state.user = action.payload.tutor;
-        state.isAuthenticated = true;
-        state.error = null;
+        return initialState
       });
-  },
+  }
 });
 
 export const { clearError } = tutorSlice.actions;

@@ -11,7 +11,6 @@ import {
   verifyOtpService,
   loginService,
   logoutUser,
-  googleUserAuthService,
 } from "../../services/Authentication/AuthenticationService";
 
 export const signUp = createAsyncThunk(
@@ -84,24 +83,6 @@ export const logout = createAsyncThunk(
       }
     } catch (error: any) {
       return rejectWithValue("Unexpected error occurred.");
-    }
-  }
-);
-
-export const googleLogin = createAsyncThunk(
-  "user/googleLogin",
-  async (credential: string, { rejectWithValue }) => {
-    try {
-      const result = await googleUserAuthService(credential);
-      if (result.success  && result.data.user) {
-        return { user: result.data.user, accessToken: result.data.accessToken }
-      } else {
-        return rejectWithValue(result.message || "Google login failed");
-      }
-    } catch (error: any) {
-      return rejectWithValue(
-        error?.response?.data?.message || "Unexpected error occurred."
-      );
     }
   }
 );

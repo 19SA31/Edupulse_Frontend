@@ -127,6 +127,7 @@ function Header({ role = null }: HeaderProps) {
   const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log("role:  ", role);
 
     try {
       if (role === "user") {

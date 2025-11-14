@@ -1,20 +1,42 @@
 import { createAxiosInstance } from "../api/axiosInstance";
-import { CourseDetails } from "../interfaces/courseInterface";
-import { AxiosError } from "axios";
 
 const tutorAxiosInstance = createAxiosInstance("tutor");
 
 import {
+  Category,
   FormData as CourseFormData,
   Chapter,
+  Lesson,
+  UploadedFile,
+  CourseImage,
 } from "../interfaces/courseInterface";
-import { slotRequest } from "../interfaces/slotBookingInterface";
-import {
-  CropData,
-  UpdateProfileData,
-  VerificationDocuments,
-  ApiResponse,
-} from "../interfaces/tutorInterface";
+
+interface CropData {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+export interface UpdateProfileData {
+  id?: string;
+  name?: string;
+  phone?: string;
+  DOB?: string;
+  designation?: string;
+  about?: string;
+  gender?: string;
+  avatar?: File;
+  cropData?: CropData;
+}
+
+interface VerificationDocuments {
+  avatar: File;
+  degree: File;
+  aadharFront: File;
+  aadharBack: File;
+  email?: string;
+  phone?: string;
+}
 
 export const tutorSignUpService = async (
   name: string,
@@ -29,6 +51,7 @@ export const tutorSignUpService = async (
       phone,
       password,
     });
+    console.log("inside tutor signup service");
     return response.data;
   } catch (error: any) {
     if (error.response?.data) {
@@ -53,6 +76,7 @@ export const tutorVerifyOtpService = async (
       password,
       otp,
     });
+    console.log("inside tutor verify OTP service");
     return response.data;
   } catch (error: any) {
     if (error.response?.data) {
@@ -70,8 +94,15 @@ export const tutorLoginService = async (email: string, password: string) => {
     });
 
     const tutorData = response.data.data.tutor;
+    console.log(
+      "Verification status:",
+      tutorData,
+      tutorData.isVerified,
+      tutorData.verificationStatus
+    );
 
     if (response.data.success && response.data.data) {
+      console.log("inside tutorloginservice", response.data.data.tutor);
       localStorage.setItem("tutorAccessToken", response.data.data.accessToken);
       localStorage.setItem("tutor", JSON.stringify(response.data.data.tutor));
     }
@@ -86,6 +117,7 @@ export const tutorLoginService = async (email: string, password: string) => {
 export const logoutTutor = async () => {
   try {
     const response = await tutorAxiosInstance.post("/logout");
+    console.log("inside logout tutor service", response);
 
     if (response.data.success) {
       localStorage.removeItem("tutorAccessToken");
@@ -108,6 +140,7 @@ export const tutorForgotPasswordService = async (
       email,
       isForgot,
     });
+    console.log("inside tutor forgot password service");
     return response.data;
   } catch (error: any) {
     if (error.response?.data) {
@@ -128,6 +161,7 @@ export const tutorVerifyForgotOtpService = async (
       otp,
       isForgot,
     });
+    console.log("tutorVerifyForgotOtpService:", response.data);
     return response.data;
   } catch (error: any) {
     if (error.response?.data) {
@@ -146,6 +180,7 @@ export const tutorPasswordChangeService = async (
       email,
       password,
     });
+    console.log("inside tutor password change service");
     return response.data;
   } catch (error: any) {
     if (error.response?.data) {
@@ -160,6 +195,7 @@ export const tutorVerificationService = async (
 ) => {
   try {
     const formData = new FormData();
+    console.log("inside verifytutor front service", documents);
 
     formData.append("avatar", documents.avatar);
     formData.append("degree", documents.degree);
@@ -196,6 +232,7 @@ export const tutorVerificationService = async (
       }
     );
 
+    console.log("inside tutor verification service");
     return response.data;
   } catch (error: any) {
     console.error("Tutor verification error:", error);
@@ -209,6 +246,7 @@ export const tutorVerificationService = async (
 export const getTutorVerificationStatus = async () => {
   try {
     const response = await tutorAxiosInstance.get("/verification-status");
+    console.log("inside get tutor verification status service");
     return response.data;
   } catch (error: any) {
     console.error("Get verification status error:", error);
@@ -237,13 +275,18 @@ export const updateTutorProfile = async (
       formData.append("designation", profileData.designation);
     if (profileData.about) formData.append("about", profileData.about);
 
-    const response = await tutorAxiosInstance.put("/update-profile", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-      timeout: 60000,
-    });
+    const response = await tutorAxiosInstance.put(
+      "/profile/update-profile",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        timeout: 60000,
+      }
+    );
 
+    console.log("Profile update response:", response.data);
     if (!response.data.success) {
       return {
         success: false,
@@ -264,6 +307,7 @@ export const updateTutorProfile = async (
     };
 
     localStorage.setItem("tutor", JSON.stringify(updatedTutor));
+    console.log("Updated user data with S3 URL:", updatedTutor);
 
     return {
       success: true,
@@ -305,7 +349,7 @@ export const clearUserData = (): void => {
 };
 
 export const getCourseCategories = () => {
-  return tutorAxiosInstance.get("/get-category");
+  return tutorAxiosInstance.get("/course/get-category");
 };
 
 export const createCourse = async (
@@ -313,6 +357,7 @@ export const createCourse = async (
 ) => {
   try {
     const formData = new FormData();
+    console.log("Full courseData:", courseData);
 
     formData.append("title", courseData.title);
     formData.append("description", courseData.description);
@@ -321,8 +366,9 @@ export const createCourse = async (
     formData.append("category", courseData.category);
     formData.append("price", courseData.price.toString());
 
-    if (courseData.thumbnailImage?.file) {
-      formData.append("thumbnail", courseData.thumbnailImage.file);
+    if (courseData.courseImage?.file) {
+      console.log("Thumbnail file found:", courseData.courseImage.file);
+      formData.append("thumbnail", courseData.courseImage.file);
     } else {
       console.log("No thumbnail file found");
     }
@@ -343,6 +389,7 @@ export const createCourse = async (
             const fieldName = `lesson_documents_${chapterIndex}_${lessonIndex}_${docIndex}`;
             formData.append(fieldName, doc.file);
             documentsAppended++;
+            console.log(`Appended document to field: ${fieldName}`);
           } else {
             console.log(`No valid file for document ${docIndex}`);
           }
@@ -355,6 +402,7 @@ export const createCourse = async (
             const fieldName = `lesson_videos_${chapterIndex}_${lessonIndex}_${videoIndex}`;
             formData.append(fieldName, video.file);
             videosAppended++;
+            console.log(`Appended video to field: ${fieldName}`);
           } else {
             console.log(`No valid file for video ${videoIndex}`);
           }
@@ -362,7 +410,7 @@ export const createCourse = async (
       });
     });
 
-    const response = await tutorAxiosInstance.post("/create-course", formData, {
+    const response = await tutorAxiosInstance.post("/course/create", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -374,173 +422,6 @@ export const createCourse = async (
     console.error("Error creating course:", error);
     if (error.response?.data) {
       return error.response.data;
-    }
-    throw error;
-  }
-};
-
-export const getAllCoursesTutor = async (
-  page: number = 1,
-  limit: number = 10,
-  search: string = ""
-) => {
-  try {
-    const response = await tutorAxiosInstance.get("/tutor-courses", {
-      params: { page, limit, search },
-    });
-    return response.data;
-  } catch (error) {
-    console.log("error in fetching tutor courses", error);
-    throw error;
-  }
-};
-
-export const getTutorRevenue = async () => {
-  try {
-    const response = await tutorAxiosInstance.get("/tutor-revenue");
-    console.log("$$$", response.data);
-    return response.data;
-  } catch (error) {
-    console.log("error in  fetching tutors revenue");
-    throw error;
-  }
-};
-
-export const getCourseEnrollments = async (
-  courseId: string,
-  page: number = 1,
-  limit: number = 10,
-  search: string = ""
-) => {
-  try {
-    const response = await tutorAxiosInstance.get(
-      `/course-enrollments/${courseId}`,
-      {
-        params: { page, limit, search },
-      }
-    );
-    console.log("###", response.data);
-    return response.data;
-  } catch (error) {
-    console.log("error in  fetching course enrollments");
-    throw error;
-  }
-};
-
-export async function fetchCourseDetails(
-  courseId: string
-): Promise<CourseDetails> {
-  const response = await tutorAxiosInstance.get(`/course-details/${courseId}`);
-  return response.data;
-}
-
-export const editCourse = async (
-  courseId: string,
-  courseData: CourseFormData & { chapters: Chapter[] }
-) => {
-  try {
-    console.log("courseData", courseData);
-    const formData = new FormData();
-    formData.append("title", courseData.title);
-    formData.append("description", courseData.description);
-    formData.append("benefits", courseData.benefits);
-    formData.append("requirements", courseData.requirements);
-    formData.append("category", courseData.category);
-    formData.append("price", courseData.price.toString());
-
-    if (courseData.thumbnailImage) {
-      if (
-        courseData.thumbnailImage.file &&
-        !courseData.thumbnailImage.isExisting
-      ) {
-        formData.append("thumbnail", courseData.thumbnailImage.file);
-      } else if (courseData.thumbnailImage.isExisting) {
-        formData.append(
-          "thumbnailUrl",
-          courseData.thumbnailImage.preview || ""
-        );
-      }
-    }
-    formData.append("chapters", JSON.stringify(courseData.chapters));
-
-    let totalDocuments = 0;
-    let totalVideos = 0;
-    let documentsAppended = 0;
-    let videosAppended = 0;
-
-    courseData.chapters.forEach((chapter, chapterIndex) => {
-      chapter.lessons.forEach((lesson, lessonIndex) => {
-        lesson.documents.forEach((doc, docIndex) => {
-          totalDocuments++;
-
-          if (doc.file && doc.file instanceof File && !doc.isExisting) {
-            const fieldName = `lesson_documents_${chapterIndex}_${lessonIndex}_${docIndex}`;
-            formData.append(fieldName, doc.file);
-            documentsAppended++;
-          } else if (doc.isExisting) {
-            const fieldName = `existing_document_${chapterIndex}_${lessonIndex}_${docIndex}`;
-            formData.append(fieldName, doc.url || "");
-          }
-        });
-
-        lesson.videos.forEach((video, videoIndex) => {
-          totalVideos++;
-
-          if (video.file && video.file instanceof File && !video.isExisting) {
-            const fieldName = `lesson_videos_${chapterIndex}_${lessonIndex}_${videoIndex}`;
-            formData.append(fieldName, video.file);
-            videosAppended++;
-          } else if (video.isExisting) {
-            const fieldName = `existing_video_${chapterIndex}_${lessonIndex}_${videoIndex}`;
-            formData.append(fieldName, video.url || "");
-          }
-        });
-      });
-    });
-
-    const response = await tutorAxiosInstance.put(
-      `/edit-course/${courseId}`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        timeout: 120000,
-      }
-    );
-
-    return response.data;
-  } catch (error: any) {
-    console.error("Error editing course:", error);
-    if (error.response?.data) {
-      return error.response.data;
-    }
-    throw error;
-  }
-};
-
-export const createTutorSlots = async (slotData: slotRequest) => {
-  try {
-    const response = await tutorAxiosInstance.post("/create-slots", slotData);
-    return response.data;
-  } catch (error: unknown) {
-    console.error("Error in creating slots:", error);
-    if (error instanceof AxiosError) {
-      return error.response?.data;
-    }
-    throw error;
-  }
-};
-
-export const getTutorSlots = async () => {
-  try {
-    console.log("inside get tutor slots");
-    const response = await tutorAxiosInstance.get("/get-slots");
-    return response.data;
-  } catch (error: unknown) {
-    console.error("error in fetching courses:", error);
-    if (error instanceof AxiosError) {
-      return error.response?.data;
     }
     throw error;
   }

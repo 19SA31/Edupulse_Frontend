@@ -6,10 +6,7 @@ import { AppDispatch } from "../../redux/store";
 import { logoutAdminAction } from "../../redux/actions/adminActions";
 import Table, { TableColumn, TableAction } from "../../components/common/Table";
 import { Course, CourseListing } from "../../interfaces/courseInterface";
-import {
-  getPublishedCourses,
-  listUnlistCourse,
-} from "../../services/adminService";
+import { getPublishedCourses, listUnlistCourse } from "../../services/adminService";
 
 const courseColumns: TableColumn<Course>[] = [
   { key: "title", title: "Course Name", align: "center" },
@@ -43,6 +40,7 @@ const courseColumns: TableColumn<Course>[] = [
   },
 ];
 
+
 function CourseManagement() {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -57,6 +55,7 @@ function CourseManagement() {
     setLoading(true);
     try {
       const response = await getPublishedCourses(page, search);
+      console.log("[[[", response);
       if (response.success && response.data) {
         setCourses(
           response.data.courses.map((c: CourseListing) => ({
@@ -90,7 +89,8 @@ function CourseManagement() {
 
   const toggleListState = async (courseId: string) => {
     try {
-      const toggleResponse = await listUnlistCourse(courseId);
+      console.log("Toggling list state for course:", courseId);
+      const toggleResponse = await listUnlistCourse(courseId)
       setCourses((prevCourses) =>
         prevCourses.map((course) =>
           course._id === courseId
@@ -103,6 +103,10 @@ function CourseManagement() {
     }
   };
 
+  const handleViewDetails = (course: Course) => {
+    console.log("Viewing course details:", course._id);
+  };
+
   const actions: TableAction<Course>[] = [
     {
       label: (course: Course) => (course.isListed ? "Unlist" : "List"),
@@ -111,9 +115,12 @@ function CourseManagement() {
     },
   ];
 
-  const handlePageChange = (page:number) => {
-    setCurrentPage(page)
-    fetchCourses(page,searchQuery)
+  const handlePageChange = (direction: "next" | "previous") => {
+    if (direction === "next" && currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    } else if (direction === "previous" && currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
   };
 
   const handleSearchChange = (query: string) => {

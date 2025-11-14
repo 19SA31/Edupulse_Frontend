@@ -30,7 +30,8 @@ function CourseDetailsPage() {
   const userRole = getUserRole();
 
   useEffect(() => {
-    if (userRole !== "user") {
+    console.log("$$$", courseData);    if (userRole !== "user") {
+      console.log("Non-user trying to access course details, role:", userRole);
       navigate("/", { replace: true });
       return;
     }
@@ -51,8 +52,10 @@ function CourseDetailsPage() {
         }
 
         if (state?.courseDetails) {
+          console.log("Using provided course details");
           setCourseData(state.courseDetails);
         } else {
+          console.log("Fetching course details for ID:", courseId);
           const response = await fetchCourseDetails(courseId);
 
           if (response.success && response.data) {
@@ -121,6 +124,7 @@ function CourseDetailsPage() {
       </div>
     );
   }
+
 
   if (!courseData) {
     return (

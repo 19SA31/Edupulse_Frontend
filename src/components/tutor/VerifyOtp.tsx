@@ -17,10 +17,11 @@ const VerifyOtp = () => {
 
   const handleVerify = async (otp: string) => {
     try {
-
+      console.log(userData)
       let response;
       if (userData?.source === "forgotPassword") {
         response = await tutorVerifyForgotOtpService(userData.email, otp, true);
+        console.log("tutorVerifyForgotOtpService",response)
       } else {
         response = await tutorVerifyOtpService(
           userData.name,

@@ -14,7 +14,6 @@ import {
 } from "../../services/adminService";
 import { Category } from "../../interfaces/adminInterface";
 import Table, { TableColumn, TableAction } from "../../components/common/Table";
-import { Messages } from "../../enums/messages";
 
 function AddCourseCategory() {
   const navigate = useNavigate();
@@ -25,7 +24,6 @@ function AddCourseCategory() {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
-  const [totalCount, setTotalCount] = useState<number>(0); 
 
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
@@ -49,6 +47,11 @@ function AddCourseCategory() {
     }),
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
+        console.log(
+          isEditMode ? "inside editcategory" : "inside addcategory",
+          values
+        );
+
         let response;
         if (isEditMode && editingCategoryId) {
           response = await updateCategoryService(
@@ -70,11 +73,18 @@ function AddCourseCategory() {
 
           toast.success(
             isEditMode
-              ? Messages.CATEGORY_UPDATED
-              : Messages.CATEGORY_ADDED
+              ? "Category updated successfully!"
+              : "Category added successfully!"
           );
 
           await fetchCategories(currentPage, searchQuery);
+
+          console.log(
+            isEditMode
+              ? "Category updated successfully:"
+              : "Category added successfully:",
+            response.data
+          );
         }
       } catch (error: any) {
         if (error.response && error.response.status === 401) {
@@ -103,19 +113,23 @@ function AddCourseCategory() {
   const fetchCategories = async (page: number, search: string) => {
     try {
       setLoading(true);
+      console.log("Fetching categories, page:", page, "search:", search);
 
       const response = await getCategories(page, search);
+      console.log("Full response:", response);
 
       if (response.data && response.data.success && response.data.data) {
-        const { categories, totalPages, totalCount } = response.data.data;
+        const { categories, totalPages } = response.data.data;
 
         setCategories(categories || []);
         setTotalPages(totalPages || 1);
-        setTotalCount(totalCount || 0);
+
+        console.log("Categories set:", categories);
+        console.log("Total pages:", totalPages);
       } else {
+        console.log("Response unsuccessful or no data");
         setCategories([]);
         setTotalPages(1);
-        setTotalCount(0);
       }
     } catch (error: any) {
       if (error.response && error.response.status === 401) {
@@ -125,7 +139,6 @@ function AddCourseCategory() {
       } else {
         console.error("Error fetching categories:", error);
         setCategories([]);
-        setTotalCount(0);
         toast.error("Failed to fetch categories");
       }
     } finally {
@@ -139,6 +152,8 @@ function AddCourseCategory() {
 
   const toggleListState = async (id: string) => {
     try {
+      console.log("Toggling category state:", id);
+
       const result = await toggleCategoryStatus(id);
 
       if (result.success) {
@@ -170,8 +185,12 @@ function AddCourseCategory() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handlePagination = (page: number) => {
-    setCurrentPage(page);
+  const handlePagination = (direction: string) => {
+    if (direction === "next" && currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    } else if (direction === "previous" && currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -369,7 +388,6 @@ function AddCourseCategory() {
                     searchPlaceholder="Search Categories"
                     currentPage={currentPage}
                     totalPages={totalPages}
-                    totalCount={totalCount}
                     onPageChange={handlePagination}
                     itemsPerPage={10}
                     emptyMessage="No categories found"

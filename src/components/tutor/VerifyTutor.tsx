@@ -153,8 +153,11 @@ function VerifyTutor() {
         aadharFront: values.aadharFront.file,
         aadharBack: values.aadharBack.file,
       };
-  
+      console.log("verify tutor ui", documents);
+      
+     
       const result = await tutorVerificationService(documents);
+      console.log("verifytutor front", result);
       
       if (result.success) {
         toast.success(

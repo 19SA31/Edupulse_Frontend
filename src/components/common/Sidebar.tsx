@@ -1,6 +1,8 @@
 import { NavLink } from "react-router-dom";
 import { ReactNode, useState } from "react";
-import { SidebarItem, SidebarProps } from "../../interfaces/adminInterface";
+import { SidebarItem,SidebarProps } from "../../interfaces/adminInterface";
+
+
 
 function ReusableSidebar({
   sidebarItems = [],
@@ -11,10 +13,13 @@ function ReusableSidebar({
 }: SidebarProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+
   const safeSidebarItems = Array.isArray(sidebarItems) ? sidebarItems : [];
+  console.log("safeSidebarItems",safeSidebarItems)
 
   return (
     <>
+
       <button
         type="button"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -36,6 +41,7 @@ function ReusableSidebar({
         </svg>
       </button>
 
+
       <aside
         className={`fixed top-14 left-0 z-40 w-64 h-screen pt-6 transition-transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -48,15 +54,15 @@ function ReusableSidebar({
               <li key={index}>
                 <NavLink
                   to={item.path}
-                  end 
-                  className={({ isActive }) =>
+                  end={item.path === "/tutor/dashboard"}
+                  className={({ isActive }: { isActive: boolean }) =>
                     `flex items-center p-2 rounded-lg group ${
                       isActive
                         ? `bg-gray-800 ${activeColor}`
                         : `${textColor} ${hoverColor}`
                     }`
                   }
-                  onClick={() => setIsSidebarOpen(false)}
+                  onClick={() => setIsSidebarOpen(false)} 
                 >
                   {({ isActive }) => (
                     <>
@@ -80,6 +86,7 @@ function ReusableSidebar({
           </ul>
         </div>
       </aside>
+
 
       {isSidebarOpen && (
         <div

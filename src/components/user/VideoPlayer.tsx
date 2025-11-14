@@ -1,40 +1,27 @@
 import React, { useState, useRef, useEffect } from "react";
+import { Play, Pause, Volume2, VolumeX, Maximize, Lock } from "lucide-react";
 import {
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Maximize,
-  Lock,
-  Minimize,
-} from "lucide-react";
-import { VideoPlayerProps } from "../../interfaces/courseInterface";
+  CourseVideo,
+  VideoPlayerProps,
+} from "../../interfaces/courseInterface";
 
-interface ExtendedVideoPlayerProps extends VideoPlayerProps {
-  isEnrolled?: boolean;
-}
-
-const VideoPlayer: React.FC<ExtendedVideoPlayerProps> = ({
+const VideoPlayer: React.FC<VideoPlayerProps> = ({
   video,
   onPaywallTrigger,
   freeWatchTime = 30,
-  isEnrolled = false,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
+  const [volume, setVolume] = useState<number>(1);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [showPaywall, setShowPaywall] = useState<boolean>(false);
   const [hasTriggeredPaywall, setHasTriggeredPaywall] =
     useState<boolean>(false);
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
-  const effectiveFreeWatchTime = isEnrolled ? Infinity : freeWatchTime;
   const freeProgress =
-    duration > 0 && !isEnrolled
-      ? Math.min((freeWatchTime / duration) * 100, 100)
-      : 100;
+    duration > 0 ? Math.min((freeWatchTime / duration) * 100, 100) : 0;
   const currentProgress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   useEffect(() => {
@@ -55,11 +42,7 @@ const VideoPlayer: React.FC<ExtendedVideoPlayerProps> = ({
   }, [video]);
 
   useEffect(() => {
-    if (
-      !isEnrolled &&
-      currentTime >= effectiveFreeWatchTime &&
-      !hasTriggeredPaywall
-    ) {
+    if (currentTime >= freeWatchTime && !hasTriggeredPaywall) {
       setShowPaywall(true);
       setHasTriggeredPaywall(true);
       setIsPlaying(false);
@@ -70,35 +53,11 @@ const VideoPlayer: React.FC<ExtendedVideoPlayerProps> = ({
         onPaywallTrigger();
       }
     }
-  }, [
-    currentTime,
-    effectiveFreeWatchTime,
-    hasTriggeredPaywall,
-    onPaywallTrigger,
-    isEnrolled,
-  ]);
-
-  useEffect(() => {
-    if (showPaywall && videoRef.current) {
-      videoRef.current.pause();
-      setIsPlaying(false);
-    }
-  }, [showPaywall]);
-
-  useEffect(() => {
-    if (isEnrolled) {
-      setShowPaywall(false);
-      setHasTriggeredPaywall(false);
-    }
-  }, [isEnrolled]);
+  }, [currentTime, freeWatchTime, hasTriggeredPaywall, onPaywallTrigger]);
 
   const togglePlay = (): void => {
-    if (showPaywall && !isEnrolled) {
-      if (videoRef.current) {
-        videoRef.current.pause();
-      }
-      return;
-    }
+    if (showPaywall) return;
+
     const video = videoRef.current;
     if (!video) return;
 
@@ -113,7 +72,8 @@ const VideoPlayer: React.FC<ExtendedVideoPlayerProps> = ({
   };
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>): void => {
-    if (showPaywall && !isEnrolled) return;
+    if (showPaywall) return;
+
     const video = videoRef.current;
     if (!video) return;
 
@@ -121,11 +81,7 @@ const VideoPlayer: React.FC<ExtendedVideoPlayerProps> = ({
     const pos = (e.clientX - rect.left) / rect.width;
     const newTime = pos * duration;
 
-    if (
-      !isEnrolled &&
-      newTime > effectiveFreeWatchTime &&
-      !hasTriggeredPaywall
-    ) {
+    if (newTime > freeWatchTime && !hasTriggeredPaywall) {
       return;
     }
 
@@ -140,33 +96,9 @@ const VideoPlayer: React.FC<ExtendedVideoPlayerProps> = ({
     setIsMuted(!isMuted);
   };
 
-  const toggleFullscreen = () => {
-    if (!videoRef.current) return;
-
-    if (!document.fullscreenElement) {
-      videoRef.current.requestFullscreen().then(() => {
-        setIsFullscreen(true);
-        if (showPaywall && !isEnrolled) {
-          videoRef.current?.pause();
-        }
-      });
-    } else {
-      document.exitFullscreen().then(() => setIsFullscreen(false));
-    }
-  };
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-    };
-  }, []);
-
   const formatTime = (time: number): string => {
     if (isNaN(time) || time === null || time === undefined) return "0:00";
+
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
@@ -182,27 +114,18 @@ const VideoPlayer: React.FC<ExtendedVideoPlayerProps> = ({
 
   return (
     <div className="relative bg-black rounded-lg overflow-hidden">
-      <div
-        className={`w-full ${
-          isEnrolled
-            ? "aspect-video max-h-[calc(100vh-150px)]"
-            : "h-64 md:h-80 lg:h-96"
-        }`}
-      >
-        <video
-          ref={videoRef}
-          src={video.signedUrl}
-          autoPlay
-          controlsList="nodownload"
-          className="w-full h-full object-contain"
-          onContextMenu={(e) => e.preventDefault()}
-          onError={(e: React.SyntheticEvent<HTMLVideoElement, Event>) =>
-            console.log("Video error:", e)
-          }
-        />
-      </div>
+      <video
+        ref={videoRef}
+        src={video.signedUrl}
+        className="w-full h-64 md:h-80 lg:h-96 object-cover"
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onError={(e: React.SyntheticEvent<HTMLVideoElement, Event>) =>
+          console.log("Video error:", e)
+        }
+      />
 
-      {showPaywall && !isEnrolled && (
+      {showPaywall && (
         <div className="absolute inset-0 bg-black bg-opacity-90 flex items-center justify-center z-20">
           <div className="text-center text-white p-8 max-w-md">
             <Lock className="w-16 h-16 mx-auto mb-4 text-yellow-500" />
@@ -211,6 +134,9 @@ const VideoPlayer: React.FC<ExtendedVideoPlayerProps> = ({
               You've watched the free preview. Enroll now to access the full
               course content and continue your learning journey.
             </p>
+            <button className="bg-yellow-400 hover:bg-gradient-to-bl from-yellow-400 to-yellow-600 text-black font-semibold py-3 px-8 rounded-lg transition-colors">
+              Enroll Now
+            </button>
           </div>
         </div>
       )}
@@ -221,23 +147,19 @@ const VideoPlayer: React.FC<ExtendedVideoPlayerProps> = ({
             className="w-full h-2 bg-gray-600 rounded cursor-pointer"
             onClick={handleSeek}
           >
-            {!isEnrolled && (
-              <div
-                className="absolute top-0 left-0 h-2 bg-yellow-500 opacity-50 rounded"
-                style={{ width: `${freeProgress}%` }}
-              />
-            )}
+            <div
+              className="absolute top-0 left-0 h-2 bg-yellow-500 opacity-50 rounded"
+              style={{ width: `${freeProgress}%` }}
+            />
             <div
               className="absolute top-0 left-0 h-2 bg-white rounded"
               style={{ width: `${currentProgress}%` }}
             />
           </div>
-          {!isEnrolled && (
-            <div
-              className="absolute -top-1 w-1 h-4 bg-yellow-500"
-              style={{ left: `${freeProgress}%` }}
-            />
-          )}
+          <div
+            className="absolute -top-1 w-1 h-4 bg-yellow-500"
+            style={{ left: `${freeProgress}%` }}
+          />
         </div>
 
         <div className="flex items-center justify-between">
@@ -245,7 +167,7 @@ const VideoPlayer: React.FC<ExtendedVideoPlayerProps> = ({
             <button
               onClick={togglePlay}
               className="text-white hover:text-gray-300 transition-colors"
-              disabled={showPaywall && !isEnrolled}
+              disabled={showPaywall}
             >
               {isPlaying ? (
                 <Pause className="w-6 h-6" />
@@ -271,23 +193,11 @@ const VideoPlayer: React.FC<ExtendedVideoPlayerProps> = ({
           </div>
 
           <div className="flex items-center space-x-2">
-            {!isEnrolled && (
-              <span className="text-yellow-500 text-xs">
-                Free: {formatTime(freeWatchTime)}
-              </span>
-            )}
-            {isEnrolled && (
-              <span className="text-green-500 text-xs">Full Access</span>
-            )}
-            <button
-              onClick={toggleFullscreen}
-              className="text-white hover:text-gray-300 transition-colors"
-            >
-              {isFullscreen ? (
-                <Minimize className="w-5 h-5" />
-              ) : (
-                <Maximize className="w-5 h-5" />
-              )}
+            <span className="text-yellow-500 text-xs">
+              Free: {formatTime(freeWatchTime)}
+            </span>
+            <button className="text-white hover:text-gray-300 transition-colors">
+              <Maximize className="w-5 h-5" />
             </button>
           </div>
         </div>

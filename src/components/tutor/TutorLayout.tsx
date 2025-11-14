@@ -2,14 +2,7 @@ import { Outlet } from "react-router-dom";
 import Header from "../../components/common/Header";
 import ReusableSidebar from "../../components/common/Sidebar";
 import { SidebarItem } from "../../interfaces/userInterface";
-import {
-  MdLibraryAdd,
-  MdDashboard,
-  MdPerson,
-  MdMenuBook,
-} from "react-icons/md";
-import { FiClock, FiLayers } from "react-icons/fi";
-
+import { MdLibraryAdd, MdDashboard, MdPerson } from "react-icons/md";
 
 function TutorLayout() {
   const tutorSidebarItems: SidebarItem[] = [
@@ -28,21 +21,6 @@ function TutorLayout() {
       label: "Add Course",
       icon: <MdLibraryAdd className="w-5 h-5" />,
     },
-    {
-      path: "/tutor/dashboard/course-management",
-      label: "Course Management",
-      icon: <MdMenuBook className="w-5 h-5" />,
-    },
-    {
-      path: "/tutor/dashboard/add-slot",
-      label: "Add Slot",
-      icon: <FiClock className="w-5 h-5" />,
-    },
-    {
-      path:"/tutor/dashboard/course-dashboard",
-      label:"Course Dashboard",
-      icon: <FiLayers className="w-5 h-5"/>
-    }
   ];
 
   return (
@@ -58,7 +36,7 @@ function TutorLayout() {
           hoverColor="hover:bg-gray-800"
           textColor="text-gray-300"
         />
-        <main className="flex-1 ml-0 sm:ml-64 overflow-y-auto">
+        <main className="flex-1 ml-0 sm:ml-64 p-4 overflow-y-auto overflow-x-hidden h-screen">
           <Outlet />
         </main>
       </div>

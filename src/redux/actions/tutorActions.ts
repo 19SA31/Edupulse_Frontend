@@ -11,7 +11,6 @@ import {
   tutorVerifyOtpService,
   tutorLoginService,
   logoutTutor,
-  googleTutorAuthService
 } from "../../services/Authentication/AuthenticationService";
 
 export const tutorSignUp = createAsyncThunk(
@@ -92,24 +91,6 @@ export const logoutTutorAction = createAsyncThunk(
       }
     } catch (error: any) {
       return rejectWithValue("Unexpected error occurred.");
-    }
-  }
-);
-
-export const googleTutorLogin = createAsyncThunk(
-  "tutor/googleLogin",
-  async (credential: string, { rejectWithValue }) => {
-    try {
-      const result = await googleTutorAuthService(credential);
-      if (result.success  && result.data.user) {
-        return { tutor: result.data.user, accessToken: result.data.accessToken }
-      } else {
-        return rejectWithValue(result.message || "Google login failed");
-      }
-    } catch (error: any) {
-      return rejectWithValue(
-        error?.response?.data?.message || "Unexpected error occurred."
-      );
     }
   }
 );
